@@ -1,52 +1,95 @@
-// app/pricing/page.tsx
-import { PricingTable } from "../../components/PricingTable";
-
 export default function PricingPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <section className="card p-5">
-        <h1 className="text-2xl font-bold text-white">Pricing</h1>
-        <p className="mt-3 text-sm text-slate-300">
-          CleanCut AI is designed to be up to <strong>5–10x cheaper</strong>{" "}
-          per image than tools like Remove.bg, Adobe, Canva, or ClipDrop, while
-          keeping HD quality and no watermark.
+    <div className="mx-auto max-w-6xl px-4 py-16">
+      <header className="text-center">
+        <h1 className="text-3xl font-bold text-white">
+          Simple, transparent pricing
+        </h1>
+        <p className="mt-3 text-slate-300">
+          Remove backgrounds at a fraction of the cost of other tools.
         </p>
-      </section>
+      </header>
 
-      <section className="mt-6">
-        <PricingTable />
-      </section>
+      <div className="mt-12 grid gap-6 md:grid-cols-3">
+        {/* FREE PLAN */}
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+          <h2 className="text-lg font-semibold text-white">Free</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Try CleanCut AI for free
+          </p>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="card p-4 text-xs text-slate-300">
-          <h2 className="text-sm font-semibold text-white">
-            How we stay cheaper
-          </h2>
-          <ul className="mt-2 space-y-1">
-            <li>• We use open-source models hosted on free infrastructure.</li>
-            <li>• We keep it simple: background removal only.</li>
-            <li>• We don&apos;t watermark images, even on the free tier.</li>
-            <li>• You pay based on realistic monthly usage, not “per pixel”.</li>
+          <p className="mt-4 text-3xl font-bold text-white">$0</p>
+
+          <ul className="mt-6 space-y-3 text-sm text-slate-300">
+            <li>✅ No watermark</li>
+            <li>✅ Transparent PNG export</li>
+            <li>✅ Batch processing (limited)</li>
+            <li>⚠️ Monthly credit limit</li>
+            <li>⚠️ Standard processing speed</li>
           </ul>
+
+          <a
+            href="/signup"
+            className="mt-6 block w-full rounded-full border border-slate-700 py-2 text-center text-sm font-semibold text-slate-200 hover:border-slate-500"
+          >
+            Get started
+          </a>
         </div>
-        <div className="card p-4 text-xs text-slate-300">
-          <h2 className="text-sm font-semibold text-white">
-            Example comparison
-          </h2>
-          <ul className="mt-2 space-y-1">
-            <li>• Remove.bg: often ~$0.10–0.23 per image on small plans.</li>
-            <li>• ClipDrop / Canva: bundled into expensive subscriptions.</li>
-            <li>
-              • CleanCut AI Pro Monthly: 1000 credits for $4.99 → as low as
-              ~$0.005 per image.
-            </li>
-            <li>
-              • Lifetime: after a few months of use, you usually pay less than
-              1–2 months of competitors.
-            </li>
+
+        {/* PRO MONTHLY */}
+        <div className="rounded-3xl border border-indigo-500 bg-indigo-500/10 p-6">
+          <h2 className="text-lg font-semibold text-white">Pro Monthly</h2>
+          <p className="mt-1 text-sm text-slate-300">
+            Best for regular users
+          </p>
+
+          <p className="mt-4 text-3xl font-bold text-white">$4.99</p>
+          <p className="text-sm text-slate-400">per month</p>
+
+          <ul className="mt-6 space-y-3 text-sm text-slate-200">
+            <li>✅ No watermark</li>
+            <li>✅ Transparent PNG export</li>
+            <li>✅ Large batch processing</li>
+            <li>✅ Higher monthly credits</li>
+            <li>✅ Faster processing</li>
+            <li>✅ Priority queue</li>
           </ul>
+
+          <a
+            href="/signup"
+            className="mt-6 block w-full rounded-full bg-indigo-500 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-600"
+          >
+            Upgrade to Pro
+          </a>
         </div>
-      </section>
+
+        {/* LIFETIME */}
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+          <h2 className="text-lg font-semibold text-white">Lifetime</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Pay once, use forever
+          </p>
+
+          <p className="mt-4 text-3xl font-bold text-white">$19.99</p>
+          <p className="text-sm text-slate-400">one-time payment</p>
+
+          <ul className="mt-6 space-y-3 text-sm text-slate-300">
+            <li>✅ No watermark</li>
+            <li>✅ Transparent PNG export</li>
+            <li>✅ Large batch processing</li>
+            <li>✅ Monthly credits forever</li>
+            <li>✅ Faster processing</li>
+            <li>✅ Best value long-term</li>
+          </ul>
+
+          <a
+            href="/signup"
+            className="mt-6 block w-full rounded-full border border-slate-700 py-2 text-center text-sm font-semibold text-slate-200 hover:border-slate-500"
+          >
+            Get lifetime access
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

@@ -86,11 +86,11 @@ export default function SignUpPage() {
           </button>
         </>
       ) : (
-        <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">
-          ✅ Account created!  
+        <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+          ✅ <strong>Account created!</strong>
           <br />
-          Please check your email and click the verification link before signing
-          in.
+          Please check your email <strong>and spam folder</strong> for the
+          confirmation link before signing in.
         </div>
       )}
 

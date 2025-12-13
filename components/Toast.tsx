@@ -5,15 +5,17 @@ import { useEffect } from "react";
 export function Toast({
   message,
   onClose,
+  durationMs = 3000,
 }: {
   message: string | null;
   onClose: () => void;
+  durationMs?: number;
 }) {
   useEffect(() => {
     if (!message) return;
-    const t = setTimeout(onClose, 3000);
+    const t = setTimeout(onClose, durationMs);
     return () => clearTimeout(t);
-  }, [message, onClose]);
+  }, [message, onClose, durationMs]);
 
   if (!message) return null;
 

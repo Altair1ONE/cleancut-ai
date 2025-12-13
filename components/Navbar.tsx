@@ -9,60 +9,50 @@ import { FeedbackModal } from "./FeedbackModal";
 import { Toast } from "./Toast";
 import { loadCredits } from "../lib/credits";
 
-// Works with any CreditState shape (no TS errors)
-function getCreditsLeftSafe(creditState: any): number {
-  if (!creditState) return 0;
-
-  if (typeof creditState.remaining === "number") return creditState.remaining;
-  if (typeof creditState.creditsRemaining === "number") return creditState.creditsRemaining;
-  if (typeof creditState.creditsLeft === "number") return creditState.creditsLeft;
-  if (typeof creditState.credits === "number") return creditState.credits;
-
-  if (
-    typeof creditState.monthlyLimit === "number" &&
-    typeof creditState.usedThisMonth === "number"
-  ) {
-    return Math.max(0, creditState.monthlyLimit - creditState.usedThisMonth);
-  }
-
-  return 0;
-}
-
 export function Navbar() {
   const pathname = usePathname();
   const { session, user, loading, justLoggedIn, displayName } = useAuth();
+
   const [openFeedback, setOpenFeedback] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
   const [creditsLeft, setCreditsLeft] = useState<number>(0);
+
+  // ✅ Real toast state so it actually shows & hides
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const email = user?.email || "";
   const initial = (displayName || email || "?").charAt(0).toUpperCase();
 
   function refreshCredits() {
-    const c = loadCredits() as any;
-    setCreditsLeft(getCreditsLeftSafe(c));
+    const c = loadCredits();
+    setCreditsLeft(c.creditsLeft);
   }
 
   useEffect(() => {
     refreshCredits();
 
-    // ✅ Update credits instantly after processing
+    // ✅ instant credit updates after processing
     const handler = () => refreshCredits();
     window.addEventListener("credits:update", handler);
-
-    return () => {
-      window.removeEventListener("credits:update", handler);
-    };
+    return () => window.removeEventListener("credits:update", handler);
   }, []);
 
-  const toastMsg = useMemo(() => {
-    if (!justLoggedIn) return null;
-    return displayName ? `Welcome back, ${displayName} 👋` : "Welcome back 👋";
+  // ✅ ensure the toast actually appears on SIGNED_IN
+  useEffect(() => {
+    if (!justLoggedIn) return;
+    const name = displayName?.trim();
+    setToastMsg(name ? `Welcome back, ${name} 👋` : "Welcome back 👋");
   }, [justLoggedIn, displayName]);
+
+  const activeClass = (p: string) =>
+    pathname === p
+      ? "bg-slate-800 text-white"
+      : "text-slate-300 hover:bg-slate-800/60 hover:text-white";
 
   return (
     <>
-      <Toast message={toastMsg} onClose={() => {}} />
+      <Toast message={toastMsg} onClose={() => setToastMsg(null)} />
 
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -72,34 +62,25 @@ export function Navbar() {
               <div className="text-sm font-semibold text-white">
                 CleanCut <span className="text-slate-400">by</span> Xevora
               </div>
-              <div className="text-[11px] text-slate-400">Background remover</div>
+              <div className="text-[11px] text-slate-400">
+                Background remover
+              </div>
             </div>
           </Link>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href="/"
-              className={`rounded-full px-3 py-1 text-sm ${
-                pathname === "/" ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-              }`}
-            >
+            <Link href="/" className={`rounded-full px-3 py-1 text-sm ${activeClass("/")}`}>
               Home
             </Link>
             <Link
               href="/pricing"
-              className={`rounded-full px-3 py-1 text-sm ${
-                pathname === "/pricing"
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-              }`}
+              className={`rounded-full px-3 py-1 text-sm ${activeClass("/pricing")}`}
             >
               Pricing
             </Link>
             <Link
               href="/app"
-              className={`rounded-full px-3 py-1 text-sm ${
-                pathname === "/app" ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-              }`}
+              className={`rounded-full px-3 py-1 text-sm ${activeClass("/app")}`}
             >
               App
             </Link>
@@ -181,7 +162,11 @@ export function Navbar() {
         </nav>
       </header>
 
-      <FeedbackModal open={openFeedback} onClose={() => setOpenFeedback(false)} page={pathname} />
+      <FeedbackModal
+        open={openFeedback}
+        onClose={() => setOpenFeedback(false)}
+        page={pathname}
+      />
     </>
   );
 }

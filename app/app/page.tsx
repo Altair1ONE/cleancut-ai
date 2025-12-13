@@ -118,8 +118,14 @@ export default function AppPage() {
       }
 
       const updatedCredits = consumeCredits(credits, images.length, useHd);
-      setCredits(updatedCredits);
-      setResults(newResults);
+setCredits(updatedCredits);
+setResults(newResults);
+
+// ✅ Tell Navbar to refresh credits immediately
+if (typeof window !== "undefined") {
+  window.dispatchEvent(new Event("credits:update"));
+}
+
 
       // ✅ Recommended: instantly refresh Navbar credits badge
       if (typeof window !== "undefined") {

@@ -1,15 +1,8 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl } from "../lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: ["/"],
-        disallow: ["/api/", "/app", "/login", "/signup"],
-      },
-    ],
-    sitemap: absoluteUrl("/sitemap.xml"),
+    rules: [{ userAgent: "*", allow: ["/"], disallow: ["/app", "/login", "/signup"] }],
+    sitemap: "https://xevora.org/cleancut/sitemap.xml",
   };
 }

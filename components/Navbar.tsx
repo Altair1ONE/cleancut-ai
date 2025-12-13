@@ -3,64 +3,68 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-
-import { FeedbackModal } from "./FeedbackModal";
-import { useAuth } from "./AuthProvider";
 import { supabase } from "../lib/supabaseClient";
-import { withBasePath, BASE_PATH } from "../lib/site";
+import { useAuth } from "./AuthProvider";
+import { FeedbackModal } from "./FeedbackModal";
 
 export function Navbar() {
   const pathname = usePathname();
-  const [openFeedback, setOpenFeedback] = useState(false);
   const { session, loading } = useAuth();
+  const [openFeedback, setOpenFeedback] = useState(false);
 
-  const isActive = (p: string) => pathname === withBasePath(p) || pathname === p;
+  const isActive = (p: string) => pathname === p;
 
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link href={withBasePath("/")} className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 shadow-[0_10px_30px_rgba(99,102,241,0.35)]" />
-            <div className="leading-tight">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500" />
+            <div>
               <div className="text-sm font-semibold text-white">
                 CleanCut <span className="text-slate-400">by</span> Xevora
               </div>
-              <div className="text-[11px] text-slate-400">Background remover</div>
+              <div className="text-[11px] text-slate-400">
+                Background remover
+              </div>
             </div>
           </Link>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden gap-2 md:flex">
             <Link
-              href={withBasePath("/")}
-              className={`rounded-full px-3 py-1 text-sm ${
-                isActive("/") ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+              href="/"
+              className={`px-3 py-1 rounded-full ${
+                isActive("/") ? "bg-slate-800 text-white" : "text-slate-300"
               }`}
             >
               Home
             </Link>
             <Link
-              href={withBasePath("/pricing")}
-              className={`rounded-full px-3 py-1 text-sm ${
-                isActive("/pricing") ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+              href="/pricing"
+              className={`px-3 py-1 rounded-full ${
+                isActive("/pricing")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
               }`}
             >
               Pricing
             </Link>
             <Link
-              href={withBasePath("/app")}
-              className={`rounded-full px-3 py-1 text-sm ${
-                isActive("/app") ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+              href="/app"
+              className={`px-3 py-1 rounded-full ${
+                isActive("/app")
+                  ? "bg-slate-800 text-white"
+                  : "text-slate-300"
               }`}
             >
               App
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2">
             <button
               onClick={() => setOpenFeedback(true)}
-              className="hidden rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500 md:inline-flex"
+              className="hidden md:inline rounded-full border border-slate-700 px-4 py-2 text-sm"
             >
               Feedback
             </button>
@@ -68,21 +72,21 @@ export function Navbar() {
             {!loading && session ? (
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+                className="rounded-full border border-slate-700 px-4 py-2 text-sm"
               >
                 Logout
               </button>
             ) : (
               <>
                 <Link
-                  href={withBasePath("/login")}
-                  className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+                  href="/login"
+                  className="rounded-full border border-slate-700 px-4 py-2 text-sm"
                 >
                   Sign in
                 </Link>
                 <Link
-                  href={withBasePath("/signup")}
-                  className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
+                  href="/signup"
+                  className="rounded-full bg-indigo-500 px-4 py-2 text-sm text-white"
                 >
                   Sign up
                 </Link>
@@ -95,7 +99,7 @@ export function Navbar() {
       <FeedbackModal
         open={openFeedback}
         onClose={() => setOpenFeedback(false)}
-        page={pathname.replace(BASE_PATH, "") || "/"}
+        page={pathname}
       />
     </>
   );

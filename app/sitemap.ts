@@ -1,20 +1,12 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl } from "../lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const base = "https://xevora.org/cleancut";
   const now = new Date();
 
-  const routes = [
-    "/",
-    "/pricing",
-    "/blog",
-    "/blog/remove-background-without-watermark",
+  return [
+    { url: `${base}/`, lastModified: now },
+    { url: `${base}/pricing`, lastModified: now },
+    { url: `${base}/blog`, lastModified: now },
   ];
-
-  return routes.map((path) => ({
-    url: absoluteUrl(path),
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: path === "/" ? 1 : 0.8,
-  }));
 }

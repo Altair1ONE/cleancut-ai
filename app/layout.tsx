@@ -2,24 +2,20 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Navbar } from "../components/Navbar";
 import { AuthProvider } from "../components/AuthProvider";
-import { SITE_URL, BASE_PATH } from "../lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL("https://xevora.org"),
   title: {
     default: "Free Background Remover – No Watermark | CleanCut by Xevora",
     template: "%s | CleanCut by Xevora",
   },
   description:
-    "Remove background from images instantly with CleanCut by Xevora. No watermark, transparent PNG export, and batch processing.",
-  alternates: {
-    canonical: `${BASE_PATH}/`,
-  },
+    "Remove background from images instantly with CleanCut by Xevora. No watermark, transparent PNG export, batch processing.",
   openGraph: {
     title: "Free Background Remover – No Watermark",
     description:
-      "Remove backgrounds instantly. No watermark. Transparent PNG export. Batch background removal.",
-    url: `${SITE_URL}${BASE_PATH}`,
+      "Remove backgrounds instantly. No watermark. Transparent PNG export.",
+    url: "https://xevora.org/cleancut",
     siteName: "Xevora",
     images: [
       {
@@ -29,15 +25,7 @@ export const metadata: Metadata = {
         alt: "CleanCut by Xevora",
       },
     ],
-    locale: "en_US",
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Free Background Remover – No Watermark",
-    description:
-      "CleanCut by Xevora: remove background instantly with transparent PNG export.",
-    images: ["/og.png"],
   },
 };
 

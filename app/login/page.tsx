@@ -22,33 +22,43 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
-    } else {
-      router.push("/app");
+      setError(
+        error.message.includes("Invalid login credentials")
+          ? "Invalid email or password, or email not verified yet."
+          : error.message
+      );
+      setLoading(false);
+      return;
     }
 
+    router.push("/app");
     setLoading(false);
   }
 
   return (
     <div className="mx-auto mt-20 max-w-sm rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
       <h1 className="text-xl font-semibold text-white">Sign in</h1>
+      <p className="mt-2 text-sm text-slate-300">
+        Sign in to access your dashboard.
+      </p>
 
       <input
         type="email"
         placeholder="Email"
-        className="mt-4 w-full rounded-xl bg-slate-950 p-3 text-sm text-white"
+        className="mt-4 w-full rounded-xl bg-slate-950 p-3 text-sm text-white focus:ring-2 focus:ring-indigo-500/40"
+        value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
 
       <input
         type="password"
         placeholder="Password"
-        className="mt-3 w-full rounded-xl bg-slate-950 p-3 text-sm text-white"
+        className="mt-3 w-full rounded-xl bg-slate-950 p-3 text-sm text-white focus:ring-2 focus:ring-indigo-500/40"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
 
       <button
         onClick={signIn}

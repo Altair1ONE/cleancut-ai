@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Client } from "@gradio/client";
 
+import { useAuth } from "../../components/AuthProvider";
 import { CreditsBadge } from "../../components/CreditsBadge";
 import {
   CreditState,
@@ -109,8 +111,7 @@ async function resizeImageFile(file: File, maxSide: number): Promise<File> {
 }
 
 /**
- * Run async tasks with a concurrency limit.
- * This version is TypeScript-safe (no self-referencing variables).
+ * Run async tasks with a concurrency limit (TS safe)
  */
 async function asyncPool<T, R>(
   poolLimit: number,
@@ -124,17 +125,16 @@ async function asyncPool<T, R>(
     const p = Promise.resolve().then(() => iteratorFn(array[i], i));
     ret.push(p);
 
-    if (poolLimit <= array.length) {
-      let removePromise!: Promise<void>;
-      removePromise = p.then(() => {
-        const idx = executing.indexOf(removePromise);
-        if (idx >= 0) executing.splice(idx, 1);
-      });
-      executing.push(removePromise);
+    let removePromise!: Promise<void>;
+    removePromise = p.then(() => {
+      const idx = executing.indexOf(removePromise);
+      if (idx >= 0) executing.splice(idx, 1);
+    });
 
-      if (executing.length >= poolLimit) {
-        await Promise.race(executing);
-      }
+    executing.push(removePromise);
+
+    if (executing.length >= poolLimit) {
+      await Promise.race(executing);
     }
   }
 
@@ -144,15 +144,32 @@ async function asyncPool<T, R>(
 /** -------------------------------------------------------- **/
 
 export default function AppPage() {
+  // ✅ AUTH PROTECTION
+  const { session, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      router.push("/login");
+    }
+  }, [loading, session, router]);
+
+  // While auth is loading OR redirecting, show a small loader
+  if (loading || (!loading && !session)) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
+        Loading…
+      </div>
+    );
+  }
+
+  // ✅ Your existing app logic below (unchanged)
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [images, setImages] = useState<QueuedImage[]>([]);
   const [results, setResults] = useState<ProcessedImage[]>([]);
   const [bgMode, setBgMode] = useState<BgMode>("transparent");
   const [customColor, setCustomColor] = useState("#ffffff");
-
-  // ✅ Fast default ON
   const [qualityMode, setQualityMode] = useState<QualityMode>("fast");
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -169,13 +186,11 @@ export default function AppPage() {
 
   function onFilesSelected(files: File[]) {
     const limited = files.slice(0, plan.maxBatchSize);
-
     const newItems: QueuedImage[] = limited.map((f) => ({
       id: `${f.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       file: f,
       previewUrl: URL.createObjectURL(f),
     }));
-
     setImages(newItems);
     setResults([]);
     setErrorMsg(null);
@@ -201,7 +216,7 @@ export default function AppPage() {
 
     const spaceId = process.env.NEXT_PUBLIC_BG_SPACE;
     if (!spaceId) {
-      setErrorMsg("NEXT_PUBLIC_BG_SPACE is not set in .env.local.");
+      setErrorMsg("NEXT_PUBLIC_BG_SPACE is not set in environment variables.");
       return;
     }
 
@@ -211,7 +226,6 @@ export default function AppPage() {
     try {
       const app = await Client.connect(spaceId);
 
-      // Resize before sending (major speed boost)
       const maxSide = getMaxSidePx(credits.planId, qualityMode);
       const resized = await Promise.all(
         images.map(async (img) => {
@@ -224,7 +238,6 @@ export default function AppPage() {
       const qualityFlag = qualityMode === "quality";
 
       const processed = await asyncPool(concurrency, resized, async (img) => {
-        // HF endpoint api_name="remove_bg"
         const result: any = await app.predict("remove_bg", [
           img.file,
           qualityFlag,
@@ -248,7 +261,6 @@ export default function AppPage() {
             : null;
 
         if (!outputUrl) {
-          console.error("HF response:", result);
           throw new Error("Could not extract output url");
         }
 
@@ -359,7 +371,6 @@ export default function AppPage() {
               </div>
             </div>
 
-            {/* Fast/Quality toggle */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
               <div>
                 <div className="text-xs font-semibold text-slate-100">
@@ -392,12 +403,6 @@ export default function AppPage() {
                   Quality
                 </button>
               </div>
-            </div>
-
-            <div className="text-[11px] text-slate-400">
-              Auto-resize:{" "}
-              {credits ? getMaxSidePx(credits.planId, qualityMode) : 1600}px long
-              edge • Concurrency: 2
             </div>
 
             <button

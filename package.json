@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@gradio/client": "^2.0.0",
+    "@supabase/supabase-js": "^2.87.1",
     "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0"

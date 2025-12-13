@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Navbar } from "../components/Navbar";
+import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cleancut.ai"),
@@ -56,8 +57,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-slate-950 text-slate-100 antialiased">
-        <Navbar />
-        {children}
+        <AuthProvider>
+          <Navbar />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

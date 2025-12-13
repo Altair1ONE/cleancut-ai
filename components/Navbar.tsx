@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+
 import { FeedbackModal } from "./FeedbackModal";
+import { useAuth } from "./AuthProvider";
+import { supabase } from "../lib/supabaseClient";
 
 export function Navbar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [openFeedback, setOpenFeedback] = useState(false);
+  const { session, loading } = useAuth();
 
   const isActive = (p: string) => pathname === p;
 
@@ -60,15 +64,31 @@ export function Navbar() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setOpen(true)}
+              onClick={() => setOpenFeedback(true)}
               className="hidden rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500 md:inline-flex"
             >
               Feedback
             </button>
 
+            {!loading && session ? (
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
+              >
+                Sign in
+              </Link>
+            )}
+
             <Link
               href="/app"
-              className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_15px_40px_rgba(99,102,241,0.25)] hover:bg-indigo-600"
+              className="hidden items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_15px_40px_rgba(99,102,241,0.25)] hover:bg-indigo-600 md:inline-flex"
             >
               Try app
             </Link>
@@ -76,7 +96,11 @@ export function Navbar() {
         </nav>
       </header>
 
-      <FeedbackModal open={open} onClose={() => setOpen(false)} page={pathname} />
+      <FeedbackModal
+        open={openFeedback}
+        onClose={() => setOpenFeedback(false)}
+        page={pathname}
+      />
     </>
   );
 }

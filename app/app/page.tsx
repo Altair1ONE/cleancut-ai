@@ -40,13 +40,7 @@ type QualityMode = "fast" | "quality";
 
 function getMaxSidePx(planId: string, mode: QualityMode): number {
   const isPaid = planId !== "free";
-
-  if (!isPaid) {
-    // Free tier: keep fast
-    return mode === "fast" ? 1600 : 2400;
-  }
-
-  // Paid tiers: allow larger
+  if (!isPaid) return mode === "fast" ? 1600 : 2400;
   return mode === "fast" ? 2200 : 3200;
 }
 
@@ -65,8 +59,8 @@ async function resizeImageFile(file: File, maxSide: number): Promise<File> {
 
     const w = img.naturalWidth;
     const h = img.naturalHeight;
-
     const longSide = Math.max(w, h);
+
     if (longSide <= maxSide) return file;
 
     const scale = maxSide / longSide;
@@ -114,23 +108,33 @@ async function resizeImageFile(file: File, maxSide: number): Promise<File> {
   }
 }
 
+/**
+ * Run async tasks with a concurrency limit.
+ * This version is TypeScript-safe (no self-referencing variables).
+ */
 async function asyncPool<T, R>(
   poolLimit: number,
   array: T[],
   iteratorFn: (item: T, index: number) => Promise<R>
 ): Promise<R[]> {
   const ret: Promise<R>[] = [];
-  const executing: Promise<any>[] = [];
+  const executing: Promise<void>[] = [];
 
   for (let i = 0; i < array.length; i++) {
     const p = Promise.resolve().then(() => iteratorFn(array[i], i));
     ret.push(p);
 
-    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
-    executing.push(e);
+    if (poolLimit <= array.length) {
+      let removePromise!: Promise<void>;
+      removePromise = p.then(() => {
+        const idx = executing.indexOf(removePromise);
+        if (idx >= 0) executing.splice(idx, 1);
+      });
+      executing.push(removePromise);
 
-    if (executing.length >= poolLimit) {
-      await Promise.race(executing);
+      if (executing.length >= poolLimit) {
+        await Promise.race(executing);
+      }
     }
   }
 
@@ -209,7 +213,6 @@ export default function AppPage() {
 
       // Resize before sending (major speed boost)
       const maxSide = getMaxSidePx(credits.planId, qualityMode);
-
       const resized = await Promise.all(
         images.map(async (img) => {
           const resizedFile = await resizeImageFile(img.file, maxSide);
@@ -221,7 +224,7 @@ export default function AppPage() {
       const qualityFlag = qualityMode === "quality";
 
       const processed = await asyncPool(concurrency, resized, async (img) => {
-        // ✅ IMPORTANT: api_name is "remove_bg" (no slash here)
+        // HF endpoint api_name="remove_bg"
         const result: any = await app.predict("remove_bg", [
           img.file,
           qualityFlag,
@@ -392,8 +395,9 @@ export default function AppPage() {
             </div>
 
             <div className="text-[11px] text-slate-400">
-              Auto-resize: {credits ? getMaxSidePx(credits.planId, qualityMode) : 1600}px long edge
-              • Concurrency: 2
+              Auto-resize:{" "}
+              {credits ? getMaxSidePx(credits.planId, qualityMode) : 1600}px long
+              edge • Concurrency: 2
             </div>
 
             <button

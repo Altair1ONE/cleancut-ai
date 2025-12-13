@@ -19,6 +19,7 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 shadow-[0_10px_30px_rgba(99,102,241,0.35)]" />
             <div className="leading-tight">
@@ -29,6 +30,7 @@ export function Navbar() {
             </div>
           </Link>
 
+          {/* Nav links */}
           <div className="hidden items-center gap-2 md:flex">
             <Link
               href="/"
@@ -62,6 +64,7 @@ export function Navbar() {
             </Link>
           </div>
 
+          {/* Right actions */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setOpenFeedback(true)}
@@ -78,20 +81,21 @@ export function Navbar() {
                 Logout
               </button>
             ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
-              >
-                Sign in
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
+                >
+                  Sign up
+                </Link>
+              </>
             )}
-
-            <Link
-              href="/app"
-              className="hidden items-center justify-center rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_15px_40px_rgba(99,102,241,0.25)] hover:bg-indigo-600 md:inline-flex"
-            >
-              Try app
-            </Link>
           </div>
         </nav>
       </header>

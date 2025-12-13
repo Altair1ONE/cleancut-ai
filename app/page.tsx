@@ -242,6 +242,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="mt-14">
+  <h2 className="text-xl font-semibold text-white">Popular use cases</h2>
+  <div className="mt-4 grid gap-3 md:grid-cols-3">
+    <Link className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600" href="/use-cases/shopify-product-photos">
+      <div className="text-sm font-semibold text-white">Shopify product photos</div>
+      <p className="mt-1 text-sm text-slate-300">Remove backgrounds for listings & catalogs.</p>
+    </Link>
+    <Link className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600" href="/use-cases/amazon-listing-images">
+      <div className="text-sm font-semibold text-white">Amazon listings</div>
+      <p className="mt-1 text-sm text-slate-300">Clean subject isolation for marketplace images.</p>
+    </Link>
+    <Link className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600" href="/use-cases/youtube-thumbnails">
+      <div className="text-sm font-semibold text-white">YouTube thumbnails</div>
+      <p className="mt-1 text-sm text-slate-300">Make faces pop with transparent PNG exports.</p>
+    </Link>
+  </div>
+</section>
+
+
       {/* SEO FAQ SCHEMA */}
       <SeoFaq />
     </main>

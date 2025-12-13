@@ -1,31 +1,46 @@
-import "./globals.css";
 import type { Metadata } from "next";
+import "./globals.css";
 import { Navbar } from "../components/Navbar";
 import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://xevora.org"),
   title: {
-    default: "Free Background Remover – No Watermark | CleanCut by Xevora",
-    template: "%s | CleanCut by Xevora",
+    default: "CleanCut AI – Remove Image Background Online | Xevora",
+    template: "%s | CleanCut AI by Xevora",
   },
   description:
-    "Remove background from images instantly with CleanCut by Xevora. No watermark, transparent PNG export, batch processing.",
+    "Remove image backgrounds instantly using AI. CleanCut AI by Xevora lets you create transparent PNGs in HD with no watermark. Fast, free, and professional background removal online.",
+  keywords: [
+    "background remover",
+    "remove background",
+    "remove background from image",
+    "AI background removal",
+    "transparent PNG",
+    "remove image background online",
+    "background remover free",
+    "no watermark background remover",
+  ],
+  authors: [{ name: "Xevora" }],
+  creator: "Xevora",
+  publisher: "Xevora",
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
-    title: "Free Background Remover – No Watermark",
-    description:
-      "Remove backgrounds instantly. No watermark. Transparent PNG export.",
-    url: "https://xevora.org/cleancut",
-    siteName: "Xevora",
-    images: [
-      {
-        url: "/og.png",
-        width: 1200,
-        height: 630,
-        alt: "CleanCut by Xevora",
-      },
-    ],
     type: "website",
+    url: "https://xevora.org/cleancut",
+    title: "CleanCut AI – Remove Image Background Online",
+    description:
+      "Create clean, transparent PNGs in seconds. AI-powered background remover with no watermark. Built by Xevora.",
+    siteName: "CleanCut AI",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CleanCut AI – Remove Image Background Online",
+    description:
+      "Fast AI background removal. Transparent PNGs, HD quality, no watermark.",
   },
 };
 
@@ -36,7 +51,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-100 antialiased">
+      <body className="bg-slate-950 text-white">
         <AuthProvider>
           <Navbar />
           {children}

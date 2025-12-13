@@ -7,64 +7,56 @@ import { useState } from "react";
 import { FeedbackModal } from "./FeedbackModal";
 import { useAuth } from "./AuthProvider";
 import { supabase } from "../lib/supabaseClient";
+import { withBasePath, BASE_PATH } from "../lib/site";
 
 export function Navbar() {
   const pathname = usePathname();
   const [openFeedback, setOpenFeedback] = useState(false);
   const { session, loading } = useAuth();
 
-  const isActive = (p: string) => pathname === p;
+  const isActive = (p: string) => pathname === withBasePath(p) || pathname === p;
 
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={withBasePath("/")} className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 shadow-[0_10px_30px_rgba(99,102,241,0.35)]" />
             <div className="leading-tight">
-              <div className="text-sm font-semibold text-white">CleanCut AI</div>
-              <div className="text-[11px] text-slate-400">
-                Background remover
+              <div className="text-sm font-semibold text-white">
+                CleanCut <span className="text-slate-400">by</span> Xevora
               </div>
+              <div className="text-[11px] text-slate-400">Background remover</div>
             </div>
           </Link>
 
-          {/* Nav links */}
           <div className="hidden items-center gap-2 md:flex">
             <Link
-              href="/"
+              href={withBasePath("/")}
               className={`rounded-full px-3 py-1 text-sm ${
-                isActive("/")
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                isActive("/") ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
               }`}
             >
               Home
             </Link>
             <Link
-              href="/pricing"
+              href={withBasePath("/pricing")}
               className={`rounded-full px-3 py-1 text-sm ${
-                isActive("/pricing")
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                isActive("/pricing") ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
               }`}
             >
               Pricing
             </Link>
             <Link
-              href="/app"
+              href={withBasePath("/app")}
               className={`rounded-full px-3 py-1 text-sm ${
-                isActive("/app")
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                isActive("/app") ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
               }`}
             >
               App
             </Link>
           </div>
 
-          {/* Right actions */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setOpenFeedback(true)}
@@ -83,13 +75,13 @@ export function Navbar() {
             ) : (
               <>
                 <Link
-                  href="/login"
+                  href={withBasePath("/login")}
                   className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
                 >
                   Sign in
                 </Link>
                 <Link
-                  href="/signup"
+                  href={withBasePath("/signup")}
                   className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
                 >
                   Sign up
@@ -103,7 +95,7 @@ export function Navbar() {
       <FeedbackModal
         open={openFeedback}
         onClose={() => setOpenFeedback(false)}
-        page={pathname}
+        page={pathname.replace(BASE_PATH, "") || "/"}
       />
     </>
   );

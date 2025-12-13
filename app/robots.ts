@@ -1,14 +1,15 @@
 import type { MetadataRoute } from "next";
+import { absoluteUrl } from "../lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/api/"],
+        allow: ["/"],
+        disallow: ["/api/", "/app", "/login", "/signup"],
       },
     ],
-    sitemap: "https://cleancut.ai/sitemap.xml",
+    sitemap: absoluteUrl("/sitemap.xml"),
   };
 }

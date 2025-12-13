@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import Link from "next/link";
+import { withBasePath } from "../../lib/site";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -29,15 +30,13 @@ export default function SignUpPage() {
 
     const emailRedirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/login`
+        ? `${window.location.origin}${withBasePath("/login")}`
         : undefined;
 
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo,
-      },
+      options: { emailRedirectTo },
     });
 
     if (error) {
@@ -54,7 +53,7 @@ export default function SignUpPage() {
     <div className="mx-auto mt-20 max-w-sm rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
       <h1 className="text-xl font-semibold text-white">Create an account</h1>
       <p className="mt-2 text-sm text-slate-300">
-        Sign up to start using CleanCut AI.
+        Sign up to start using CleanCut by Xevora.
       </p>
 
       {!success ? (
@@ -96,7 +95,7 @@ export default function SignUpPage() {
 
       <p className="mt-4 text-center text-xs text-slate-400">
         Already have an account?{" "}
-        <Link href="/login" className="text-indigo-400 hover:underline">
+        <Link href={withBasePath("/login")} className="text-indigo-400 hover:underline">
           Sign in
         </Link>
       </p>

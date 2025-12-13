@@ -1,13 +1,9 @@
-// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: "/cleancut",
+
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
+    unoptimized: true,
   },
 };
 

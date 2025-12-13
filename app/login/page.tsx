@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { withBasePath } from "../../lib/site";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,22 +17,19 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(
         error.message.includes("Invalid login credentials")
-          ? "Invalid email or password, or email not verified yet."
+          ? "Invalid email or password, or your email is not verified yet."
           : error.message
       );
       setLoading(false);
       return;
     }
 
-    router.push("/app");
+    router.push(withBasePath("/app"));
     setLoading(false);
   }
 
@@ -39,7 +37,7 @@ export default function LoginPage() {
     <div className="mx-auto mt-20 max-w-sm rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
       <h1 className="text-xl font-semibold text-white">Sign in</h1>
       <p className="mt-2 text-sm text-slate-300">
-        Sign in to access your dashboard.
+        Sign in to access CleanCut by Xevora.
       </p>
 
       <input
@@ -70,7 +68,7 @@ export default function LoginPage() {
 
       <p className="mt-4 text-center text-xs text-slate-400">
         Don’t have an account?{" "}
-        <Link href="/signup" className="text-indigo-400 hover:underline">
+        <Link href={withBasePath("/signup")} className="text-indigo-400 hover:underline">
           Create one
         </Link>
       </p>

@@ -8,7 +8,14 @@ export interface Plan {
   priceNote: string;
   monthlyCredits: number;
   maxBatchSize: number;
-  hdMultiplier: number; // credits per HD image
+
+  // Existing: credits per HD export image (you already had this)
+  hdMultiplier: number;
+
+  // ✅ NEW (minimal additions)
+  allowQuality: boolean;     // Quality mode allowed?
+  allowHdExport: boolean;    // HD Export allowed?
+
   highlight?: boolean;
 }
 
@@ -21,6 +28,10 @@ export const PLANS: Plan[] = [
     monthlyCredits: 30,
     maxBatchSize: 5,
     hdMultiplier: 2,
+
+    // ✅ Free restrictions
+    allowQuality: false,
+    allowHdExport: false,
   },
   {
     id: "pro_monthly",
@@ -30,6 +41,11 @@ export const PLANS: Plan[] = [
     monthlyCredits: 1000,
     maxBatchSize: 20,
     hdMultiplier: 2,
+
+    // ✅ Paid features
+    allowQuality: true,
+    allowHdExport: true,
+
     highlight: true,
   },
   {
@@ -40,6 +56,10 @@ export const PLANS: Plan[] = [
     monthlyCredits: 200,
     maxBatchSize: 10,
     hdMultiplier: 2,
+
+    // ✅ Paid features
+    allowQuality: true,
+    allowHdExport: true,
   },
 ];
 

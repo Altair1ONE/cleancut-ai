@@ -41,7 +41,6 @@ export function loadCredits(): CreditState {
 
   try {
     const parsed: CreditState = JSON.parse(raw);
-    // if month changed, reset credits
     if (parsed.lastReset !== thisMonth) {
       const plan = getPlanById(parsed.planId);
       const resetState: CreditState = {
@@ -79,25 +78,47 @@ export function switchPlan(planId: PlanId) {
   return newState;
 }
 
+// ✅ NEW: options object (minimal + clean)
+export type CreditUseOptions = {
+  quality?: boolean; // Quality mode costs 2 credits/image
+  hd?: boolean;      // HD export costs plan.hdMultiplier credits/image
+};
+
+function creditsPerImage(planId: PlanId, opts?: CreditUseOptions): number {
+  const plan = getPlanById(planId);
+
+  const quality = !!opts?.quality;
+  const hd = !!opts?.hd;
+
+  // Base cost: Fast = 1
+  // Quality adds +1 (so total 2)
+  const qualityCost = quality ? 2 : 1;
+
+  // HD adds +plan.hdMultiplier (you set 2) BUT only when hd=true
+  // If you want HD to be "instead of" normal: change to (hd ? plan.hdMultiplier : 0)
+  const hdExtra = hd ? plan.hdMultiplier : 0;
+
+  return qualityCost + hdExtra;
+}
+
 export function canConsumeCredits(
   state: CreditState,
   imagesCount: number,
-  useHd: boolean
+  opts?: CreditUseOptions
 ): boolean {
-  const plan = getPlanById(state.planId);
-  const neededPerImage = useHd ? plan.hdMultiplier : 1;
-  const totalNeeded = neededPerImage * imagesCount;
+  const per = creditsPerImage(state.planId, opts);
+  const totalNeeded = per * imagesCount;
   return state.creditsLeft >= totalNeeded;
 }
 
 export function consumeCredits(
   state: CreditState,
   imagesCount: number,
-  useHd: boolean
+  opts?: CreditUseOptions
 ): CreditState {
-  const plan = getPlanById(state.planId);
-  const neededPerImage = useHd ? plan.hdMultiplier : 1;
-  const totalNeeded = neededPerImage * imagesCount;
+  const per = creditsPerImage(state.planId, opts);
+  const totalNeeded = per * imagesCount;
+
   const newState: CreditState = {
     ...state,
     creditsLeft: Math.max(0, state.creditsLeft - totalNeeded),

@@ -100,6 +100,19 @@ export default function Footer() {
           </div>
         </div>
 
+        <div className="flex flex-wrap gap-4">
+  <Link className="hover:text-slate-300" href="/terms">
+    Terms
+  </Link>
+  <Link className="hover:text-slate-300" href="/privacy">
+    Privacy
+  </Link>
+  <Link className="hover:text-slate-300" href="/refund">
+    Refunds
+  </Link>
+</div>
+
+
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col gap-3 border-t border-slate-800 pt-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
           <div>

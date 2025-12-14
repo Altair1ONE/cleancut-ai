@@ -78,7 +78,6 @@ async function resizeImageFile(file: File, maxSide: number): Promise<File> {
 
     ctx.drawImage(img, 0, 0, newW, newH);
 
-    // Prefer PNG when original is PNG to preserve edges
     const outType =
       file.type === "image/png"
         ? "image/png"
@@ -145,14 +144,12 @@ export default function AppPage() {
   const { session, loading } = useAuth();
   const router = useRouter();
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!loading && !session) {
       router.push("/login");
     }
   }, [loading, session, router]);
 
-  // IMPORTANT: no early returns before hooks in inner component
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
@@ -193,7 +190,6 @@ function AppInner() {
     [credits]
   );
 
-  // Cleanup preview object URLs when images change
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
@@ -226,7 +222,10 @@ function AppInner() {
       return;
     }
 
-    if (!canConsumeCredits(credits, images.length, false)) {
+    // ✅ Quality costs 2 credits/image; Fast costs 1 credit/image
+    const isQuality = qualityMode === "quality";
+
+    if (!canConsumeCredits(credits, images.length, isQuality)) {
       setShowPaywall(true);
       return;
     }
@@ -252,10 +251,9 @@ function AppInner() {
       );
 
       const concurrency = 2;
-      const qualityFlag = qualityMode === "quality";
+      const qualityFlag = isQuality;
 
       const processed = await asyncPool(concurrency, resized, async (img) => {
-        // NOTE: endpoint name must match your Space. If your API shows "/remove_bg", use "/remove_bg".
         const result: any = await app.predict("/remove_bg", [
           img.file,
           qualityFlag,
@@ -293,10 +291,10 @@ function AppInner() {
 
       setResults(processed);
 
-      const updatedCredits = consumeCredits(credits, images.length, false);
+      // ✅ Deduct correct credits: Fast=1x, Quality=2x
+      const updatedCredits = consumeCredits(credits, images.length, isQuality);
       setCredits(updatedCredits);
 
-      // Let Navbar refresh credits immediately
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("credits:update"));
       }
@@ -337,6 +335,10 @@ function AppInner() {
     }
   }
 
+  const isQuality = qualityMode === "quality";
+  const perImageCost = isQuality ? 2 : 1;
+  const totalCost = images.length * perImageCost;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -345,7 +347,7 @@ function AppInner() {
             CleanCut AI – Background Removal App
           </h1>
           <p className="mt-1 text-xs text-slate-300">
-            Fast mode is default (best speed). Use Quality for hair/fur edges.
+            Fast mode is default (best speed). Quality costs 2 credits for cleaner edges.
           </p>
         </div>
         <CreditsBadge />
@@ -400,7 +402,7 @@ function AppInner() {
                   Processing mode
                 </div>
                 <div className="mt-1 text-[11px] text-slate-400">
-                  Fast = quicker. Quality = slower, cleaner edges.
+                  Fast = 1 credit/image. Quality = 2 credits/image, cleaner edges.
                 </div>
               </div>
 
@@ -413,7 +415,7 @@ function AppInner() {
                       : "bg-slate-800 text-slate-200"
                   }`}
                 >
-                  Fast (default)
+                  Fast (1 credit)
                 </button>
                 <button
                   onClick={() => setQualityMode("quality")}
@@ -423,7 +425,7 @@ function AppInner() {
                       : "bg-slate-800 text-slate-200"
                   }`}
                 >
-                  Quality
+                  Quality (2 credits)
                 </button>
               </div>
             </div>
@@ -441,7 +443,7 @@ function AppInner() {
               ) : (
                 `Process ${images.length || ""} image${
                   images.length === 1 ? "" : "s"
-                }`
+                } • Cost: ${totalCost} credit${totalCost === 1 ? "" : "s"}`
               )}
             </button>
 
@@ -478,6 +480,10 @@ function AppInner() {
             <p className="mt-2">
               You&apos;ve reached the limit for your current plan. Upgrade to
               process more images.
+            </p>
+            <p className="mt-2 text-[11px] text-slate-400">
+              Current selection: <span className="text-slate-200">{qualityMode}</span>{" "}
+              • Cost per image: <span className="text-slate-200">{perImageCost}</span> credit(s)
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button

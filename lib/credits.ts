@@ -6,7 +6,7 @@ import { PlanId, getPlanById } from "./plans";
 export interface CreditState {
   planId: PlanId;
   creditsLeft: number;
-  lastReset: string; // month key
+  lastReset: string; // month key for paid plans, "one-time" for free
 }
 
 const STORAGE_KEY = "bg_saas_credits_v1";
@@ -19,8 +19,8 @@ export function loadCredits(): CreditState {
   if (typeof window === "undefined") {
     return {
       planId: "free",
-      creditsLeft: getPlanById("free").monthlyCredits,
-      lastReset: new Date().toISOString(),
+      creditsLeft: getPlanById("free").monthlyCredits, // 30
+      lastReset: "one-time",
     };
   }
 
@@ -28,12 +28,13 @@ export function loadCredits(): CreditState {
   const now = new Date();
   const thisMonth = getMonthKey(now);
 
+  // First time user
   if (!raw) {
     const plan = getPlanById("free");
     const initial: CreditState = {
       planId: "free",
-      creditsLeft: plan.monthlyCredits,
-      lastReset: `${thisMonth}`,
+      creditsLeft: plan.monthlyCredits, // 30 one-time
+      lastReset: "one-time",
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
     return initial;
@@ -42,6 +43,12 @@ export function loadCredits(): CreditState {
   try {
     const parsed: CreditState = JSON.parse(raw);
 
+    // ✅ Free tier is one-time credits: never reset monthly
+    if (parsed.planId === "free") {
+      return parsed;
+    }
+
+    // ✅ Paid plans: monthly reset
     if (parsed.lastReset !== thisMonth) {
       const plan = getPlanById(parsed.planId);
       const resetState: CreditState = {
@@ -70,19 +77,27 @@ export function switchPlan(planId: PlanId) {
   const now = new Date();
   const thisMonth = getMonthKey(now);
 
-  const newState: CreditState = {
-    planId,
-    creditsLeft: plan.monthlyCredits,
-    lastReset: thisMonth,
-  };
+  // ✅ Free = one-time 30 credits (no monthly reset)
+  const newState: CreditState =
+    planId === "free"
+      ? {
+          planId,
+          creditsLeft: plan.monthlyCredits, // 30 once
+          lastReset: "one-time",
+        }
+      : {
+          planId,
+          creditsLeft: plan.monthlyCredits,
+          lastReset: thisMonth,
+        };
 
   saveCredits(newState);
   return newState;
 }
 
 /**
- * NOTE: You're currently using `useHd` to represent "2x cost mode".
- * In your app: Fast => useHd=false (1 credit/image), Quality => useHd=true (2 credits/image)
+ * NOTE: Your app uses the boolean flag to represent "2x cost mode" (Quality).
+ * Fast => false (1 credit/image), Quality => true (2 credits/image)
  */
 export function canConsumeCredits(
   state: CreditState,

@@ -23,6 +23,7 @@ const plans = [
       "Fast mode included",
       "Limited monthly credits",
       "Small batch size",
+      "Quality mode (paid only)",
     ],
     cta: { label: "Try Free", href: "/app" },
   },
@@ -38,7 +39,7 @@ const plans = [
       "Bigger batch processing",
       "Fast + Quality modes",
       "Priority processing",
-      "HD export option",
+      "HD export (Lifetime only • Coming soon)",
     ],
     cta: { label: "Upgrade (coming soon)", href: "/pricing#checkout" },
   },
@@ -53,6 +54,7 @@ const plans = [
       "Monthly credits forever",
       "Bigger batch processing",
       "Fast + Quality modes",
+      "HD export (Coming soon)",
       "Best long-term savings",
     ],
     cta: { label: "Get Lifetime (coming soon)", href: "/pricing#checkout" },
@@ -60,7 +62,6 @@ const plans = [
 ];
 
 function JsonLd() {
-  // Lightweight schema: SoftwareApplication + Offer
   const json = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -190,7 +191,8 @@ export default function PricingPage() {
 
             {p.id !== "free" && (
               <p className="mt-3 text-xs text-slate-400">
-                Payments UI is ready. We’ll plug in Stripe next.
+                Checkout is coming soon. Once payments go live, your plan will
+                upgrade automatically.
               </p>
             )}
           </div>
@@ -255,8 +257,8 @@ export default function PricingPage() {
               What are credits?
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              Each processed image costs credits. HD processing may cost more.
-              Credits reset monthly based on your plan.
+              Each processed image costs credits. Quality mode costs more
+              credits per image. Credits reset monthly based on your plan.
             </p>
           </div>
 
@@ -266,29 +268,32 @@ export default function PricingPage() {
             </h3>
             <p className="mt-2 text-sm text-slate-300">
               Yes. You can start free and upgrade when you need bigger batches,
-              more credits, and faster processing.
+              more credits, and higher limits.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
             <h3 className="text-sm font-semibold text-white">
-              When will payments go live?
+              When will HD export be available?
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              Your payments UI is already ready. Next step is connecting Stripe
-              and credit syncing.
+              HD export requires heavier processing. It’s coming soon and will be
+              included in the Lifetime plan.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Placeholder checkout section (for future Stripe) */}
-      <section id="checkout" className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
+      {/* Placeholder checkout section (for future payments) */}
+      <section
+        id="checkout"
+        className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8"
+      >
         <h2 className="text-xl font-semibold text-white">
           Checkout (coming soon)
         </h2>
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          This section will become a real checkout once we connect Stripe.
+          This section will become a real checkout once we connect payments.
           For now, it’s a placeholder so the user journey feels complete.
         </p>
         <Link

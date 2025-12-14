@@ -11,6 +11,7 @@ import {
 import { getPlanById } from "../../lib/plans";
 import { UploadArea } from "../../components/UploadArea";
 import { BeforeAfter } from "../../components/BeforeAfter";
+import { getBgApiUrl } from "../../lib/hf"; // ✅ NEW
 
 type BgMode =
   | "transparent"
@@ -76,11 +77,14 @@ export default function AppPage() {
       return;
     }
 
-    const bgUrl = process.env.NEXT_PUBLIC_BG_API_URL;
+    // ✅ CHANGED: get endpoint from NEXT_PUBLIC_BG_SPACE
+    const bgUrl = getBgApiUrl();
     const upscaleUrl = process.env.NEXT_PUBLIC_UPSCALE_API_URL;
 
     if (!bgUrl) {
-      setErrorMsg("Background removal endpoint (NEXT_PUBLIC_BG_API_URL) is not set.");
+      setErrorMsg(
+        "Background removal endpoint is not set. Please set NEXT_PUBLIC_BG_SPACE in your .env and Vercel."
+      );
       return;
     }
 
@@ -105,7 +109,10 @@ export default function AppPage() {
         if (useHd && upscaleUrl) {
           const upscaleForm = new FormData();
           upscaleForm.append("file", finalBlob, "removed.png");
-          const upRes = await fetch(upscaleUrl, { method: "POST", body: upscaleForm });
+          const upRes = await fetch(upscaleUrl, {
+            method: "POST",
+            body: upscaleForm,
+          });
           if (upRes.ok) finalBlob = await upRes.blob();
         }
 
@@ -118,16 +125,10 @@ export default function AppPage() {
       }
 
       const updatedCredits = consumeCredits(credits, images.length, useHd);
-setCredits(updatedCredits);
-setResults(newResults);
+      setCredits(updatedCredits);
+      setResults(newResults);
 
-// ✅ Tell Navbar to refresh credits immediately
-if (typeof window !== "undefined") {
-  window.dispatchEvent(new Event("credits:update"));
-}
-
-
-      // ✅ Recommended: instantly refresh Navbar credits badge
+      // ✅ keep only ONE dispatch (you had it twice)
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("credits:update"));
       }
@@ -171,7 +172,9 @@ if (typeof window !== "undefined") {
 
           <div className="mt-4 space-y-3 text-xs text-slate-300">
             <div>
-              <span className="font-semibold text-slate-200">Background mode</span>
+              <span className="font-semibold text-slate-200">
+                Background mode
+              </span>
               <div className="mt-2 flex flex-wrap gap-2">
                 {(
                   ["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]
@@ -207,7 +210,9 @@ if (typeof window !== "undefined") {
                   checked={useHd}
                   onChange={(e) => setUseHd(e.target.checked)}
                 />
-                <span>HD Upscale (costs 2 credits / image on your current plan)</span>
+                <span>
+                  HD Upscale (costs 2 credits / image on your current plan)
+                </span>
               </label>
               <span className="text-[11px] text-slate-400">
                 Max batch: {plan.maxBatchSize} images
@@ -221,10 +226,14 @@ if (typeof window !== "undefined") {
             >
               {isProcessing
                 ? "Processing..."
-                : `Process ${images.length || ""} image${images.length === 1 ? "" : "s"}`}
+                : `Process ${images.length || ""} image${
+                    images.length === 1 ? "" : "s"
+                  }`}
             </button>
 
-            {errorMsg && <p className="text-[11px] text-rose-400">{errorMsg}</p>}
+            {errorMsg && (
+              <p className="text-[11px] text-rose-400">{errorMsg}</p>
+            )}
 
             {results.length > 0 && (
               <button
@@ -238,17 +247,24 @@ if (typeof window !== "undefined") {
         </div>
 
         <div className="card p-4">
-          <BeforeAfter images={results} bgMode={bgMode} customColor={customColor} />
+          <BeforeAfter
+            images={results}
+            bgMode={bgMode}
+            customColor={customColor}
+          />
         </div>
       </section>
 
       {showPaywall && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
           <div className="card max-w-sm p-4 text-xs text-slate-300">
-            <h2 className="text-sm font-semibold text-white">You&apos;re out of credits</h2>
+            <h2 className="text-sm font-semibold text-white">
+              You&apos;re out of credits
+            </h2>
             <p className="mt-2">
-              You&apos;ve reached the limit for your current plan. Upgrade to Pro Monthly
-              ($4.99) or Lifetime ($19.99 one-time) to process more images.
+              You&apos;ve reached the limit for your current plan. Upgrade to
+              Pro Monthly ($4.99) or Lifetime ($19.99 one-time) to process more
+              images.
             </p>
 
             <div className="mt-4 flex justify-end gap-2">

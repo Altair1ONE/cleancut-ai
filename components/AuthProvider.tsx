@@ -10,7 +10,6 @@ type AuthContextType = {
   loading: boolean;
   justLoggedIn: boolean;
   displayName: string;
-  signOut: () => Promise<void>; // ✅ added
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,7 +18,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   justLoggedIn: false,
   displayName: "",
-  signOut: async () => {}, // ✅ added default
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -52,8 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               session.user.email?.charAt(0).toUpperCase() ||
               ""
           );
-        } else {
-          setDisplayName("");
         }
 
         if (event === "SIGNED_IN") {
@@ -68,14 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // ✅ added: keep sign out centralized for Navbar and future use
-  async function signOut() {
-    await supabase.auth.signOut();
-  }
-
   return (
     <AuthContext.Provider
-      value={{ session, user, loading, justLoggedIn, displayName, signOut }}
+      value={{ session, user, loading, justLoggedIn, displayName }}
     >
       {children}
     </AuthContext.Provider>

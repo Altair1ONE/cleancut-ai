@@ -9,22 +9,26 @@ export default function Navbar() {
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useAuth(); // ✅ use AuthProvider (no extra supabase client)
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   const feedbackUrl = process.env.NEXT_PUBLIC_FEEDBACK_URL;
 
+  // Load credits + listen for updates (from app/page.tsx)
   useEffect(() => {
-    setCredits(loadCredits());
+    const c = loadCredits();
+    setCredits(c);
 
     function onCreditsUpdate() {
-      setCredits(loadCredits());
+      const latest = loadCredits();
+      setCredits(latest);
     }
 
     window.addEventListener("credits:update", onCreditsUpdate);
     return () => window.removeEventListener("credits:update", onCreditsUpdate);
   }, []);
 
+  // Close dropdown on outside click
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!wrapRef.current) return;
@@ -36,7 +40,7 @@ export default function Navbar() {
 
   async function handleSignOut() {
     try {
-      await signOut();
+      await signOut(); // ✅ centralized sign out
     } finally {
       setOpen(false);
       window.location.href = "/";
@@ -48,6 +52,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        {/* LEFT: BRAND */}
         <Link href="/" className="text-sm font-bold tracking-wide text-white">
           CleanCut<span className="text-indigo-400"> AI</span>
           <span className="ml-2 text-xs font-normal text-slate-400">
@@ -55,6 +60,7 @@ export default function Navbar() {
           </span>
         </Link>
 
+        {/* CENTER: NAV LINKS */}
         <nav className="hidden items-center gap-6 md:flex">
           <Link href="/app" className="text-sm text-slate-300 hover:text-white">
             App
@@ -65,7 +71,10 @@ export default function Navbar() {
           >
             Pricing
           </Link>
-          <Link href="/blog" className="text-sm text-slate-300 hover:text-white">
+          <Link
+            href="/blog"
+            className="text-sm text-slate-300 hover:text-white"
+          >
             Blog
           </Link>
           <Link
@@ -75,6 +84,7 @@ export default function Navbar() {
             Contact
           </Link>
 
+          {/* ✅ Feedback (Google Sheet / Apps Script URL) */}
           {feedbackUrl && (
             <a
               href={feedbackUrl}
@@ -87,6 +97,7 @@ export default function Navbar() {
           )}
         </nav>
 
+        {/* RIGHT */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
             <div className="hidden rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 md:block">
@@ -138,6 +149,7 @@ export default function Navbar() {
                     Billing
                   </Link>
 
+                  {/* ✅ Feedback in dropdown too */}
                   {feedbackUrl && (
                     <a
                       href={feedbackUrl}
@@ -171,6 +183,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* ✅ Mobile nav (simple) */}
       <div className="border-t border-slate-900/60 md:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs text-slate-300">
           <Link href="/app" className="hover:text-white">

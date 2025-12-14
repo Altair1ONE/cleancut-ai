@@ -1,69 +1,97 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function signIn() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  async function handleSignIn(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setMsg(null);
     setLoading(true);
-    setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
 
-    if (error) {
-      setError("Invalid credentials or email not verified yet.");
+      setMsg("Signed in! Redirecting...");
+      window.location.href = "/app";
+    } catch (e: any) {
+      setErr(e?.message || "Invalid login credentials.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push("/app");
   }
 
   return (
-    <div className="mx-auto mt-20 max-w-sm rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-      <h1 className="text-xl font-semibold text-white">Sign in</h1>
+    <main className="mx-auto max-w-md px-4 py-12">
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <h1 className="text-2xl font-bold text-white">Sign in</h1>
+        <p className="mt-2 text-sm text-slate-300">
+          Sign in to manage your credits and plan.
+        </p>
 
-      <input
-        className="mt-4 w-full rounded-xl bg-slate-950 p-3 text-sm"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="mt-3 w-full rounded-xl bg-slate-950 p-3 text-sm"
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <form onSubmit={handleSignIn} className="mt-6 space-y-4">
+          <div>
+            <label className="text-xs text-slate-300">Email</label>
+            <input
+              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+          <div>
+            <label className="text-xs text-slate-300">Password</label>
+            <input
+              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-      <button
-        onClick={signIn}
-        disabled={loading}
-        className="mt-4 w-full rounded-full bg-indigo-500 py-2 text-sm text-white"
-      >
-        {loading ? "Signing in..." : "Sign in"}
-      </button>
+          {err && <p className="text-sm text-rose-400">{err}</p>}
+          {msg && <p className="text-sm text-emerald-400">{msg}</p>}
 
-      <p className="mt-4 text-center text-xs text-slate-400">
-        Don’t have an account?{" "}
-        <Link href="/signup" className="text-indigo-400">
-          Create one
-        </Link>
-      </p>
-    </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-700"
+          >
+            {loading ? "Signing in..." : "Sign in"}
+          </button>
+
+          <p className="text-center text-sm text-slate-400">
+            Don’t have an account?{" "}
+            <Link href="/signup" className="text-indigo-300 hover:text-indigo-200">
+              Sign up
+            </Link>
+          </p>
+        </form>
+      </div>
+    </main>
   );
 }

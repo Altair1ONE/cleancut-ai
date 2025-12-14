@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-export default function SignInPage() {
+export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const supabase = createClient(
@@ -16,10 +18,9 @@ export default function SignInPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  async function handleSignIn(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null);
-    setMsg(null);
+    setError(null);
     setLoading(true);
 
     try {
@@ -27,12 +28,13 @@ export default function SignInPage() {
         email,
         password,
       });
+
       if (error) throw error;
 
-      setMsg("Signed in! Redirecting...");
-      window.location.href = "/app";
-    } catch (e: any) {
-      setErr(e?.message || "Invalid login credentials.");
+      // ✅ Correct redirect (basePath safe)
+      router.push("/app");
+    } catch (err: any) {
+      setError(err.message || "Invalid login credentials");
     } finally {
       setLoading(false);
     }
@@ -43,43 +45,37 @@ export default function SignInPage() {
       <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <h1 className="text-2xl font-bold text-white">Sign in</h1>
         <p className="mt-2 text-sm text-slate-300">
-          Sign in to manage your credits and plan.
+          Access your CleanCut AI account.
         </p>
 
-        <form onSubmit={handleSignIn} className="mt-6 space-y-4">
+        <form onSubmit={handleLogin} className="mt-6 space-y-4">
           <div>
             <label className="text-xs text-slate-300">Email</label>
             <input
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
               type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none"
             />
           </div>
 
           <div>
             <label className="text-xs text-slate-300">Password</label>
             <input
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
               type="password"
-              autoComplete="current-password"
-              placeholder="Your password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 outline-none"
             />
           </div>
 
-          {err && <p className="text-sm text-rose-400">{err}</p>}
-          {msg && <p className="text-sm text-emerald-400">{msg}</p>}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
 
           <button
-            type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-700"
+            className="w-full rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 disabled:bg-slate-700"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { blogPosts } from "../lib/blogPosts";
+import { BLOG_POSTS } from "../lib/blogPosts";
 import { useCases } from "../lib/useCases";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -18,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 1,
   }));
 
-  const blogRoutes = blogPosts.map((post) => ({
+  const blogRoutes = BLOG_POSTS.map((post) => ({
     url: `${baseUrl}/cleancut/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: "monthly" as const,

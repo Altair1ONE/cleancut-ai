@@ -1,49 +1,68 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { blogPosts } from "../../../lib/blogPosts";
+import { BLOG_POSTS, getPostBySlug } from "../../../lib/blogPosts";
 
-type Props = { params: { slug: string } };
-
-export function generateStaticParams() {
-  return blogPosts.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  return BLOG_POSTS.map((p) => ({ slug: p.slug }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const post = blogPosts.find((p) => p.slug === params.slug);
-  if (!post) return {};
+export function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Metadata {
+  const post = getPostBySlug(params.slug);
+  if (!post) {
+    return {
+      title: "Blog",
+      description: "CleanCut AI blog",
+    };
+  }
+
+  const canonical = `https://xevora.org/cleancut${post.canonicalPath}`;
+
   return {
     title: post.title,
     description: post.description,
     keywords: post.keywords,
-    alternates: {
-      canonical: `https://xevora.org/cleancut/blog/${post.slug}`,
+    alternates: { canonical },
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      url: canonical,
+      type: "article",
     },
   };
 }
 
-function ArticleJsonLd({
-  title,
-  description,
-  date,
-  url,
-}: {
-  title: string;
-  description: string;
-  date: string;
-  url: string;
-}) {
-  const json = {
+function JsonLd({ post }: { post: ReturnType<typeof getPostBySlug> }) {
+  if (!post) return null;
+
+  const canonical = `https://xevora.org/cleancut${post.canonicalPath}`;
+
+  const json: any = {
     "@context": "https://schema.org",
-    "@type": "Article",
-    headline: title,
-    description,
-    datePublished: date,
-    dateModified: date,
-    author: [{ "@type": "Organization", name: "Xevora" }],
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.date,
+    author: { "@type": "Organization", name: post.author },
     publisher: { "@type": "Organization", name: "Xevora" },
-    mainEntityOfPage: url,
+    mainEntityOfPage: canonical,
+    url: canonical,
   };
+
+  if (post.faq && post.faq.length) {
+    json.hasPart = {
+      "@type": "FAQPage",
+      mainEntity: post.faq.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    };
+  }
 
   return (
     <script
@@ -53,79 +72,137 @@ function ArticleJsonLd({
   );
 }
 
-export default function BlogPostPage({ params }: Props) {
-  const post = blogPosts.find((p) => p.slug === params.slug);
-  if (!post) return notFound();
+// Very small “markdown-ish” renderer (keeps it simple + safe)
+function renderParagraphs(content: string) {
+  const lines = content.trim().split("\n");
+  const blocks: { type: "h2" | "h3" | "p" | "li" | "hr"; text: string }[] = [];
 
-  const canonical = `https://xevora.org/cleancut/blog/${post.slug}`;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    if (line.startsWith("## ")) blocks.push({ type: "h2", text: line.slice(3) });
+    else if (line.startsWith("### ")) blocks.push({ type: "h3", text: line.slice(4) });
+    else if (line.startsWith("- ")) blocks.push({ type: "li", text: line.slice(2) });
+    else if (line === "---") blocks.push({ type: "hr", text: "" });
+    else blocks.push({ type: "p", text: line });
+  }
+
+  return blocks;
+}
+
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = getPostBySlug(params.slug);
+  if (!post) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <h1 className="text-2xl font-bold text-white">Post not found</h1>
+        <Link href="/blog" className="mt-4 inline-block text-indigo-300 hover:underline">
+          Back to blog
+        </Link>
+      </main>
+    );
+  }
+
+  const blocks = renderParagraphs(post.content);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <ArticleJsonLd
-        title={post.title}
-        description={post.description}
-        date={post.date}
-        url={canonical}
-      />
+      <JsonLd post={post} />
 
-      <header className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <span>{post.date}</span>
-          <span>{post.readTime}</span>
+      <div className="text-xs text-slate-400">
+        {new Date(post.date).toLocaleDateString()} • {post.category} • by {post.author}
+      </div>
+
+      <h1 className="mt-2 text-3xl font-bold text-white md:text-4xl">
+        {post.title}
+      </h1>
+
+      <p className="mt-4 text-base text-slate-300">{post.description}</p>
+
+      <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <div className="flex flex-wrap gap-2">
+          {post.keywords.map((k) => (
+            <span
+              key={k}
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300"
+            >
+              {k}
+            </span>
+          ))}
         </div>
+      </div>
 
-        <h1 className="mt-3 text-2xl font-bold text-white md:text-4xl">
-          {post.title}
-        </h1>
+      <article className="prose prose-invert mt-8 max-w-none">
+        <div className="space-y-4">
+          {blocks.map((b, idx) => {
+            if (b.type === "h2")
+              return (
+                <h2 key={idx} className="mt-8 text-xl font-semibold text-white">
+                  {b.text}
+                </h2>
+              );
+            if (b.type === "h3")
+              return (
+                <h3 key={idx} className="mt-6 text-lg font-semibold text-white">
+                  {b.text}
+                </h3>
+              );
+            if (b.type === "li")
+              return (
+                <div key={idx} className="flex gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>{b.text}</span>
+                </div>
+              );
+            if (b.type === "hr")
+              return <hr key={idx} className="my-6 border-slate-800" />;
+            return (
+              <p key={idx} className="text-slate-300 leading-7">
+                {b.text
+                  .split("**")
+                  .map((part, i) =>
+                    i % 2 === 1 ? (
+                      <strong key={i} className="text-white">
+                        {part}
+                      </strong>
+                    ) : (
+                      <span key={i}>{part}</span>
+                    )
+                  )}
+              </p>
+            );
+          })}
+        </div>
+      </article>
 
-        <p className="mt-3 text-slate-300">{post.description}</p>
-
-        <div className="mt-5 flex flex-wrap gap-3">
+      {/* Internal linking */}
+      <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <h2 className="text-lg font-semibold text-white">Try it now</h2>
+        <p className="mt-2 text-sm text-slate-300">
+          Remove backgrounds and export transparent PNGs in seconds.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href="/app"
-            className="rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
+            className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
             Open App
           </Link>
           <Link
             href="/pricing"
-            className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+            className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
             Pricing
           </Link>
+          <Link
+            href="/blog"
+            className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
+          >
+            More Blog Posts
+          </Link>
         </div>
-      </header>
-
-      <article className="mt-8 space-y-5 text-slate-200">
-        {post.content.map((para, i) => (
-          <p key={i} className="leading-relaxed text-slate-200">
-            {para}
-          </p>
-        ))}
-
-        <div className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-          <h2 className="text-lg font-semibold text-white">
-            Try background removal in seconds
-          </h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Upload an image and export a clean transparent PNG instantly. No watermark.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/app"
-              className="rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
-            >
-              Try CleanCut AI
-            </Link>
-            <Link
-              href="/blog"
-              className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
-            >
-              Back to Blog
-            </Link>
-          </div>
-        </div>
-      </article>
+      </section>
     </main>
   );
 }

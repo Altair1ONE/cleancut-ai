@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { blogPosts } from "../lib/blogPosts";
+import { BLOG_POSTS } from "../lib/blogPosts";
 import { useCases } from "../lib/useCases";
 
 export default function Footer() {
-  const latestPosts = [...blogPosts]
+  const latestPosts = [...BLOG_POSTS]
     .sort((a, b) => (a.date < b.date ? 1 : -1))
     .slice(0, 3);
 

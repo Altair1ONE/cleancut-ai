@@ -64,6 +64,11 @@ export default function Footer() {
                   Blog
                 </Link>
               </li>
+              <li>
+                <Link className="hover:text-white" href="/contact">
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -100,33 +105,22 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4">
-  <Link className="hover:text-slate-300" href="/terms">
-    Terms
-  </Link>
-  <Link className="hover:text-slate-300" href="/privacy">
-    Privacy
-  </Link>
-  <Link className="hover:text-slate-300" href="/refund">
-    Refunds
-  </Link>
-</div>
-
-
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col gap-3 border-t border-slate-800 pt-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
-          <div>
-            © {new Date().getFullYear()} Xevora. All rights reserved.
-          </div>
+          <div>© {new Date().getFullYear()} Xevora. All rights reserved.</div>
+
           <div className="flex flex-wrap gap-4">
-            <Link className="hover:text-slate-300" href="/blog">
-              Learn
+            <Link className="hover:text-slate-300" href="/terms">
+              Terms
             </Link>
-            <Link className="hover:text-slate-300" href="/pricing">
-              Plans
+            <Link className="hover:text-slate-300" href="/privacy">
+              Privacy
             </Link>
-            <Link className="hover:text-slate-300" href="/app">
-              App
+            <Link className="hover:text-slate-300" href="/refund">
+              Refunds
+            </Link>
+            <Link className="hover:text-slate-300" href="/contact">
+              Contact
             </Link>
           </div>
         </div>

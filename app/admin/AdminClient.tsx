@@ -15,13 +15,21 @@ type UsageRow = {
   created_at: string;
 };
 
-function isAdminEmail(email?: string | null) {
-  const raw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-  const allowed = raw
+// ✅ Fallback (so you never get locked out if env isn't injected properly)
+const FALLBACK_ADMIN_EMAILS = ["inbox2hammad@gmail.com"];
+
+function parseAdminEmails(raw: string) {
+  return raw
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  return !!email && allowed.includes(email.toLowerCase());
+}
+
+function isAdminEmail(email?: string | null) {
+  const envRaw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
+  const allowedFromEnv = parseAdminEmails(envRaw);
+  const allowed = allowedFromEnv.length ? allowedFromEnv : FALLBACK_ADMIN_EMAILS;
+  return !!email && allowed.includes(email.trim().toLowerCase());
 }
 
 export default function AdminClient() {
@@ -36,11 +44,6 @@ export default function AdminClient() {
   const adminOk = useMemo(() => isAdminEmail(user?.email), [user?.email]);
 
   useEffect(() => {
-  console.log("ADMIN_DEBUG user.email =", user?.email);
-  console.log("ADMIN_DEBUG NEXT_PUBLIC_ADMIN_EMAILS =", process.env.NEXT_PUBLIC_ADMIN_EMAILS);
-}, [user?.email]);
-
-  useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [loading, user, router]);
 
@@ -53,12 +56,52 @@ export default function AdminClient() {
   }
 
   if (!adminOk) {
+    const envRaw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
+    const allowedFromEnv = parseAdminEmails(envRaw);
+    const effectiveAllowed = allowedFromEnv.length
+      ? allowedFromEnv
+      : FALLBACK_ADMIN_EMAILS;
+
     return (
       <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
         <div className="text-white font-semibold">Access denied</div>
         <div className="mt-2">
-          Your email is not in <code className="text-slate-200">NEXT_PUBLIC_ADMIN_EMAILS</code>.
+          Your email is not in{" "}
+          <code className="text-slate-200">NEXT_PUBLIC_ADMIN_EMAILS</code>.
         </div>
+
+        {/* ✅ Debug panel so you can see EXACTLY what's happening */}
+        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-xs">
+          <div className="text-slate-200 font-semibold mb-2">Debug</div>
+          <div>
+            <span className="text-slate-400">Logged-in email:</span>{" "}
+            <span className="text-slate-100">{user.email ?? "(null)"}</span>
+          </div>
+          <div className="mt-1">
+            <span className="text-slate-400">Env raw:</span>{" "}
+            <span className="text-slate-100">
+              {envRaw ? JSON.stringify(envRaw) : "(empty/undefined)"}
+            </span>
+          </div>
+          <div className="mt-1">
+            <span className="text-slate-400">Effective allow-list:</span>{" "}
+            <span className="text-slate-100">
+              {effectiveAllowed.join(", ")}
+            </span>
+          </div>
+
+          <div className="mt-3 text-slate-400">
+            If <b>Env raw</b> is empty, your Vercel env var isn’t being injected
+            into the client build. In that case the fallback list is used.
+          </div>
+        </div>
+
+        <button
+          onClick={() => router.push("/")}
+          className="mt-5 rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+        >
+          Go back
+        </button>
       </div>
     );
   }
@@ -93,7 +136,9 @@ export default function AdminClient() {
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
         <p className="mt-2 text-sm text-slate-300">
-          View user usage analytics (latest 100). Credit override panel will become fully active once credits are stored in Supabase (after Paddle automation).
+          View user usage analytics (latest 100). Credit override panel will
+          become fully active once credits are stored in Supabase (after Paddle
+          automation).
         </p>
 
         <div className="mt-4 flex flex-wrap gap-3">
@@ -128,7 +173,8 @@ export default function AdminClient() {
 
         {rows.length === 0 ? (
           <p className="mt-3 text-sm text-slate-300">
-            No events yet. Process an image while logged in to generate analytics.
+            No events yet. Process an image while logged in to generate
+            analytics.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
@@ -163,10 +209,13 @@ export default function AdminClient() {
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-        <h2 className="text-lg font-semibold text-white">Credit override panel (coming next)</h2>
+        <h2 className="text-lg font-semibold text-white">
+          Credit override panel (coming next)
+        </h2>
         <p className="mt-2 text-sm text-slate-300">
-          After Paddle is connected, we’ll store credits & plan in Supabase per user and enable:
-          manual credit top-up, plan switch, refund handling, and support bonuses — all from here.
+          After Paddle is connected, we’ll store credits & plan in Supabase per
+          user and enable: manual credit top-up, plan switch, refund handling,
+          and support bonuses — all from here.
         </p>
       </section>
     </div>

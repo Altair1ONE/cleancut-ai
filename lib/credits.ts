@@ -6,7 +6,7 @@ import { PlanId, getPlanById } from "./plans";
 export interface CreditState {
   planId: PlanId;
   creditsLeft: number;
-  lastReset: string; // ISO date
+  lastReset: string; // month key
 }
 
 const STORAGE_KEY = "bg_saas_credits_v1";
@@ -41,6 +41,7 @@ export function loadCredits(): CreditState {
 
   try {
     const parsed: CreditState = JSON.parse(raw);
+
     if (parsed.lastReset !== thisMonth) {
       const plan = getPlanById(parsed.planId);
       const resetState: CreditState = {
@@ -51,6 +52,7 @@ export function loadCredits(): CreditState {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(resetState));
       return resetState;
     }
+
     return parsed;
   } catch {
     window.localStorage.removeItem(STORAGE_KEY);
@@ -78,51 +80,35 @@ export function switchPlan(planId: PlanId) {
   return newState;
 }
 
-// ✅ NEW: options object (minimal + clean)
-export type CreditUseOptions = {
-  quality?: boolean; // Quality mode costs 2 credits/image
-  hd?: boolean;      // HD export costs plan.hdMultiplier credits/image
-};
-
-function creditsPerImage(planId: PlanId, opts?: CreditUseOptions): number {
-  const plan = getPlanById(planId);
-
-  const quality = !!opts?.quality;
-  const hd = !!opts?.hd;
-
-  // Base cost: Fast = 1
-  // Quality adds +1 (so total 2)
-  const qualityCost = quality ? 2 : 1;
-
-  // HD adds +plan.hdMultiplier (you set 2) BUT only when hd=true
-  // If you want HD to be "instead of" normal: change to (hd ? plan.hdMultiplier : 0)
-  const hdExtra = hd ? plan.hdMultiplier : 0;
-
-  return qualityCost + hdExtra;
-}
-
+/**
+ * NOTE: You're currently using `useHd` to represent "2x cost mode".
+ * In your app: Fast => useHd=false (1 credit/image), Quality => useHd=true (2 credits/image)
+ */
 export function canConsumeCredits(
   state: CreditState,
   imagesCount: number,
-  opts?: CreditUseOptions
+  useHd: boolean
 ): boolean {
-  const per = creditsPerImage(state.planId, opts);
-  const totalNeeded = per * imagesCount;
+  const plan = getPlanById(state.planId);
+  const neededPerImage = useHd ? plan.hdMultiplier : 1;
+  const totalNeeded = neededPerImage * imagesCount;
   return state.creditsLeft >= totalNeeded;
 }
 
 export function consumeCredits(
   state: CreditState,
   imagesCount: number,
-  opts?: CreditUseOptions
+  useHd: boolean
 ): CreditState {
-  const per = creditsPerImage(state.planId, opts);
-  const totalNeeded = per * imagesCount;
+  const plan = getPlanById(state.planId);
+  const neededPerImage = useHd ? plan.hdMultiplier : 1;
+  const totalNeeded = neededPerImage * imagesCount;
 
   const newState: CreditState = {
     ...state,
     creditsLeft: Math.max(0, state.creditsLeft - totalNeeded),
   };
+
   saveCredits(newState);
   return newState;
 }

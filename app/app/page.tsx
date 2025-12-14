@@ -40,14 +40,10 @@ type QualityMode = "fast" | "quality";
 
 /** ---------- Helpers: resize + concurrency pool ---------- **/
 
-function getMaxSidePx(planId: string, mode: QualityMode, hd: boolean): number {
+function getMaxSidePx(planId: string, mode: QualityMode): number {
   const isPaid = planId !== "free";
-
-  // Existing logic preserved; HD just bumps max side a bit for paid users
   if (!isPaid) return mode === "fast" ? 1600 : 2400;
-
-  const base = mode === "fast" ? 2200 : 3200;
-  return hd ? Math.min(base + 900, 4096) : base;
+  return mode === "fast" ? 2200 : 3200;
 }
 
 async function resizeImageFile(file: File, maxSide: number): Promise<File> {
@@ -180,14 +176,13 @@ function AppInner() {
   const [bgMode, setBgMode] = useState<BgMode>("transparent");
   const [customColor, setCustomColor] = useState("#ffffff");
   const [qualityMode, setQualityMode] = useState<QualityMode>("fast");
-
-  // ✅ NEW: HD export (paid only)
-  const [useHdExport, setUseHdExport] = useState(false);
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Coming-soon "HD export" UI state (Lifetime only, but disabled)
+  const [hdExport, setHdExport] = useState(false);
 
   useEffect(() => {
     setCredits(loadCredits());
@@ -198,16 +193,20 @@ function AppInner() {
     [credits]
   );
 
-  // ✅ Enforce plan locks without changing your UI flow
+  // ✅ Disable Quality for Free tier (auto-force to Fast)
+  const qualityAllowed = plan.id !== "free";
   useEffect(() => {
-    if (!plan.allowQuality && qualityMode === "quality") {
+    if (!qualityAllowed && qualityMode === "quality") {
       setQualityMode("fast");
     }
-    if (!plan.allowHdExport && useHdExport) {
-      setUseHdExport(false);
-    }
-  }, [plan.allowQuality, plan.allowHdExport, qualityMode, useHdExport]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qualityAllowed]);
 
+  // ✅ HD export coming soon ONLY for Lifetime plan (and disabled)
+  const hdVisible = plan.id === "lifetime";
+  const hdEnabled = false; // coming soon
+
+  // Cleanup preview object URLs when images change
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
@@ -240,26 +239,16 @@ function AppInner() {
       return;
     }
 
-    // Locks
-    const isQuality = qualityMode === "quality";
-    if (isQuality && !plan.allowQuality) {
+    // ✅ Quality costs 2 credits/image; Fast costs 1 credit/image
+    // ✅ BUT: Free tier cannot use Quality at all
+    const isQuality = qualityAllowed && qualityMode === "quality";
+
+    if (!qualityAllowed && qualityMode === "quality") {
       setShowPaywall(true);
-      setErrorMsg("Quality mode is available on paid plans only.");
-      return;
-    }
-    if (useHdExport && !plan.allowHdExport) {
-      setShowPaywall(true);
-      setErrorMsg("HD export is available on paid plans only.");
       return;
     }
 
-    // ✅ Correct credit check
-    if (
-      !canConsumeCredits(credits, images.length, {
-        quality: isQuality,
-        hd: useHdExport,
-      })
-    ) {
+    if (!canConsumeCredits(credits, images.length, isQuality)) {
       setShowPaywall(true);
       return;
     }
@@ -276,8 +265,7 @@ function AppInner() {
     try {
       const app = await Client.connect(spaceId);
 
-      const maxSide = getMaxSidePx(credits.planId, qualityMode, useHdExport);
-
+      const maxSide = getMaxSidePx(credits.planId, qualityMode);
       const resized = await Promise.all(
         images.map(async (img) => {
           const resizedFile = await resizeImageFile(img.file, maxSide);
@@ -326,11 +314,8 @@ function AppInner() {
 
       setResults(processed);
 
-      // ✅ Correct credit deduction
-      const updatedCredits = consumeCredits(credits, images.length, {
-        quality: isQuality,
-        hd: useHdExport,
-      });
+      // ✅ Deduct correct credits: Fast=1x, Quality=2x
+      const updatedCredits = consumeCredits(credits, images.length, isQuality);
       setCredits(updatedCredits);
 
       if (typeof window !== "undefined") {
@@ -373,11 +358,8 @@ function AppInner() {
     }
   }
 
-  const isQuality = qualityMode === "quality";
-
-  // Show cost in UI (kept simple)
-  const perImageCost =
-    (isQuality ? 2 : 1) + (useHdExport ? plan.hdMultiplier : 0);
+  const isQuality = qualityAllowed && qualityMode === "quality";
+  const perImageCost = isQuality ? 2 : 1;
   const totalCost = images.length * perImageCost;
 
   return (
@@ -388,7 +370,10 @@ function AppInner() {
             CleanCut AI – Background Removal App
           </h1>
           <p className="mt-1 text-xs text-slate-300">
-            Fast mode is default (best speed). Quality + HD Export are paid features.
+            Fast mode is default (best speed).{" "}
+            {qualityAllowed
+              ? "Quality costs 2 credits for cleaner edges."
+              : "Quality mode is available on paid plans."}
           </p>
         </div>
         <CreditsBadge />
@@ -400,7 +385,9 @@ function AppInner() {
 
           <div className="mt-4 space-y-3 text-xs text-slate-300">
             <div>
-              <span className="font-semibold text-slate-200">Background mode</span>
+              <span className="font-semibold text-slate-200">
+                Background mode
+              </span>
               <div className="mt-2 flex flex-wrap gap-2">
                 {(
                   ["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]
@@ -435,7 +422,10 @@ function AppInner() {
                   Processing mode
                 </div>
                 <div className="mt-1 text-[11px] text-slate-400">
-                  Fast = 1 credit/image. Quality = 2 credits/image (paid only).
+                  Fast = 1 credit/image.{" "}
+                  {qualityAllowed
+                    ? "Quality = 2 credits/image, cleaner edges."
+                    : "Quality = paid plans only."}
                 </div>
               </div>
 
@@ -452,58 +442,44 @@ function AppInner() {
                 </button>
 
                 <button
-                  onClick={() => {
-                    if (!plan.allowQuality) {
-                      setShowPaywall(true);
-                      return;
-                    }
-                    setQualityMode("quality");
-                  }}
-                  disabled={!plan.allowQuality}
-                  title={!plan.allowQuality ? "Upgrade to unlock Quality mode" : ""}
-                  className={`rounded-full px-3 py-1 text-[11px] ${
-                    !plan.allowQuality
-                      ? "bg-slate-900 text-slate-500 border border-slate-800 cursor-not-allowed"
-                      : qualityMode === "quality"
-                      ? "bg-indigo-500/20 text-indigo-200 border border-indigo-500/30"
-                      : "bg-slate-800 text-slate-200"
-                  }`}
+                  onClick={() => qualityAllowed && setQualityMode("quality")}
+                  disabled={!qualityAllowed}
+                  title={!qualityAllowed ? "Upgrade to use Quality mode" : ""}
+                  className={`rounded-full px-3 py-1 text-[11px] border ${
+                    qualityMode === "quality"
+                      ? "bg-indigo-500/20 text-indigo-200 border-indigo-500/30"
+                      : "bg-slate-800 text-slate-200 border-transparent"
+                  } ${!qualityAllowed ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   Quality (2 credits)
                 </button>
               </div>
             </div>
 
-            {/* ✅ HD Export (paid only) */}
-            <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-              <div>
-                <div className="text-xs font-semibold text-slate-100">
-                  HD Export
+            {/* HD Export - Lifetime only, coming soon */}
+            {hdVisible && (
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+                <div>
+                  <div className="text-xs font-semibold text-slate-100">
+                    HD Export
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-400">
+                    Coming soon (Lifetime only). Requires heavier processing.
+                  </div>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-400">
-                  Higher resolution output (paid plans only).
-                </div>
-              </div>
 
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  className="h-3 w-3"
-                  checked={useHdExport}
-                  onChange={(e) => {
-                    if (!plan.allowHdExport) {
-                      setShowPaywall(true);
-                      return;
-                    }
-                    setUseHdExport(e.target.checked);
-                  }}
-                  disabled={!plan.allowHdExport}
-                />
-                <span className={!plan.allowHdExport ? "text-slate-500" : ""}>
-                  HD (+{plan.hdMultiplier} credits)
-                </span>
-              </label>
-            </div>
+                <label className="flex items-center gap-2 text-[11px] text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={hdExport}
+                    onChange={(e) => setHdExport(e.target.checked)}
+                    disabled={!hdEnabled}
+                  />
+                  <span className="text-slate-400">Coming soon</span>
+                </label>
+              </div>
+            )}
 
             <button
               onClick={handleProcess}
@@ -544,11 +520,27 @@ function AppInner() {
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
           <div className="card max-w-sm p-4 text-xs text-slate-300">
             <h2 className="text-sm font-semibold text-white">
-              Upgrade to unlock features
+              You&apos;re out of credits (or feature locked)
             </h2>
-            <p className="mt-2">
-              Quality mode and HD Export are available on paid plans.
+
+            {!qualityAllowed && qualityMode === "quality" ? (
+              <p className="mt-2">
+                Quality mode is available on paid plans. Upgrade to use it.
+              </p>
+            ) : (
+              <p className="mt-2">
+                You&apos;ve reached the limit for your current plan. Upgrade to
+                process more images.
+              </p>
+            )}
+
+            <p className="mt-2 text-[11px] text-slate-400">
+              Current selection:{" "}
+              <span className="text-slate-200">{qualityMode}</span> • Cost per
+              image:{" "}
+              <span className="text-slate-200">{perImageCost}</span> credit(s)
             </p>
+
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setShowPaywall(false)}

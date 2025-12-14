@@ -36,6 +36,11 @@ export default function AdminClient() {
   const adminOk = useMemo(() => isAdminEmail(user?.email), [user?.email]);
 
   useEffect(() => {
+  console.log("ADMIN_DEBUG user.email =", user?.email);
+  console.log("ADMIN_DEBUG NEXT_PUBLIC_ADMIN_EMAILS =", process.env.NEXT_PUBLIC_ADMIN_EMAILS);
+}, [user?.email]);
+
+  useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [loading, user, router]);
 

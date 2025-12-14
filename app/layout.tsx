@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import WelcomeBar from "../components/WelcomeBar";
 import Footer from "../components/Footer";
 import { AuthProvider } from "../components/AuthProvider";
 
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body className="bg-slate-950 text-white">
         <AuthProvider>
           <Navbar />
+          <WelcomeBar />
           {children}
           <Footer />
         </AuthProvider>

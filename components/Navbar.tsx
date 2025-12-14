@@ -1,31 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadCredits, CreditState } from "../lib/credits";
 import { useAuth } from "./AuthProvider";
-import { createClient } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { user } = useAuth(); // your AuthProvider already provides this
+  const { user, signOut } = useAuth();
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  // Supabase client (safe on client)
-  const supabase = useMemo(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    return createClient(url, key);
-  }, []);
+  const feedbackUrl = process.env.NEXT_PUBLIC_FEEDBACK_URL;
 
   useEffect(() => {
-    const c = loadCredits();
-    setCredits(c);
+    setCredits(loadCredits());
+
+    function onCreditsUpdate() {
+      setCredits(loadCredits());
+    }
+
+    window.addEventListener("credits:update", onCreditsUpdate);
+    return () => window.removeEventListener("credits:update", onCreditsUpdate);
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!wrapRef.current) return;
@@ -36,10 +35,12 @@ export default function Navbar() {
   }, []);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    setOpen(false);
-    // optional hard refresh so UI updates everywhere
-    window.location.href = "/";
+    try {
+      await signOut();
+    } finally {
+      setOpen(false);
+      window.location.href = "/";
+    }
   }
 
   const initial = user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -47,7 +48,6 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        {/* LEFT: BRAND */}
         <Link href="/" className="text-sm font-bold tracking-wide text-white">
           CleanCut<span className="text-indigo-400"> AI</span>
           <span className="ml-2 text-xs font-normal text-slate-400">
@@ -55,7 +55,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* CENTER: NAV LINKS */}
         <nav className="hidden items-center gap-6 md:flex">
           <Link href="/app" className="text-sm text-slate-300 hover:text-white">
             App
@@ -75,9 +74,19 @@ export default function Navbar() {
           >
             Contact
           </Link>
+
+          {feedbackUrl && (
+            <a
+              href={feedbackUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-slate-300 hover:text-white"
+            >
+              Feedback
+            </a>
+          )}
         </nav>
 
-        {/* RIGHT */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
             <div className="hidden rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 md:block">
@@ -89,13 +98,13 @@ export default function Navbar() {
           )}
 
           {!user && (
-  <Link
-    href="/login"
-    className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
-  >
-    Sign in
-  </Link>
-)}
+            <Link
+              href="/login"
+              className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
+            >
+              Sign in
+            </Link>
+          )}
 
           {user && (
             <>
@@ -108,7 +117,7 @@ export default function Navbar() {
               </button>
 
               {open && (
-                <div className="absolute right-0 top-12 w-48 rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-xl">
+                <div className="absolute right-0 top-12 w-52 rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-xl">
                   <div className="px-3 py-2 text-xs text-slate-400">
                     {user.email}
                   </div>
@@ -129,6 +138,18 @@ export default function Navbar() {
                     Billing
                   </Link>
 
+                  {feedbackUrl && (
+                    <a
+                      href={feedbackUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                      onClick={() => setOpen(false)}
+                    >
+                      Feedback
+                    </a>
+                  )}
+
                   <button
                     onClick={handleSignOut}
                     className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-400 hover:bg-slate-800"
@@ -147,6 +168,33 @@ export default function Navbar() {
           >
             Try Free
           </Link>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-900/60 md:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs text-slate-300">
+          <Link href="/app" className="hover:text-white">
+            App
+          </Link>
+          <Link href="/pricing" className="hover:text-white">
+            Pricing
+          </Link>
+          <Link href="/blog" className="hover:text-white">
+            Blog
+          </Link>
+          <Link href="/contact" className="hover:text-white">
+            Contact
+          </Link>
+          {feedbackUrl && (
+            <a
+              href={feedbackUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-white"
+            >
+              Feedback
+            </a>
+          )}
         </div>
       </div>
     </header>

@@ -78,11 +78,12 @@ async function resizeImageFile(file: File, maxSide: number): Promise<File> {
 
     ctx.drawImage(img, 0, 0, newW, newH);
 
+    // Prefer PNG when original is PNG to preserve edges
     const outType =
-      file.type === "image/webp"
-        ? "image/webp"
-        : file.type === "image/png"
+      file.type === "image/png"
         ? "image/png"
+        : file.type === "image/webp"
+        ? "image/webp"
         : "image/jpeg";
 
     const outQuality = outType === "image/jpeg" ? 0.92 : 0.92;
@@ -110,9 +111,6 @@ async function resizeImageFile(file: File, maxSide: number): Promise<File> {
   }
 }
 
-/**
- * Run async tasks with a concurrency limit (TS safe)
- */
 async function asyncPool<T, R>(
   poolLimit: number,
   array: T[],
@@ -144,18 +142,18 @@ async function asyncPool<T, R>(
 /** -------------------------------------------------------- **/
 
 export default function AppPage() {
-  // ✅ AUTH PROTECTION
   const { session, loading } = useAuth();
   const router = useRouter();
 
+  // Redirect if not logged in
   useEffect(() => {
     if (!loading && !session) {
       router.push("/login");
     }
   }, [loading, session, router]);
 
-  // While auth is loading OR redirecting, show a small loader
-  if (loading || (!loading && !session)) {
+  // IMPORTANT: no early returns before hooks in inner component
+  if (loading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
         Loading…
@@ -163,7 +161,18 @@ export default function AppPage() {
     );
   }
 
-  // ✅ Your existing app logic below (unchanged)
+  if (!session) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
+        Redirecting to login…
+      </div>
+    );
+  }
+
+  return <AppInner />;
+}
+
+function AppInner() {
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [images, setImages] = useState<QueuedImage[]>([]);
   const [results, setResults] = useState<ProcessedImage[]>([]);
@@ -183,6 +192,14 @@ export default function AppPage() {
     () => (credits ? getPlanById(credits.planId) : getPlanById("free")),
     [credits]
   );
+
+  // Cleanup preview object URLs when images change
+  useEffect(() => {
+    return () => {
+      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.length]);
 
   function onFilesSelected(files: File[]) {
     const limited = files.slice(0, plan.maxBatchSize);
@@ -238,7 +255,8 @@ export default function AppPage() {
       const qualityFlag = qualityMode === "quality";
 
       const processed = await asyncPool(concurrency, resized, async (img) => {
-        const result: any = await app.predict("remove_bg", [
+        // NOTE: endpoint name must match your Space. If your API shows "/remove_bg", use "/remove_bg".
+        const result: any = await app.predict("/remove_bg", [
           img.file,
           qualityFlag,
         ]);
@@ -277,6 +295,11 @@ export default function AppPage() {
 
       const updatedCredits = consumeCredits(credits, images.length, false);
       setCredits(updatedCredits);
+
+      // Let Navbar refresh credits immediately
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("credits:update"));
+      }
     } catch (err: any) {
       console.error("HF Space error:", err);
       setErrorMsg(

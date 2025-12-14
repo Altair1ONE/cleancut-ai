@@ -89,13 +89,13 @@ export default function Navbar() {
           )}
 
           {!user && (
-            <Link
-              href="/signin"
-              className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
-            >
-              Sign in
-            </Link>
-          )}
+  <Link
+    href="/login"
+    className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
+  >
+    Sign in
+  </Link>
+)}
 
           {user && (
             <>

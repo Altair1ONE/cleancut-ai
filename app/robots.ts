@@ -6,12 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: [
-          "/api/",
-          "/_next/",
-        ],
+        disallow: ["/api/", "/_next/"],
       },
     ],
-    sitemap: "https://xevora.org/sitemap.xml",
+    sitemap: "https://xevora.org/cleancut/sitemap.xml",
   };
 }

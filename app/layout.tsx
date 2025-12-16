@@ -8,6 +8,10 @@ import Script from "next/script";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://xevora.org"),
+  alternates: {
+  canonical: "https://xevora.org/cleancut",
+},
+
   title: {
     default: "CleanCut AI – Remove Image Background Online | Xevora",
     template: "%s | CleanCut AI by Xevora",
@@ -38,12 +42,26 @@ export const metadata: Metadata = {
     description:
       "Create clean, transparent PNGs in seconds. AI-powered background remover with no watermark. Built by Xevora.",
     siteName: "CleanCut AI",
+
+    images: [
+  {
+    url: "/og-cleancut.png",
+    width: 1200,
+    height: 630,
+    alt: "CleanCut AI by Xevora",
+  },
+],
+
   },
   twitter: {
     card: "summary_large_image",
     title: "CleanCut AI – Remove Image Background Online",
     description:
       "Fast AI background removal. Transparent PNGs, HD quality, no watermark.",
+
+      images: ["/og-cleancut.png"],
+
+      
   },
 };
 
@@ -65,9 +83,8 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-ZP7P4QLKL6', {
-              page_path: window.location.pathname,
-            });
+            gtag('config', 'G-ZP7P4QLKL6');
+
           `}
         </Script>
       </head>

@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import WelcomeBar from "../components/WelcomeBar";
 import Footer from "../components/Footer";
 import { AuthProvider } from "../components/AuthProvider";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://xevora.org"),
@@ -52,10 +52,26 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
-
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-ZP7P4QLKL6"
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-ZP7P4QLKL6', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
+      </head>
+
       <body className="bg-slate-950 text-white">
         <AuthProvider>
           <Navbar />
@@ -63,9 +79,6 @@ export default function RootLayout({
           {children}
           <Footer />
         </AuthProvider>
-
-        {/* Google Analytics (GA4) */}
-        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );

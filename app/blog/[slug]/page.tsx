@@ -13,8 +13,7 @@ export function generateMetadata({
 }: {
   params: { slug: string };
 }): Metadata {
-  const post =
-    getPostBySlug(params.slug) ?? BLOG_POSTS.find((p) => p.slug === params.slug);
+  const post = getPostBySlug(params.slug);
 
   if (!post) {
     return {
@@ -86,8 +85,7 @@ function renderParagraphs(content: string) {
     if (!line) continue;
 
     if (line.startsWith("## ")) blocks.push({ type: "h2", text: line.slice(3) });
-    else if (line.startsWith("### "))
-      blocks.push({ type: "h3", text: line.slice(4) });
+    else if (line.startsWith("### ")) blocks.push({ type: "h3", text: line.slice(4) });
     else if (line.startsWith("- ")) blocks.push({ type: "li", text: line.slice(2) });
     else if (line === "---") blocks.push({ type: "hr", text: "" });
     else blocks.push({ type: "p", text: line });
@@ -97,17 +95,13 @@ function renderParagraphs(content: string) {
 }
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post =
-    getPostBySlug(params.slug) ?? BLOG_POSTS.find((p) => p.slug === params.slug);
+  const post = getPostBySlug(params.slug);
 
   if (!post) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="text-2xl font-bold text-white">Post not found</h1>
-        <Link
-          href="/cleancut/blog"
-          className="mt-4 inline-block text-indigo-300 hover:underline"
-        >
+        <Link href="/blog" className="mt-4 inline-block text-indigo-300 hover:underline">
           Back to blog
         </Link>
       </main>
@@ -194,19 +188,19 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
-            href="/cleancut/app"
+            href="/app"
             className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
             Open App
           </Link>
           <Link
-            href="/cleancut/pricing"
+            href="/pricing"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
             Pricing
           </Link>
           <Link
-            href="/cleancut/blog"
+            href="/blog"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
             More Blog Posts

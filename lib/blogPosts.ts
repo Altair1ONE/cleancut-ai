@@ -268,6 +268,19 @@ If you need a cutout you can reuse anywhere, transparent PNG is the best export 
   },
 ];
 
+function normalizeSlug(input: string) {
+  // Handles cases like:
+  // "remove-background-online-no-watermark"
+  // "/blog/remove-background-online-no-watermark"
+  // "blog/remove-background-online-no-watermark"
+  // "/cleancut/blog/remove-background-online-no-watermark" (if it ever happens)
+  const s = decodeURIComponent(String(input || "")).trim();
+  const cleaned = s.replace(/^\/+/, "");
+  const parts = cleaned.split("/").filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : cleaned;
+}
+
 export function getPostBySlug(slug: string) {
-  return BLOG_POSTS.find((p) => p.slug === slug) || null;
+  const normalized = normalizeSlug(slug);
+  return BLOG_POSTS.find((p) => p.slug === normalized) || null;
 }

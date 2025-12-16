@@ -19,7 +19,14 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-function FaqJsonLd({ faq, url }: { faq: { q: string; a: string }[]; url: string }) {
+function FaqJsonLd({
+  faq,
+  url,
+}: {
+  faq: { q: string; a: string }[];
+  url: string;
+}) {
+  // ✅ include @id / mainEntityOfPage for stronger SEO association
   const json = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -28,7 +35,9 @@ function FaqJsonLd({ faq, url }: { faq: { q: string; a: string }[]; url: string 
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
+    mainEntityOfPage: url,
   };
+
   return (
     <script
       type="application/ld+json"

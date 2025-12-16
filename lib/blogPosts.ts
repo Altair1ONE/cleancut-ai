@@ -1,339 +1,269 @@
-// lib/blog.ts
+// lib/blogPosts.ts
+
 export type BlogPost = {
   slug: string;
   title: string;
   description: string;
   date: string; // YYYY-MM-DD
   author: string;
+  canonicalPath: string; // e.g. /blog/slug
   category: string;
   keywords: string[];
-  canonicalPath: string; // e.g. "/blog/remove-background-online"
-  content: string; // markdown-ish (we render safely with simple formatting)
-  faq?: { q: string; a: string }[];
+  faq: { q: string; a: string }[];
+  content: string; // markdown-ish string used by your renderer
 };
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    slug: "remove-background-online",
-    title: "How to Remove Background from Images Online (Fast, No Watermark)",
+    slug: "remove-background-online-no-watermark",
+    title: "How to Remove Background from Images Online (No Watermark)",
     description:
-      "Learn how to remove backgrounds online in seconds using CleanCut AI. Export transparent PNGs with no watermark and keep clean edges for product photos, portraits, and designs.",
+      "Learn how to remove backgrounds online without watermarks. Export transparent PNGs for e-commerce, thumbnails, and marketing designs using CleanCut AI.",
     date: "2025-12-14",
     author: "Xevora",
+    canonicalPath: "/blog/remove-background-online-no-watermark",
     category: "Guides",
     keywords: [
       "remove background online",
-      "background remover",
-      "transparent png",
-      "remove background from image",
       "no watermark background remover",
+      "transparent png",
+      "background removal",
+      "clean cutout",
+      "product photos",
+      "thumbnail cutout",
     ],
-    canonicalPath: "/blog/remove-background-online",
-    content: `
-Removing a background shouldn’t require Photoshop, paid credits, or watermarks.
-
-CleanCut AI is built to do one thing extremely well: **remove image backgrounds quickly**, then export a **transparent PNG** you can actually use.
-
-## Step-by-step: Remove background in 3 steps
-1. Open the app: **/app**
-2. Upload a JPG/PNG/WEBP (or a small batch depending on your plan).
-3. Click **Process** → download your clean transparent PNG.
-
-## When to use Fast vs Quality
-- **Fast mode**: best for most product photos, logos, and clear subjects.
-- **Quality mode**: better edges for hair/fur, complex details, and tricky lighting.
-
-> Note: If you’re on the Free plan, some advanced modes may be limited.
-
-## Best results checklist (pro tips)
-- Use images with good contrast (subject clearly separated from background).
-- Avoid ultra-low resolution screenshots.
-- If edges look rough, try **Quality** mode.
-
-## Common use cases
-- E-commerce product photos (Shopify, Amazon, Etsy)
-- Portraits / profile photos
-- Marketing banners and ads
-- Design assets (transparent PNG)
-
-✅ Try it now: **/app**  
-See plans: **/pricing**
-`,
     faq: [
       {
-        q: "Does CleanCut AI add a watermark?",
-        a: "No. CleanCut AI does not add watermarks to exported images.",
+        q: "Is watermark-free background removal possible?",
+        a: "Yes. Some tools export PNGs without watermarks. CleanCut AI is built to keep exports clean and usable.",
       },
       {
-        q: "What file formats are supported?",
-        a: "Common formats like PNG, JPG/JPEG, and WEBP are supported.",
-      },
-      {
-        q: "Is transparent PNG supported?",
-        a: "Yes. CleanCut AI exports transparent PNGs.",
+        q: "What format should I download after background removal?",
+        a: "Transparent PNG is best if you want to place your subject on different backgrounds later.",
       },
     ],
+    content: `
+## Why background removal matters
+A clean cutout instantly makes images look more professional. It’s widely used for:
+- Product photos (Shopify, Amazon, Etsy)
+- YouTube thumbnails and creator graphics
+- Ads, banners, and social posts
+- Logos and branding assets
+
+## Step-by-step: remove background online
+Here’s the fastest workflow:
+- Upload your image (PNG/JPG/WEBP)
+- Choose **Fast** mode for speed
+- Use **Quality** mode for hair/fur edges (paid plans)
+- Download the transparent PNG
+
+## Tips for cleaner edges
+Better input gives better output:
+- Use higher resolution images
+- Prefer clear lighting and strong contrast
+- Crop closer to the subject for best results
+
+---
+### Try it now
+Open the app, upload your image, and export a transparent PNG in seconds.
+`,
   },
 
   {
-    slug: "shopify-product-photos-background-removal",
-    title: "Shopify Product Photos: Remove Backgrounds for Higher Conversions",
+    slug: "shopify-product-photo-background-removal",
+    title: "Shopify Product Photos: Remove Background and Create Clean Listings",
     description:
-      "Clean product photos improve trust and increase conversions. Learn how to remove backgrounds for Shopify product images and keep consistent lighting and clean edges.",
+      "A practical guide for Shopify sellers to remove backgrounds, create consistent white backgrounds, and export transparent PNGs for ads and catalogs.",
     date: "2025-12-14",
     author: "Xevora",
+    canonicalPath: "/blog/shopify-product-photo-background-removal",
     category: "E-commerce",
     keywords: [
       "shopify product photos",
-      "remove background for product images",
-      "ecommerce background remover",
-      "white background product photo",
+      "remove background for shopify",
+      "transparent png for shopify",
+      "white background product image",
+      "ecommerce image editing",
     ],
-    canonicalPath: "/blog/shopify-product-photos-background-removal",
+    faq: [
+      {
+        q: "Do Shopify product images need a white background?",
+        a: "Not always, but white backgrounds are common for clean, consistent catalogs and a premium store look.",
+      },
+      {
+        q: "Can I make consistent thumbnails for my Shopify store?",
+        a: "Yes. Use transparent PNG cutouts and place them on a consistent background color for a branded look.",
+      },
+    ],
     content: `
-If you sell online, your product photos are doing the heavy lifting.
-
-A clean background:
-- improves clarity,
-- builds trust,
-- and makes your product look premium.
+## Why consistent product photos convert better
+Consistency improves trust and makes your store look premium. Clean product images help customers focus on the product, not the background.
 
 ## Best background style for Shopify
-- **White background** is the safest default for most catalogs.
-- **Transparent PNG** is perfect if your theme uses colored sections.
+Many sellers use:
+- **White background** for main listing images
+- **Lifestyle images** as secondary photos
+- **Transparent PNG cutouts** for ads and banners
 
-## Quick workflow (fast)
-1. Upload product images in **/app**
-2. Process (Fast is usually enough).
-3. Download PNGs and upload to Shopify.
+## Fast workflow for sellers
+Use this repeatable process:
+- Remove background
+- Export transparent PNG
+- Place on white background (if needed)
+- Upload to Shopify
 
-## Consistency tips
-- Keep the same crop and scale across products.
-- Use the same shadow style (if you add shadows).
-- Don’t mix warm and cold lighting across the same category.
-
-## When to use Quality mode
-Use Quality for:
-- transparent products (glass, bottles),
-- furry materials,
-- complex shapes (jewelry, chains).
-
-✅ Start removing backgrounds: **/app**  
-Compare plans: **/pricing**
+---
+### Pro tip
+Batch processing is best for stores with many products — prepare images in groups to save time.
 `,
+  },
+
+  {
+    slug: "fast-vs-quality-background-removal",
+    title: "Fast vs Quality Background Removal: What’s the Difference?",
+    description:
+      "Understand Fast vs Quality background removal, when to use each, and why Quality is better for hair, fur, and complex edges.",
+    date: "2025-12-14",
+    author: "Xevora",
+    canonicalPath: "/blog/fast-vs-quality-background-removal",
+    category: "Guides",
+    keywords: [
+      "fast vs quality background removal",
+      "quality mode background remover",
+      "hair edge background removal",
+      "fur cutout",
+      "transparent png",
+      "clean edges",
+    ],
     faq: [
       {
-        q: "Does background removal improve conversion?",
-        a: "Cleaner images reduce friction and improve perceived quality, which often helps conversions.",
+        q: "Why does Quality mode look better on hair and fur?",
+        a: "Quality mode uses extra processing to refine transparency edges, which helps with complex details like hair strands.",
       },
       {
-        q: "Should I export transparent PNG or white background?",
-        a: "Use transparent PNG for flexible layouts, white background for consistent marketplace-style listing images.",
+        q: "Should free users get Quality mode?",
+        a: "Most tools reserve it for paid tiers to keep the free tier sustainable and fast for everyone.",
       },
     ],
+    content: `
+## Fast mode (best for speed)
+Fast mode is ideal for:
+- Products on simple backgrounds
+- Clear contrast images
+- Bulk processing where speed matters
+
+## Quality mode (best for complex edges)
+Quality mode is best for:
+- Hair and fur
+- Semi-transparent details
+- Busy backgrounds where edges are harder
+
+## Which one should you use?
+A simple rule:
+- Use **Fast** for most product photos
+- Use **Quality** when edges matter (portraits, hair, complex objects)
+
+---
+### Credit systems (common model)
+Many apps price compute like:
+- Fast = 1 credit/image
+- Quality = 2 credits/image
+`,
   },
 
   {
-    slug: "passport-photo-background-remove",
-    title: "Passport Photo Background: How to Make a Clean White Background",
+    slug: "best-image-types-for-background-removal",
+    title: "Best Image Types for Background Removal (Cleaner Results in Seconds)",
     description:
-      "Need a clean white background for a passport photo? Learn a fast method to remove the background and export a clean PNG suitable for many ID photo requirements.",
+      "Improve background removal results with simple photo tips: lighting, contrast, resolution, and cropping. Get cleaner PNG cutouts for products and portraits.",
     date: "2025-12-14",
     author: "Xevora",
-    category: "Use Cases",
+    canonicalPath: "/blog/best-image-types-for-background-removal",
+    category: "Tips",
     keywords: [
-      "passport photo background",
-      "white background photo",
-      "remove background from portrait",
-      "id photo background remover",
+      "best images for background removal",
+      "clean cutout tips",
+      "transparent png export",
+      "improve background remover results",
+      "photo lighting tips",
     ],
-    canonicalPath: "/blog/passport-photo-background-remove",
-    content: `
-Many ID and passport photos require a clean, simple background (often white or light).
-
-CleanCut AI helps you remove cluttered backgrounds quickly.
-
-## Quick method
-1. Upload your portrait to **/app**
-2. Process (try **Quality** if hair edges are tricky)
-3. Export PNG and place it on a plain white background in your editor if needed
-
-## Tips for better ID photos
-- Face should be evenly lit (avoid harsh shadows).
-- Avoid busy backgrounds and extreme angles.
-- Keep hair edges clean — **Quality** is better for that.
-
-✅ Remove your background: **/app**
-`,
     faq: [
       {
-        q: "Is this an official passport photo generator?",
-        a: "CleanCut AI removes backgrounds. Always check your country’s exact passport/ID requirements.",
+        q: "Do blurry photos work for background removal?",
+        a: "Sometimes, but edge quality often degrades. Sharper photos typically produce cleaner cutouts.",
+      },
+      {
+        q: "What helps most for clean edges?",
+        a: "Higher resolution, good lighting, and clear subject separation are the biggest wins.",
       },
     ],
-  },
-
-  {
-    slug: "remove-bg-for-youtube-thumbnails",
-    title: "YouTube Thumbnails: Remove Background for Cleaner, Clickable Designs",
-    description:
-      "Learn how creators remove backgrounds from portraits and objects to create clean YouTube thumbnails. Export transparent PNG and layer it over bold colors and text.",
-    date: "2025-12-14",
-    author: "Xevora",
-    category: "Creators",
-    keywords: [
-      "remove background for youtube thumbnails",
-      "thumbnail background remover",
-      "transparent png creator workflow",
-    ],
-    canonicalPath: "/blog/remove-bg-for-youtube-thumbnails",
     content: `
-Creators use one simple trick to make thumbnails pop:
+## Use high resolution when possible
+Higher resolution gives the model more detail for edges. Low-res images often produce softer cutouts.
 
-**Cut out the subject**, then place it on a clean background with text.
+## Lighting makes a huge difference
+Even lighting reduces harsh shadows and improves subject separation from the background.
 
-## Thumbnail workflow
-1. Export a transparent PNG from **/app**
-2. Place it on a bold background color
-3. Add big text + a subtle shadow
+## Crop closer to your subject
+If your subject is small in the frame, crop closer before processing. This improves accuracy and speeds up results.
 
-## Fast vs Quality for thumbnails
-- Fast is great when the edges are already clean.
-- Quality helps when hair/fur edges look rough.
-
-✅ Try it now: **/app**
+---
+### Quick checklist
+- Sharp focus
+- Bright, even lighting
+- Good contrast between subject and background
+- Minimal motion blur
 `,
   },
 
   {
-    slug: "transparent-logo-png",
-    title: "Make a Transparent Logo PNG: Clean Background Removal in Seconds",
+    slug: "transparent-png-what-it-is",
+    title: "What Is a Transparent PNG (And When Should You Use It?)",
     description:
-      "Need a transparent logo PNG for your website or brand kit? Remove background from your logo and export a clean transparent PNG with no watermark.",
+      "Transparent PNGs let you place cutouts on any background. Learn PNG vs JPG, and why transparent exports are best for design, marketing, and product images.",
     date: "2025-12-14",
     author: "Xevora",
-    category: "Design",
+    canonicalPath: "/blog/transparent-png-what-it-is",
+    category: "Basics",
     keywords: [
-      "transparent logo png",
-      "remove background from logo",
-      "logo background remover",
+      "transparent png",
+      "png vs jpg",
+      "what is transparent background",
+      "remove background png",
+      "alpha transparency",
     ],
-    canonicalPath: "/blog/transparent-logo-png",
-    content: `
-A transparent logo PNG is essential for:
-- websites,
-- invoices,
-- thumbnails,
-- brand kits,
-- and product packaging.
-
-## How to make your logo transparent
-1. Upload your logo to **/app**
-2. Process
-3. Download transparent PNG
-
-## Pro tip
-If your logo has thin edges or gradients, try **Quality** mode.
-
-✅ Make your logo transparent: **/app**
-`,
-  },
-
-  {
-    slug: "real-estate-photos-remove-background",
-    title: "Real Estate Marketing: Remove Backgrounds for Cleaner Ads & Posters",
-    description:
-      "For real estate ads and posters, clean cutouts look more professional. Learn how to remove backgrounds from agent portraits and property objects and export PNGs for design.",
-    date: "2025-12-14",
-    author: "Xevora",
-    category: "Marketing",
-    keywords: [
-      "real estate marketing images",
-      "remove background for ads",
-      "transparent png for posters",
+    faq: [
+      {
+        q: "Does PNG always mean transparent?",
+        a: "No. PNG supports transparency, but the file must be exported with transparency enabled.",
+      },
+      {
+        q: "Why do designers prefer transparent PNGs?",
+        a: "Because you can reuse the same cutout across many backgrounds without re-editing.",
+      },
     ],
-    canonicalPath: "/blog/real-estate-photos-remove-background",
     content: `
-Real estate marketing is visual. Clean designs build trust.
+## PNG vs JPG (simple explanation)
+- **JPG** does NOT support transparency.
+- **PNG** supports transparency (alpha channel).
 
-## What to remove backgrounds from
-- agent portraits
-- keys/house icons
-- featured property objects
-- logos and badges
+## When you should use a transparent PNG
+Transparent PNGs are perfect for:
+- Thumbnails and ads
+- Product cutouts
+- Logos and icons
+- Website graphics and overlays
 
-## Workflow
-1. Export transparent PNG from **/app**
-2. Add a shadow in your editor
-3. Place on posters, listings, and paid ads
+## The benefit
+Once you have a transparent PNG, you can place your subject on:
+- White background
+- Brand colors
+- Gradients
+- Lifestyle mockups
 
-✅ Start: **/app**
-`,
-  },
-
-  {
-    slug: "batch-background-removal",
-    title: "Batch Background Removal: How to Process Multiple Images Faster",
-    description:
-      "Learn how to remove backgrounds in bulk using batch processing. Save time for catalogs, marketplaces, and large photo sets with a simple workflow.",
-    date: "2025-12-14",
-    author: "Xevora",
-    category: "Productivity",
-    keywords: [
-      "batch background removal",
-      "remove background in bulk",
-      "bulk transparent png",
-    ],
-    canonicalPath: "/blog/batch-background-removal",
-    content: `
-If you handle catalogs or listings, batch processing saves hours.
-
-## Best use cases for batch
-- product catalogs
-- marketplace listings
-- team photos
-- content batches for social media
-
-## How to do it
-1. Upload multiple images to **/app**
-2. Process
-3. Download PNGs
-
-> Batch limits depend on your plan.
-
-✅ Process images: **/app**  
-See limits: **/pricing**
-`,
-  },
-
-  {
-    slug: "remove-bg-vs-removebg-alternatives",
-    title: "Remove.bg Alternatives: When You Want No Watermark and Better Value",
-    description:
-      "Looking for remove.bg alternatives? Compare the common pain points like cost, watermarks, and workflow limits — and learn what to check before choosing a tool.",
-    date: "2025-12-14",
-    author: "Xevora",
-    category: "Comparisons",
-    keywords: [
-      "remove.bg alternative",
-      "background remover cheaper",
-      "no watermark background remover",
-    ],
-    canonicalPath: "/blog/remove-bg-vs-removebg-alternatives",
-    content: `
-Many people search for alternatives because they want:
-- lower cost per image,
-- no watermark,
-- and simpler batch workflows.
-
-## What to compare in a background remover
-- Export quality (clean edges)
-- Watermark policy
-- Batch limits
-- Pricing transparency
-- Speed and reliability
-
-✅ Try CleanCut AI: **/app**
+---
+### Summary
+If you need a cutout you can reuse anywhere, transparent PNG is the best export format.
 `,
   },
 ];

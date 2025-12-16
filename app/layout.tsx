@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import WelcomeBar from "../components/WelcomeBar";
 import Footer from "../components/Footer";
 import { AuthProvider } from "../components/AuthProvider";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://xevora.org"),
@@ -51,6 +52,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="en">
       <body className="bg-slate-950 text-white">
@@ -60,6 +63,9 @@ export default function RootLayout({
           {children}
           <Footer />
         </AuthProvider>
+
+        {/* Google Analytics (GA4) */}
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );

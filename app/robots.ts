@@ -10,5 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: "https://xevora.org/cleancut/sitemap.xml",
+    host: "https://xevora.org",
+
   };
 }

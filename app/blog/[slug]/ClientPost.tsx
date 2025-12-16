@@ -41,7 +41,7 @@ function JsonLd({ post }: { post: ReturnType<typeof getPostBySlug> }) {
   );
 }
 
-// ✅ Added: Breadcrumb JSON-LD (does not change page logic)
+// Breadcrumb JSON-LD (as we added earlier)
 function BreadcrumbJsonLd({ url, title }: { url: string; title: string }) {
   const json = {
     "@context": "https://schema.org",
@@ -80,6 +80,45 @@ function renderParagraphs(content: string) {
   return blocks;
 }
 
+// ✅ Added: related posts picker (no external deps, keeps your data model)
+function getRelatedPosts(currentSlug: string) {
+  const current = BLOG_POSTS.find((p) => p.slug === currentSlug);
+  if (!current) return [];
+
+  const currentKw = new Set((current.keywords || []).map((k) => k.toLowerCase()));
+  const currentCat = (current.category || "").toLowerCase();
+
+  const scored = BLOG_POSTS
+    .filter((p) => p.slug !== currentSlug)
+    .map((p) => {
+      const kw = new Set((p.keywords || []).map((k) => k.toLowerCase()));
+      let shared = 0;
+      currentKw.forEach((k) => {
+        if (kw.has(k)) shared += 1;
+      });
+
+      const catMatch = currentCat && (p.category || "").toLowerCase() === currentCat ? 2 : 0;
+      const score = shared + catMatch;
+
+      return { post: p, score };
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      // tie-breaker: newest first
+      return a.post.date < b.post.date ? 1 : -1;
+    });
+
+  // Only show if there’s actually relevance; otherwise fall back to latest posts
+  const top = scored.filter((x) => x.score > 0).slice(0, 3).map((x) => x.post);
+  if (top.length >= 2) return top;
+
+  // fallback: latest 3 (excluding current)
+  return BLOG_POSTS
+    .filter((p) => p.slug !== currentSlug)
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, 3);
+}
+
 export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
   const params = useParams();
 
@@ -103,6 +142,9 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
 
   const canonical = `https://xevora.org/cleancut${post.canonicalPath}`;
   const blocks = renderParagraphs(post.content);
+
+  // ✅ Related posts computed locally (static data)
+  const related = getRelatedPosts(post.slug);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -175,7 +217,7 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
         </div>
       </article>
 
-      {/* Internal linking */}
+      {/* Internal linking (existing section) */}
       <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <h2 className="text-lg font-semibold text-white">Try it now</h2>
         <p className="mt-2 text-sm text-slate-300">
@@ -202,6 +244,36 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
           </Link>
         </div>
       </section>
+
+      {/* ✅ Added: Related posts block */}
+      {related.length > 0 && (
+        <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+          <h2 className="text-lg font-semibold text-white">Related posts</h2>
+          <p className="mt-2 text-sm text-slate-300">
+            Keep reading — these articles are closely related to this topic.
+          </p>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {related.map((p) => (
+              <Link
+                key={p.slug}
+                href={`/blog/${p.slug}`}
+                className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 hover:border-slate-600"
+              >
+                <div className="text-xs text-slate-400">
+                  {new Date(p.date).toLocaleDateString()} • {p.category}
+                </div>
+                <div className="mt-2 text-sm font-semibold text-white">
+                  {p.title}
+                </div>
+                <p className="mt-2 text-sm text-slate-300 line-clamp-3">
+                  {p.description}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

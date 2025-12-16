@@ -6,11 +6,15 @@ import Footer from "../components/Footer";
 import { AuthProvider } from "../components/AuthProvider";
 import Script from "next/script";
 
+const SITE_URL = "https://xevora.org";
+const BASE_PATH = "/cleancut";
+const OG_DEFAULT = `${SITE_URL}${BASE_PATH}/og-default.png`;
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://xevora.org"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
-  canonical: "https://xevora.org/cleancut",
-},
+    canonical: `${SITE_URL}${BASE_PATH}`,
+  },
 
   title: {
     default: "CleanCut AI – Remove Image Background Online | Xevora",
@@ -36,40 +40,66 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-  type: "website",
-  url: "https://xevora.org/cleancut",
-  title: "CleanCut AI – Remove Image Background Online",
-  description:
-    "Create clean, transparent PNGs in seconds. AI-powered background remover with no watermark. Built by Xevora.",
-  siteName: "CleanCut AI",
-  images: [
-    {
-      url: "https://xevora.org/cleancut/og-default.png",
-      width: 1200,
-      height: 630,
-      alt: "CleanCut AI – Remove Image Background Online",
-    },
-  ],
-},
-
-
+    type: "website",
+    url: `${SITE_URL}${BASE_PATH}`,
+    title: "CleanCut AI – Remove Image Background Online",
+    description:
+      "Create clean, transparent PNGs in seconds. AI-powered background remover with no watermark. Built by Xevora.",
+    siteName: "CleanCut AI",
+    images: [
+      {
+        url: OG_DEFAULT,
+        width: 1200,
+        height: 630,
+        alt: "CleanCut AI – Remove Image Background Online",
+      },
+    ],
+  },
   twitter: {
-  card: "summary_large_image",
-  title: "CleanCut AI – Remove Image Background Online",
-  description:
-    "Fast AI background removal. Transparent PNGs, HD quality, no watermark.",
-  images: ["https://xevora.org/cleancut/og-default.png"],
-},
+    card: "summary_large_image",
+    title: "CleanCut AI – Remove Image Background Online",
+    description: "Fast AI background removal. Transparent PNGs, HD quality, no watermark.",
+    images: [OG_DEFAULT],
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function GlobalJsonLd() {
+  const org = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Xevora",
+    url: SITE_URL,
+    // Optional: add if you have a logo file
+    // logo: `${SITE_URL}${BASE_PATH}/logo.png`,
+  };
+
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "CleanCut AI by Xevora",
+    url: `${SITE_URL}${BASE_PATH}`,
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(org) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }}
+      />
+    </>
+  );
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <GlobalJsonLd />
+
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-ZP7P4QLKL6"
@@ -81,7 +111,6 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-ZP7P4QLKL6');
-
           `}
         </Script>
       </head>

@@ -1,15 +1,62 @@
 import Link from "next/link";
 import { SeoFaq } from "../components/SeoFaq";
 
+function JsonLd() {
+  const siteUrl = "https://xevora.org";
+  const basePath = "/cleancut";
+
+  const softwareApp = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "CleanCut AI",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Web",
+    url: `${siteUrl}${basePath}`,
+    offers: [
+      { "@type": "Offer", name: "Free", price: "0", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Pro Monthly", price: "4.99", priceCurrency: "USD" },
+      { "@type": "Offer", name: "Lifetime", price: "19.99", priceCurrency: "USD" },
+    ],
+    publisher: { "@type": "Organization", name: "Xevora", url: siteUrl },
+  };
+
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${siteUrl}${basePath}`,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApp) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
+    </>
+  );
+}
+
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
+      <JsonLd />
+
       {/* HERO */}
       <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900/40 p-8 shadow-[0_30px_100px_rgba(0,0,0,0.35)] md:p-12">
         <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 -bottom-24 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
 
-        {/* ✅ ONE clear H1 with primary keyword */}
         <h1 className="text-3xl font-bold text-white md:text-5xl">
           AI Background Remover — Remove Background from Images Instantly{" "}
           <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
@@ -17,7 +64,6 @@ export default function HomePage() {
           </span>
         </h1>
 
-        {/* ✅ SEO-friendly intro paragraph */}
         <p className="mt-4 max-w-2xl text-base text-slate-300">
           CleanCut AI by Xevora is a fast online tool to{" "}
           <strong>remove backgrounds from images</strong> in seconds. Export{" "}
@@ -41,7 +87,6 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* ✅ Benefit bullets (good for UX + keywords) */}
         <div className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-2 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
             ✔ No watermark (even free)
@@ -57,7 +102,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ✅ Internal links for SEO */}
         <p className="mt-5 text-sm text-slate-400">
           Need HD exports and bigger batches?{" "}
           <Link href="/pricing" className="text-indigo-300 hover:text-indigo-200">
@@ -243,23 +287,41 @@ export default function HomePage() {
       </section>
 
       <section className="mt-14">
-  <h2 className="text-xl font-semibold text-white">Popular use cases</h2>
-  <div className="mt-4 grid gap-3 md:grid-cols-3">
-    <Link className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600" href="/use-cases/shopify-product-photos">
-      <div className="text-sm font-semibold text-white">Shopify product photos</div>
-      <p className="mt-1 text-sm text-slate-300">Remove backgrounds for listings & catalogs.</p>
-    </Link>
-    <Link className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600" href="/use-cases/amazon-listing-images">
-      <div className="text-sm font-semibold text-white">Amazon listings</div>
-      <p className="mt-1 text-sm text-slate-300">Clean subject isolation for marketplace images.</p>
-    </Link>
-    <Link className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600" href="/use-cases/youtube-thumbnails">
-      <div className="text-sm font-semibold text-white">YouTube thumbnails</div>
-      <p className="mt-1 text-sm text-slate-300">Make faces pop with transparent PNG exports.</p>
-    </Link>
-  </div>
-</section>
-
+        <h2 className="text-xl font-semibold text-white">Popular use cases</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <Link
+            className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600"
+            href="/use-cases/shopify-product-photos"
+          >
+            <div className="text-sm font-semibold text-white">
+              Shopify product photos
+            </div>
+            <p className="mt-1 text-sm text-slate-300">
+              Remove backgrounds for listings & catalogs.
+            </p>
+          </Link>
+          <Link
+            className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600"
+            href="/use-cases/amazon-listing-images"
+          >
+            <div className="text-sm font-semibold text-white">Amazon listings</div>
+            <p className="mt-1 text-sm text-slate-300">
+              Clean subject isolation for marketplace images.
+            </p>
+          </Link>
+          <Link
+            className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600"
+            href="/use-cases/youtube-thumbnails"
+          >
+            <div className="text-sm font-semibold text-white">
+              YouTube thumbnails
+            </div>
+            <p className="mt-1 text-sm text-slate-300">
+              Make faces pop with transparent PNG exports.
+            </p>
+          </Link>
+        </div>
+      </section>
 
       {/* SEO FAQ SCHEMA */}
       <SeoFaq />

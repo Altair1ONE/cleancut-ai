@@ -46,6 +46,41 @@ function FaqJsonLd({
   );
 }
 
+// ✅ Added: Breadcrumb JSON-LD (keeps everything else untouched)
+function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
+  const json = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://xevora.org/cleancut",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Use cases",
+        item: "https://xevora.org/cleancut/use-cases",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name,
+        item: url,
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
+    />
+  );
+}
+
 export default function UseCasePage({ params }: Props) {
   const uc = useCases.find((u) => u.slug === params.slug);
   if (!uc) return notFound();
@@ -55,6 +90,7 @@ export default function UseCasePage({ params }: Props) {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <FaqJsonLd faq={uc.faq} url={canonical} />
+      <BreadcrumbJsonLd url={canonical} name={uc.h1} />
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 md:p-12">
         <p className="text-xs text-slate-400">Use case</p>

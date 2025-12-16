@@ -70,8 +70,7 @@ const plans: PlanCard[] = [
       "HD export (Lifetime only — coming soon)",
     ],
     cta: { label: "Upgrade (coming soon)", href: "/pricing#checkout" },
-    note:
-      "Quality costs 2 credits/image. Fast costs 1 credit/image.",
+    note: "Quality costs 2 credits/image. Fast costs 1 credit/image.",
   },
   {
     id: "lifetime",
@@ -93,8 +92,7 @@ const plans: PlanCard[] = [
       "HD export option (coming soon — Lifetime only)",
     ],
     cta: { label: "Get Lifetime (coming soon)", href: "/pricing#checkout" },
-    note:
-      "HD export will be enabled when GPU is added (Lifetime only).",
+    note: "HD export will be enabled when GPU is added (Lifetime only).",
   },
 ];
 
@@ -106,7 +104,9 @@ function Pill({ label, tone }: { label: string; tone?: "ok" | "info" | "soon" })
       ? "border-indigo-500/25 bg-indigo-500/10 text-indigo-200"
       : "border-amber-500/25 bg-amber-500/10 text-amber-200";
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${cls}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${cls}`}
+    >
       {label}
     </span>
   );
@@ -125,11 +125,38 @@ function JsonLd() {
       { "@type": "Offer", name: "Lifetime", price: "19.99", priceCurrency: "USD", category: "one-time" },
     ],
   };
+
+  // ✅ Added: BreadcrumbList (keeps everything else untouched)
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://xevora.org/cleancut",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Pricing",
+        item: "https://xevora.org/cleancut/pricing",
+      },
+    ],
+  };
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
+    </>
   );
 }
 
@@ -196,7 +223,9 @@ export default function PricingPage() {
 
               <div
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  p.highlight ? "bg-indigo-500 text-white" : "bg-slate-800 text-slate-200"
+                  p.highlight
+                    ? "bg-indigo-500 text-white"
+                    : "bg-slate-800 text-slate-200"
                 }`}
               >
                 {p.badge}

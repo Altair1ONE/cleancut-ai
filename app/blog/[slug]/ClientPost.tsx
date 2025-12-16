@@ -41,6 +41,26 @@ function JsonLd({ post }: { post: ReturnType<typeof getPostBySlug> }) {
   );
 }
 
+// ✅ Added: Breadcrumb JSON-LD (does not change page logic)
+function BreadcrumbJsonLd({ url, title }: { url: string; title: string }) {
+  const json = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://xevora.org/cleancut" },
+      { "@type": "ListItem", position: 2, name: "Blog", item: "https://xevora.org/cleancut/blog" },
+      { "@type": "ListItem", position: 3, name: title, item: url },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
+    />
+  );
+}
+
 // Very small “markdown-ish” renderer (keeps it simple + safe)
 function renderParagraphs(content: string) {
   const lines = content.trim().split("\n");
@@ -63,7 +83,6 @@ function renderParagraphs(content: string) {
 export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
   const params = useParams();
 
-  // ✅ Works even if server params are missing:
   const slug =
     (typeof params?.slug === "string" ? params.slug : "") ||
     (typeof initialSlug === "string" ? initialSlug : "");
@@ -82,11 +101,13 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
     );
   }
 
+  const canonical = `https://xevora.org/cleancut${post.canonicalPath}`;
   const blocks = renderParagraphs(post.content);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <JsonLd post={post} />
+      <BreadcrumbJsonLd url={canonical} title={post.title} />
 
       <div className="text-xs text-slate-400">
         {new Date(post.date).toLocaleDateString()} • {post.category} • by {post.author}

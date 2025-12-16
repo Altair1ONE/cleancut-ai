@@ -13,6 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/cleancut/app",
     "/cleancut/pricing",
     "/cleancut/blog",
+    "/cleancut/use-cases",
+
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: now,

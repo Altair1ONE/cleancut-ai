@@ -36,33 +36,30 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    type: "website",
-    url: "https://xevora.org/cleancut",
-    title: "CleanCut AI – Remove Image Background Online",
-    description:
-      "Create clean, transparent PNGs in seconds. AI-powered background remover with no watermark. Built by Xevora.",
-    siteName: "CleanCut AI",
+  type: "website",
+  url: "https://xevora.org/cleancut",
+  title: "CleanCut AI – Remove Image Background Online",
+  description:
+    "Create clean, transparent PNGs in seconds. AI-powered background remover with no watermark. Built by Xevora.",
+  siteName: "CleanCut AI",
+  images: [
+    {
+      url: "https://xevora.org/cleancut/og-default.png",
+      width: 1200,
+      height: 630,
+      alt: "CleanCut AI – Remove Image Background Online",
+    },
+  ],
+},
 
-    images: [
-  {
-    url: "/og-cleancut.png",
-    width: 1200,
-    height: 630,
-    alt: "CleanCut AI by Xevora",
-  },
-],
 
-  },
   twitter: {
-    card: "summary_large_image",
-    title: "CleanCut AI – Remove Image Background Online",
-    description:
-      "Fast AI background removal. Transparent PNGs, HD quality, no watermark.",
-
-      images: ["/og-cleancut.png"],
-
-      
-  },
+  card: "summary_large_image",
+  title: "CleanCut AI – Remove Image Background Online",
+  description:
+    "Fast AI background removal. Transparent PNGs, HD quality, no watermark.",
+  images: ["https://xevora.org/cleancut/og-default.png"],
+},
 };
 
 export default function RootLayout({

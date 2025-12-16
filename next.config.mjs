@@ -14,6 +14,13 @@ const nextConfig = {
         permanent: true,
         basePath: false,
       },
+
+      // ✅ RSS: keep /feed.xml as the public URL, but serve from /feed
+      {
+        source: "/feed.xml",
+        destination: "/feed",
+        permanent: true,
+      },
     ];
   },
 };

@@ -15,17 +15,22 @@ const nextConfig = {
         basePath: false,
       },
 
-      // RSS redirect (if you added /feed handler)
+      // ✅ Root → basePath SEO files
       {
-        source: "/feed.xml",
-        destination: "/feed",
+        source: "/robots.txt",
+        destination: "/cleancut/robots.txt",
         permanent: true,
+        basePath: false,
       },
-
-      // ✅ Root sitemap redirect for audit tools + crawlers
       {
         source: "/sitemap.xml",
         destination: "/cleancut/sitemap.xml",
+        permanent: true,
+        basePath: false,
+      },
+      {
+        source: "/feed.xml",
+        destination: "/cleancut/feed",
         permanent: true,
         basePath: false,
       },

@@ -15,11 +15,19 @@ const nextConfig = {
         basePath: false,
       },
 
-      // ✅ RSS: keep /feed.xml as the public URL, but serve from /feed
+      // RSS redirect (if you added /feed handler)
       {
         source: "/feed.xml",
         destination: "/feed",
         permanent: true,
+      },
+
+      // ✅ Root sitemap redirect for audit tools + crawlers
+      {
+        source: "/sitemap.xml",
+        destination: "/cleancut/sitemap.xml",
+        permanent: true,
+        basePath: false,
       },
     ];
   },

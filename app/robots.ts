@@ -9,8 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/_next/"],
       },
     ],
-    sitemap: "https://xevora.org/cleancut/sitemap.xml",
     host: "https://xevora.org",
-
+    sitemap: "https://xevora.org/cleancut/sitemap.xml",
   };
 }

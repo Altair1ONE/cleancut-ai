@@ -20,8 +20,9 @@ export const metadata: Metadata = {
     default: "CleanCut AI – Remove Image Background Online | Xevora",
     template: "%s | CleanCut AI by Xevora",
   },
-  description:
-    "Remove image backgrounds instantly using AI. CleanCut AI by Xevora lets you create transparent PNGs in HD with no watermark. Fast, free, and professional background removal online.",
+ description:
+  "Remove image backgrounds instantly with CleanCut AI. Create transparent PNGs in HD with no watermark. Fast, free, and professional background removal online.",
+
   keywords: [
     "background remover",
     "remove background",

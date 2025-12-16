@@ -43,13 +43,13 @@ export default function BlogIndex() {
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/app"
+            href="/cleancut/app"
             className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
             Try the App
           </Link>
           <Link
-            href="/pricing"
+            href="/cleancut/pricing"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
             View Pricing
@@ -67,7 +67,7 @@ export default function BlogIndex() {
               {new Date(p.date).toLocaleDateString()} • {p.category}
             </div>
             <h2 className="mt-2 text-xl font-semibold text-white">
-              <Link href={`/blog/${p.slug}`} className="hover:underline">
+              <Link href={`/cleancut/blog/${p.slug}`} className="hover:underline">
                 {p.title}
               </Link>
             </h2>
@@ -85,7 +85,7 @@ export default function BlogIndex() {
             </div>
 
             <Link
-              href={`/blog/${p.slug}`}
+              href={`/cleancut/blog/${p.slug}`}
               className="mt-5 inline-flex rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-900"
             >
               Read article →
@@ -104,13 +104,13 @@ export default function BlogIndex() {
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
-            href="/app"
+            href="/cleancut/app"
             className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
             Open App
           </Link>
           <Link
-            href="/contact"
+            href="/cleancut/contact"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
             Contact / Refunds

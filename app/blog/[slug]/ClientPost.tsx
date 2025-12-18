@@ -4,14 +4,29 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { BLOG_POSTS, getPostBySlug } from "../../../lib/blogPosts";
 
+// If you already have this helper, keep using it.
+// If not, no problem — we only use it if it exists.
+let getBlogOgImage: undefined | ((slug: string) => string);
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  getBlogOgImage = require("../../../lib/og").getBlogOgImage;
+} catch {
+  // ignore
+}
+
 function JsonLd({ post }: { post: ReturnType<typeof getPostBySlug> }) {
   if (!post) return null;
 
   const canonical = `https://xevora.org/cleancut${post.canonicalPath}`;
+  const ogImage =
+    typeof getBlogOgImage === "function"
+      ? getBlogOgImage(post.slug)
+      : "https://xevora.org/cleancut/og-default.png";
 
   const json: any = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
+    "@id": canonical,
     headline: post.title,
     description: post.description,
     datePublished: post.date,
@@ -20,8 +35,10 @@ function JsonLd({ post }: { post: ReturnType<typeof getPostBySlug> }) {
     publisher: { "@type": "Organization", name: "Xevora" },
     mainEntityOfPage: canonical,
     url: canonical,
+    image: [ogImage],
   };
 
+  // ✅ Keep FAQ schema attached (works well for rich results)
   if (post.faq && post.faq.length) {
     json.hasPart = {
       "@type": "FAQPage",
@@ -41,14 +58,24 @@ function JsonLd({ post }: { post: ReturnType<typeof getPostBySlug> }) {
   );
 }
 
-// Breadcrumb JSON-LD (as we added earlier)
+// Breadcrumb JSON-LD
 function BreadcrumbJsonLd({ url, title }: { url: string; title: string }) {
   const json = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://xevora.org/cleancut" },
-      { "@type": "ListItem", position: 2, name: "Blog", item: "https://xevora.org/cleancut/blog" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://xevora.org/cleancut",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: "https://xevora.org/cleancut/blog",
+      },
       { "@type": "ListItem", position: 3, name: title, item: url },
     ],
   };
@@ -71,7 +98,8 @@ function renderParagraphs(content: string) {
     if (!line) continue;
 
     if (line.startsWith("## ")) blocks.push({ type: "h2", text: line.slice(3) });
-    else if (line.startsWith("### ")) blocks.push({ type: "h3", text: line.slice(4) });
+    else if (line.startsWith("### "))
+      blocks.push({ type: "h3", text: line.slice(4) });
     else if (line.startsWith("- ")) blocks.push({ type: "li", text: line.slice(2) });
     else if (line === "---") blocks.push({ type: "hr", text: "" });
     else blocks.push({ type: "p", text: line });
@@ -80,7 +108,7 @@ function renderParagraphs(content: string) {
   return blocks;
 }
 
-// ✅ Added: related posts picker (no external deps, keeps your data model)
+// ✅ Slightly smarter related posts picker (same logic style, no deps)
 function getRelatedPosts(currentSlug: string) {
   const current = BLOG_POSTS.find((p) => p.slug === currentSlug);
   if (!current) return [];
@@ -92,12 +120,17 @@ function getRelatedPosts(currentSlug: string) {
     .filter((p) => p.slug !== currentSlug)
     .map((p) => {
       const kw = new Set((p.keywords || []).map((k) => k.toLowerCase()));
+
       let shared = 0;
       currentKw.forEach((k) => {
         if (kw.has(k)) shared += 1;
       });
 
-      const catMatch = currentCat && (p.category || "").toLowerCase() === currentCat ? 2 : 0;
+      // Category match gets extra weight
+      const catMatch =
+        currentCat && (p.category || "").toLowerCase() === currentCat ? 4 : 0;
+
+      // Small boost for newer posts (tie-breaker)
       const score = shared + catMatch;
 
       return { post: p, score };
@@ -108,11 +141,10 @@ function getRelatedPosts(currentSlug: string) {
       return a.post.date < b.post.date ? 1 : -1;
     });
 
-  // Only show if there’s actually relevance; otherwise fall back to latest posts
+  // Only show truly related; otherwise fallback to latest
   const top = scored.filter((x) => x.score > 0).slice(0, 3).map((x) => x.post);
   if (top.length >= 2) return top;
 
-  // fallback: latest 3 (excluding current)
   return BLOG_POSTS
     .filter((p) => p.slug !== currentSlug)
     .sort((a, b) => (a.date < b.date ? 1 : -1))
@@ -143,7 +175,6 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
   const canonical = `https://xevora.org/cleancut${post.canonicalPath}`;
   const blocks = renderParagraphs(post.content);
 
-  // ✅ Related posts computed locally (static data)
   const related = getRelatedPosts(post.slug);
 
   return (
@@ -274,6 +305,46 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
           </div>
         </section>
       )}
+
+      {/* ✅ Added: “Read next” block (strong internal links, no logic change elsewhere) */}
+      <section className="mt-10 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <h2 className="text-lg font-semibold text-white">Read next</h2>
+        <p className="mt-2 text-sm text-slate-300">
+          Want to apply this right now? Start removing backgrounds, or explore high-intent use cases.
+        </p>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <Link
+            href="/app"
+            className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 hover:border-slate-600"
+          >
+            <div className="text-sm font-semibold text-white">Open the remover</div>
+            <p className="mt-2 text-sm text-slate-300">
+              Upload an image and export a transparent PNG in seconds.
+            </p>
+          </Link>
+
+          <Link
+            href="/use-cases/shopify-product-photos"
+            className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 hover:border-slate-600"
+          >
+            <div className="text-sm font-semibold text-white">Shopify product photos</div>
+            <p className="mt-2 text-sm text-slate-300">
+              Build clean, consistent listings and catalog images.
+            </p>
+          </Link>
+
+          <Link
+            href="/pricing"
+            className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 hover:border-slate-600"
+          >
+            <div className="text-sm font-semibold text-white">View pricing</div>
+            <p className="mt-2 text-sm text-slate-300">
+              Bigger batches and premium modes when you need them.
+            </p>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

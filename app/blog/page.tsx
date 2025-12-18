@@ -5,7 +5,7 @@ import { BLOG_POSTS } from "../../lib/blogPosts";
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Guides and use cases for background removal, transparent PNG workflows, e-commerce product photos, and creator design tips. CleanCut AI by Xevora.",
+    "Background removal guides, transparent PNG tips, and e-commerce workflows for product photos, thumbnails, and marketing. CleanCut AI by Xevora.",
   alternates: { canonical: "https://xevora.org/cleancut/blog" },
 };
 

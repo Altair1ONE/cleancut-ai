@@ -14,6 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/cleancut/pricing",
     "/cleancut/blog",
     "/cleancut/use-cases",
+    "/cleancut/feed.xml",
+
 
   ].map((route) => ({
     url: `${baseUrl}${route}`,

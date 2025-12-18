@@ -12,7 +12,11 @@ const OG_DEFAULT = `${SITE_URL}${BASE_PATH}/og-default.png`;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://xevora.org"),
-  alternates: { canonical: "https://xevora.org/cleancut" },
+  alternates: { canonical: "https://xevora.org/cleancut" ,
+  types: {
+      "application/rss+xml": "https://xevora.org/cleancut/feed.xml",
+    },
+    },
 
   title: {
     default: "CleanCut AI – Remove Image Background Online | Xevora",

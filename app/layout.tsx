@@ -11,18 +11,22 @@ const BASE_PATH = "/cleancut";
 const OG_DEFAULT = `${SITE_URL}${BASE_PATH}/og-default.png`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  alternates: {
-    canonical: `${SITE_URL}${BASE_PATH}`,
-  },
+  metadataBase: new URL("https://xevora.org"),
+  alternates: { canonical: "https://xevora.org/cleancut" },
 
   title: {
     default: "CleanCut AI – Remove Image Background Online | Xevora",
     template: "%s | CleanCut AI by Xevora",
   },
- description:
-  "Remove image backgrounds instantly with CleanCut AI. Create transparent PNGs in HD with no watermark. Fast, free, and professional background removal online.",
 
+  description:
+    "Remove image backgrounds instantly with CleanCut AI. Create transparent PNGs in HD with no watermark. Fast, free, and professional background removal online.",
+
+  icons: {
+    icon: "/cleancut/favicon.ico",
+    apple: "/cleancut/apple-touch-icon.png",
+  },
+  manifest: "/cleancut/manifest.webmanifest",
   keywords: [
     "background remover",
     "remove background",

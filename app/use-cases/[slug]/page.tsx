@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { useCases } from "../../../lib/useCases";
 
-export const dynamicParams = false; // ✅ IMPORTANT for static export builds
+export const dynamicParams = false;
 
 type Props = { params: { slug: string } };
 

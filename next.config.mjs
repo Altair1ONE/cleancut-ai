@@ -15,13 +15,7 @@ const nextConfig = {
         basePath: false,
       },
 
-      {
-        source: "/feed.xml",
-        destination: "/cleancut/feed",
-        permanent: true,
-        basePath: false,
-      },
-
+      // Root sitemap redirect (optional, helps audit tools)
       {
         source: "/sitemap.xml",
         destination: "/cleancut/sitemap.xml",
@@ -29,6 +23,7 @@ const nextConfig = {
         basePath: false,
       },
 
+      // Root robots redirect (optional, helps audit tools)
       {
         source: "/robots.txt",
         destination: "/cleancut/robots.txt",
@@ -38,7 +33,7 @@ const nextConfig = {
     ];
   },
 
-  // ✅ Add: root SEO assets should resolve even with basePath
+  // ✅ KEY FIX: make root favicon/icon URLs resolve even with basePath
   async rewrites() {
     return [
       { source: "/favicon.ico", destination: "/cleancut/favicon.ico" },

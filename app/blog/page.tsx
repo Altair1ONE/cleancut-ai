@@ -68,12 +68,7 @@ export default function BlogIndex() {
           product photos, thumbnails, transparent PNGs, and more.
         </p>
 
-        <a
-  href="/feed.xml"
-  className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
->
-  RSS Feed
-</a>
+       
 
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -89,6 +84,13 @@ export default function BlogIndex() {
           >
             View Pricing
           </Link>
+
+           <a
+         href="/feed.xml"
+  className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
+>
+  RSS Feed
+</a>
         </div>
       </section>
 

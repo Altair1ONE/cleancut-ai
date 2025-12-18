@@ -3,22 +3,16 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { useCases } from "../../../lib/useCases";
 
-type Props = { params: { slug: string } };
+export const dynamicParams = false; // ✅ IMPORTANT for static export builds
 
-function normalizeSlug(input: string) {
-  const s = decodeURIComponent(String(input || "")).trim();
-  const cleaned = s.replace(/^\/+/, "");
-  const parts = cleaned.split("/").filter(Boolean);
-  return parts.length ? parts[parts.length - 1] : cleaned;
-}
+type Props = { params: { slug: string } };
 
 export function generateStaticParams() {
   return useCases.map((u) => ({ slug: u.slug }));
 }
 
 export function generateMetadata({ params }: Props): Metadata {
-  const slug = normalizeSlug(params?.slug);
-  const uc = useCases.find((u) => u.slug === slug);
+  const uc = useCases.find((u) => u.slug === params.slug);
   if (!uc) return {};
   return {
     title: uc.title,
@@ -58,9 +52,24 @@ function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://xevora.org/cleancut" },
-      { "@type": "ListItem", position: 2, name: "Use cases", item: "https://xevora.org/cleancut/use-cases" },
-      { "@type": "ListItem", position: 3, name, item: url },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://xevora.org/cleancut",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Use cases",
+        item: "https://xevora.org/cleancut/use-cases",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name,
+        item: url,
+      },
     ],
   };
 
@@ -73,8 +82,7 @@ function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
 }
 
 export default function UseCasePage({ params }: Props) {
-  const slug = normalizeSlug(params?.slug);
-  const uc = useCases.find((u) => u.slug === slug);
+  const uc = useCases.find((u) => u.slug === params.slug);
   if (!uc) return notFound();
 
   const canonical = `https://xevora.org/cleancut/use-cases/${uc.slug}`;

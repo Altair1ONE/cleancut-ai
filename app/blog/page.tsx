@@ -18,7 +18,6 @@ function JsonLd() {
     publisher: { "@type": "Organization", name: "Xevora" },
   };
 
-  // ✅ Added: BreadcrumbList (keeps everything else untouched)
   const breadcrumbs = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -68,9 +67,6 @@ export default function BlogIndex() {
           product photos, thumbnails, transparent PNGs, and more.
         </p>
 
-       
-
-
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/app"
@@ -85,12 +81,12 @@ export default function BlogIndex() {
             View Pricing
           </Link>
 
-           <a
-         href="/feed.xml"
-  className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
->
-  RSS Feed
-</a>
+          <a
+            href="/cleancut/feed.xml"
+            className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
+          >
+            RSS Feed
+          </a>
         </div>
       </section>
 
@@ -131,7 +127,6 @@ export default function BlogIndex() {
         ))}
       </section>
 
-      {/* Internal linking footer */}
       <section className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
         <h3 className="text-lg font-semibold text-white">
           Want to remove a background right now?

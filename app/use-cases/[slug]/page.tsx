@@ -1,8 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getUseCaseBySlug, useCases } from "../../../lib/use-cases";
+import {
+  getUseCaseBySlug,
+  useCases,
+  normalizeUseCaseSlug,
+} from "../../../lib/use-cases";
 
-type Props = { params: { slug: string } };
+type Props = {
+  // ✅ Next 16 (turbopack) can pass params as a Promise
+  params: Promise<{ slug: string }>;
+};
 
 export const dynamicParams = false;
 
@@ -10,8 +17,10 @@ export async function generateStaticParams() {
   return useCases.map((u) => ({ slug: u.slug }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const uc = getUseCaseBySlug(params?.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params; // ✅ FIX
+  const uc = getUseCaseBySlug(slug);
+
   if (!uc) {
     return {
       title: "Use cases",
@@ -19,6 +28,7 @@ export function generateMetadata({ params }: Props): Metadata {
       alternates: { canonical: "https://xevora.org/cleancut/use-cases" },
     };
   }
+
   return {
     title: uc.title,
     description: uc.description,
@@ -26,7 +36,13 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-function FaqJsonLd({ faq, url }: { faq: { q: string; a: string }[]; url: string }) {
+function FaqJsonLd({
+  faq,
+  url,
+}: {
+  faq: { q: string; a: string }[];
+  url: string;
+}) {
   const json = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -51,8 +67,18 @@ function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://xevora.org/cleancut" },
-      { "@type": "ListItem", position: 2, name: "Use cases", item: "https://xevora.org/cleancut/use-cases" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://xevora.org/cleancut",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Use cases",
+        item: "https://xevora.org/cleancut/use-cases",
+      },
       { "@type": "ListItem", position: 3, name, item: url },
     ],
   };
@@ -65,11 +91,16 @@ function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
   );
 }
 
-export default function UseCasePage({ params }: Props) {
-  const uc = getUseCaseBySlug(params?.slug);
+export default async function UseCasePage({ params }: Props) {
+  const { slug } = await params; // ✅ FIX
 
-  // ✅ IMPORTANT: show friendly page instead of hard-notFound()
-  // Hard notFound() is what gives you those 404s when slug parsing is off on static hosts.
+  // (Optional debug — you can remove later)
+  const normalized = normalizeUseCaseSlug(slug);
+  console.log("RAW PARAM SLUG:", slug);
+  console.log("NORMALIZED SLUG:", normalized);
+
+  const uc = getUseCaseBySlug(slug);
+
   if (!uc) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
@@ -96,7 +127,9 @@ export default function UseCasePage({ params }: Props) {
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 md:p-12">
         <p className="text-xs text-slate-400">Use case</p>
-        <h1 className="mt-2 text-3xl font-bold text-white md:text-5xl">{uc.h1}</h1>
+        <h1 className="mt-2 text-3xl font-bold text-white md:text-5xl">
+          {uc.h1}
+        </h1>
         <p className="mt-4 max-w-3xl text-slate-300">{uc.intro}</p>
 
         <div className="mt-6 flex flex-wrap gap-3">

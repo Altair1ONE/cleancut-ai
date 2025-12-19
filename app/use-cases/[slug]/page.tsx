@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { useCases } from "../../../lib/useCases";
-
-export const dynamicParams = false;
+import { useCases } from "../../../lib/use-cases"; // ✅ FIX: match your real filename: usecases.ts
 
 type Props = { params: { slug: string } };
 
-export function generateStaticParams() {
+export const dynamicParams = false; // ✅ FIX: required for static/export-style hosting
+
+export async function generateStaticParams() {
   return useCases.map((u) => ({ slug: u.slug }));
 }
 

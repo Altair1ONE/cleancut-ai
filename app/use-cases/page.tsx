@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { useCases } from "../../lib/useCases";
+import { useCases } from "../../lib/use-cases"; // ✅ FIX: match your actual filename
+
+export const dynamicParams = false; // ✅ FIX: helps static/export style builds
 
 export const metadata: Metadata = {
   title: "Use Cases",
@@ -14,8 +16,18 @@ function JsonLd() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://xevora.org/cleancut" },
-      { "@type": "ListItem", position: 2, name: "Use cases", item: "https://xevora.org/cleancut/use-cases" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://xevora.org/cleancut",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Use cases",
+        item: "https://xevora.org/cleancut/use-cases",
+      },
     ],
   };
 
@@ -35,7 +47,8 @@ export default function UseCasesIndex() {
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 md:p-12">
         <h1 className="text-3xl font-bold text-white md:text-5xl">Use cases</h1>
         <p className="mt-3 max-w-3xl text-slate-300">
-          Learn how CleanCut AI helps with real workflows: product photos, listings, thumbnails, and marketing assets.
+          Learn how CleanCut AI helps with real workflows: product photos,
+          listings, thumbnails, and marketing assets.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">

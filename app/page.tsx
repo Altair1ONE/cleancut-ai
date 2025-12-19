@@ -291,7 +291,7 @@ export default function HomePage() {
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           <Link
             className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600"
-            href="/cleancut/use-cases/shopify-product-photos"
+            href="/use-cases/shopify-product-photos"
           >
             <div className="text-sm font-semibold text-white">
               Shopify product photos
@@ -302,7 +302,7 @@ export default function HomePage() {
           </Link>
           <Link
             className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600"
-            href="/cleancut/use-cases/amazon-listing-images"
+            href="/use-cases/amazon-listing-images"
           >
             <div className="text-sm font-semibold text-white">Amazon listings</div>
             <p className="mt-1 text-sm text-slate-300">
@@ -311,7 +311,7 @@ export default function HomePage() {
           </Link>
           <Link
             className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-600"
-            href="/cleancut/use-cases/youtube-thumbnails"
+            href="/use-cases/youtube-thumbnails"
           >
             <div className="text-sm font-semibold text-white">
               YouTube thumbnails

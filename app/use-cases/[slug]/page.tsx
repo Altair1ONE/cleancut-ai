@@ -1,19 +1,24 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { useCases } from "../../../lib/use-cases"; // ✅ FIX: match your real filename: usecases.ts
+import { getUseCaseBySlug, useCases } from "../../../lib/use-cases";
 
 type Props = { params: { slug: string } };
 
-export const dynamicParams = false; // ✅ FIX: required for static/export-style hosting
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   return useCases.map((u) => ({ slug: u.slug }));
 }
 
 export function generateMetadata({ params }: Props): Metadata {
-  const uc = useCases.find((u) => u.slug === params.slug);
-  if (!uc) return {};
+  const uc = getUseCaseBySlug(params?.slug);
+  if (!uc) {
+    return {
+      title: "Use cases",
+      description: "CleanCut AI use cases",
+      alternates: { canonical: "https://xevora.org/cleancut/use-cases" },
+    };
+  }
   return {
     title: uc.title,
     description: uc.description,
@@ -21,13 +26,7 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-function FaqJsonLd({
-  faq,
-  url,
-}: {
-  faq: { q: string; a: string }[];
-  url: string;
-}) {
+function FaqJsonLd({ faq, url }: { faq: { q: string; a: string }[]; url: string }) {
   const json = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -52,24 +51,9 @@ function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://xevora.org/cleancut",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Use cases",
-        item: "https://xevora.org/cleancut/use-cases",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name,
-        item: url,
-      },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://xevora.org/cleancut" },
+      { "@type": "ListItem", position: 2, name: "Use cases", item: "https://xevora.org/cleancut/use-cases" },
+      { "@type": "ListItem", position: 3, name, item: url },
     ],
   };
 
@@ -82,8 +66,26 @@ function BreadcrumbJsonLd({ url, name }: { url: string; name: string }) {
 }
 
 export default function UseCasePage({ params }: Props) {
-  const uc = useCases.find((u) => u.slug === params.slug);
-  if (!uc) return notFound();
+  const uc = getUseCaseBySlug(params?.slug);
+
+  // ✅ IMPORTANT: show friendly page instead of hard-notFound()
+  // Hard notFound() is what gives you those 404s when slug parsing is off on static hosts.
+  if (!uc) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <h1 className="text-2xl font-bold text-white">Use case not found</h1>
+        <p className="mt-2 text-slate-300">
+          This page doesn’t exist. Please use the Use Cases index.
+        </p>
+        <Link
+          href="/use-cases"
+          className="mt-4 inline-block text-indigo-300 hover:underline"
+        >
+          Back to Use Cases
+        </Link>
+      </main>
+    );
+  }
 
   const canonical = `https://xevora.org/cleancut/use-cases/${uc.slug}`;
 
@@ -94,9 +96,7 @@ export default function UseCasePage({ params }: Props) {
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 md:p-12">
         <p className="text-xs text-slate-400">Use case</p>
-        <h1 className="mt-2 text-3xl font-bold text-white md:text-5xl">
-          {uc.h1}
-        </h1>
+        <h1 className="mt-2 text-3xl font-bold text-white md:text-5xl">{uc.h1}</h1>
         <p className="mt-4 max-w-3xl text-slate-300">{uc.intro}</p>
 
         <div className="mt-6 flex flex-wrap gap-3">

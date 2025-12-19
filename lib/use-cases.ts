@@ -309,4 +309,17 @@ export const useCases: UseCase[] = [
       },
     ],
   },
+
 ];
+
+export function normalizeUseCaseSlug(input: string) {
+  const s = decodeURIComponent(String(input || "")).trim();
+  const cleaned = s.replace(/^\/+/, "");
+  const parts = cleaned.split("/").filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : cleaned;
+}
+
+export function getUseCaseBySlug(slug: string) {
+  const normalized = normalizeUseCaseSlug(slug);
+  return useCases.find((u) => u.slug === normalized) || null;
+}

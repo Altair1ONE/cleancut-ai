@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { BLOG_POSTS } from "../lib/blogPosts";
-import { useCases } from "../lib/useCases";
+import { useCases } from "../lib/use-cases";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://xevora.org";

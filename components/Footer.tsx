@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BLOG_POSTS } from "../lib/blogPosts";
-import { useCases } from "../lib/useCases";
+import { useCases } from "../lib/use-cases";
 
 export default function Footer() {
   const latestPosts = [...BLOG_POSTS]

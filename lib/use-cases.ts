@@ -313,13 +313,26 @@ export const useCases: UseCase[] = [
 ];
 
 export function normalizeUseCaseSlug(input: string) {
-  const s = decodeURIComponent(String(input || "")).trim();
-  const cleaned = s.replace(/^\/+/, "");
-  const parts = cleaned.split("/").filter(Boolean);
-  return parts.length ? parts[parts.length - 1] : cleaned;
+  const raw = decodeURIComponent(String(input || "")).trim();
+
+  // remove query/hash
+  const noQuery = raw.split("?")[0].split("#")[0];
+
+  // remove trailing slashes
+  const noSlash = noQuery.replace(/\/+$/, "");
+
+  // keep last segment only
+  const parts = noSlash.split("/").filter(Boolean);
+  const last = parts.length ? parts[parts.length - 1] : noSlash;
+
+  // handle static hosts that append ".html"
+  const noHtml = last.replace(/\.html$/i, "");
+
+  return noHtml.toLowerCase();
 }
 
 export function getUseCaseBySlug(slug: string) {
   const normalized = normalizeUseCaseSlug(slug);
-  return useCases.find((u) => u.slug === normalized) || null;
+  return useCases.find((u) => u.slug.toLowerCase() === normalized) || null;
 }
+

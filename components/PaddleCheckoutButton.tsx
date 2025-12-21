@@ -22,10 +22,16 @@ function loadPaddleScript(): Promise<void> {
     if (typeof window === "undefined") return resolve();
     if (window.Paddle) return resolve();
 
-    const existing = document.querySelector<HTMLScriptElement>('script[data-paddle="v2"]');
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[data-paddle="v2"]'
+    );
+
     if (existing) {
+      // If script exists but Paddle isn't ready yet, wait for load
       existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Paddle script failed")));
+      existing.addEventListener("error", () =>
+        reject(new Error("Paddle script failed"))
+      );
       return;
     }
 
@@ -39,13 +45,25 @@ function loadPaddleScript(): Promise<void> {
   });
 }
 
+function normalizeEnv(env: string) {
+  const v = (env || "").toLowerCase().trim();
+  if (v === "sandbox") return "sandbox";
+  if (v === "production") return "production";
+  // common mistakes
+  if (v === "prod") return "production";
+  if (v === "live") return "production";
+  if (v === "test") return "sandbox";
+  return "production";
+}
+
 export default function PaddleCheckoutButton({ plan, className, children }: Props) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [ready, setReady] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
   const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || "";
-  const environment = process.env.NEXT_PUBLIC_PADDLE_ENV || "production"; // "sandbox" or "production"
+  const environment = normalizeEnv(process.env.NEXT_PUBLIC_PADDLE_ENV || "production");
 
   const priceId = useMemo(() => PADDLE_PRICE_IDS[plan], [plan]);
 
@@ -54,57 +72,104 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
 
     (async () => {
       try {
-        if (!token) return; // not configured yet
+        setInitError(null);
+
+        // Helpful debug (remove later if you want)
+        console.log("[Paddle] init start", {
+          plan,
+          hasToken: !!token,
+          environment,
+          priceId,
+        });
+
+        if (!token) {
+          setInitError("Missing NEXT_PUBLIC_PADDLE_CLIENT_TOKEN");
+          return;
+        }
+
+        if (!priceId) {
+          setInitError(
+            plan === "pro_monthly"
+              ? "Missing NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY"
+              : "Missing NEXT_PUBLIC_PADDLE_PRICE_LIFETIME"
+          );
+          return;
+        }
+
         await loadPaddleScript();
 
-        if (!window.Paddle?.Initialize) return;
+        if (!window.Paddle?.Initialize) {
+          setInitError("Paddle.Initialize not found (script failed or blocked)");
+          return;
+        }
 
-        // Initialize once
         window.Paddle.Initialize({
           token,
           environment,
         });
 
-        if (!cancelled) setReady(true);
-      } catch {
-        if (!cancelled) setReady(false);
+        if (!cancelled) {
+          setReady(true);
+          console.log("[Paddle] ready ✅", { plan, environment, priceId });
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setReady(false);
+          setInitError(e?.message || "Paddle init failed");
+          console.error("[Paddle] init error:", e);
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [token, environment]);
+  }, [token, environment, priceId, plan]);
 
-  const onClick = async () => {
-    if (!ready || !priceId) return;
+  const onClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Require user logged in (important for webhook mapping)
+    if (loading) return;
+
+    if (!user?.id) {
+      alert("Please sign in first to upgrade. (So we can link payment to your account.)");
+      return;
+    }
+
+    if (!ready || !priceId) {
+      // Show a useful message instead of silent failure
+      alert(
+        initError ||
+          "Payments are not configured yet. Check Paddle token/env/price IDs."
+      );
+      return;
+    }
 
     setOpening(true);
     try {
-      const email = user?.email || undefined;
-      const supabaseUserId = user?.id || undefined;
+      const email = user.email || undefined;
+      const supabaseUserId = user.id;
 
       // Open Paddle Checkout Overlay
       window.Paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
         customer: email ? { email } : undefined,
-        // This is VERY useful so your webhook can map payment -> user
-        customData: supabaseUserId ? { supabase_user_id: supabaseUserId, plan } : { plan },
+        customData: { supabase_user_id: supabaseUserId, plan },
       });
+    } catch (err) {
+      console.error("[Paddle] Checkout.open failed:", err);
+      alert("Checkout failed to open. Check console for details.");
     } finally {
       setOpening(false);
     }
   };
 
-  const disabled = !ready || !priceId || opening;
+  const disabled = opening; // only disable while opening (so button still clicks & shows errors)
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={className}
-    >
+    <button type="button" onClick={onClick} disabled={disabled} className={className}>
       {children}
     </button>
   );

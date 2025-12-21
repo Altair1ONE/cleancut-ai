@@ -47,99 +47,7 @@ function getMaxSidePx(planId: string, mode: QualityMode): number {
   return mode === "fast" ? 2200 : 3200;
 }
 
-async function resizeImageFile(file: File, maxSide: number): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-
-  const img = document.createElement("img");
-  const url = URL.createObjectURL(file);
-
-  try {
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = url;
-    });
-
-    const w = img.naturalWidth;
-    const h = img.naturalHeight;
-    const longSide = Math.max(w, h);
-
-    if (longSide <= maxSide) return file;
-
-    const scale = maxSide / longSide;
-    const newW = Math.round(w * scale);
-    const newH = Math.round(h * scale);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = newW;
-    canvas.height = newH;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-
-    ctx.drawImage(img, 0, 0, newW, newH);
-
-    const outType =
-      file.type === "image/png"
-        ? "image/png"
-        : file.type === "image/webp"
-        ? "image/webp"
-        : "image/jpeg";
-
-    const outQuality = outType === "image/jpeg" ? 0.92 : 0.92;
-
-    const blob: Blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
-        outType,
-        outQuality
-      );
-    });
-
-    const newName =
-      file.name.replace(/\.(png|jpg|jpeg|webp)$/i, "") +
-      `-${maxSide}px` +
-      (outType === "image/png"
-        ? ".png"
-        : outType === "image/webp"
-        ? ".webp"
-        : ".jpg");
-
-    return new File([blob], newName, { type: outType });
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-async function asyncPool<T, R>(
-  poolLimit: number,
-  array: T[],
-  iteratorFn: (item: T, index: number) => Promise<R>
-): Promise<R[]> {
-  const ret: Promise<R>[] = [];
-  const executing: Promise<void>[] = [];
-
-  for (let i = 0; i < array.length; i++) {
-    const p = Promise.resolve().then(() => iteratorFn(array[i], i));
-    ret.push(p);
-
-    let removePromise!: Promise<void>;
-    removePromise = p.then(() => {
-      const idx = executing.indexOf(removePromise);
-      if (idx >= 0) executing.splice(idx, 1);
-    });
-
-    executing.push(removePromise);
-
-    if (executing.length >= poolLimit) {
-      await Promise.race(executing);
-    }
-  }
-
-  return Promise.all(ret);
-}
-
-/** -------------------------------------------------------- **/
+// ... keep everything else above unchanged ...
 
 export default function AppPage() {
   const { session, loading } = useAuth();
@@ -147,7 +55,7 @@ export default function AppPage() {
 
   useEffect(() => {
     if (!loading && !session) {
-      router.push("/login");
+      router.push("/cleancut/login");
     }
   }, [loading, session, router]);
 
@@ -171,6 +79,8 @@ export default function AppPage() {
 }
 
 function AppInner() {
+  const { user } = useAuth();
+
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [images, setImages] = useState<QueuedImage[]>([]);
   const [results, setResults] = useState<ProcessedImage[]>([]);
@@ -186,382 +96,44 @@ function AppInner() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
 
+  // ✅ Reload credits when user logs in + when credits:update fires
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  (async () => {
-    const state = await loadCredits();
-    if (mounted) {
-      setCredits(state);
+    async function refresh() {
+      try {
+        const state = await loadCredits();
+        if (mounted) setCredits(state);
+      } catch (e) {
+        console.error("AppInner loadCredits failed:", e);
+        if (mounted) setCredits(null);
+      }
     }
-  })();
 
-  return () => {
-    mounted = false;
-  };
-}, []);
+    refresh();
 
+    function onCreditsUpdate() {
+      refresh();
+    }
+
+    window.addEventListener("credits:update", onCreditsUpdate);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("credits:update", onCreditsUpdate);
+    };
+  }, [user?.id]);
 
   const plan = useMemo(
     () => (credits ? getPlanById(credits.planId) : getPlanById("free")),
     [credits]
   );
 
-  const isFree = plan.id === "free";
-  const isLifetime = plan.id === "lifetime";
-  const allowQuality = !isFree; // ✅ quality allowed only for paid plans
-  const allowHdUi = isLifetime; // ✅ show HD export UI only on lifetime (disabled)
-
-  // ✅ If user is on Free plan, force Fast mode
-  useEffect(() => {
-    if (isFree && qualityMode === "quality") {
-      setQualityMode("fast");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFree]);
-
-  // Cleanup preview object URLs when images change
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images.length]);
-
-  function onFilesSelected(files: File[]) {
-    const limited = files.slice(0, plan.maxBatchSize);
-    const newItems: QueuedImage[] = limited.map((f) => ({
-      id: `${f.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      file: f,
-      previewUrl: URL.createObjectURL(f),
-    }));
-    setImages(newItems);
-    setResults([]);
-    setErrorMsg(null);
-  }
-
-  async function handleProcess() {
-    setErrorMsg(null);
-
-    if (!credits) {
-      setErrorMsg("Credits are still loading, please wait a second.");
-      return;
-    }
-
-    if (images.length === 0) {
-      setErrorMsg("Please upload at least one image.");
-      return;
-    }
-
-    // ✅ Free tier cannot use Quality
-    const isQuality = allowQuality && qualityMode === "quality";
-
-    // ✅ Quality costs 2 credits/image; Fast costs 1 credit/image
-    if (!canConsumeCredits(credits, images.length, isQuality)) {
-      setShowPaywall(true);
-      return;
-    }
-
-    const spaceId = process.env.NEXT_PUBLIC_BG_SPACE;
-    if (!spaceId) {
-      setErrorMsg("NEXT_PUBLIC_BG_SPACE is not set in environment variables.");
-      return;
-    }
-
-    setIsProcessing(true);
-    setProcessedCount(0);
-
-    try {
-      const app = await Client.connect(spaceId);
-
-      const maxSide = getMaxSidePx(credits.planId, isQuality ? "quality" : "fast");
-      const resized = await Promise.all(
-        images.map(async (img) => {
-          const resizedFile = await resizeImageFile(img.file, maxSide);
-          return { ...img, file: resizedFile };
-        })
-      );
-
-      const concurrency = 2;
-      const qualityFlag = isQuality;
-
-      const processed = await asyncPool(concurrency, resized, async (img) => {
-        const result: any = await app.predict("/remove_bg", [
-          img.file,
-          qualityFlag,
-        ]);
-
-        const raw =
-          Array.isArray(result?.data) && result.data.length > 0
-            ? result.data[0]
-            : null;
-
-        if (!raw) {
-          console.error("HF response:", result);
-          throw new Error("Invalid response from HF");
-        }
-
-        const outputUrl =
-          typeof raw === "string"
-            ? raw
-            : typeof raw === "object" && raw && "url" in raw
-            ? (raw as any).url
-            : null;
-
-        if (!outputUrl) {
-          throw new Error("Could not extract output url");
-        }
-
-        setProcessedCount((c) => c + 1);
-
-        return {
-          id: img.id,
-          inputUrl: img.previewUrl,
-          outputUrl,
-        } as ProcessedImage;
-      });
-
-      setResults(processed);
-
-      // ✅ Usage analytics (Supabase) - non-blocking
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const creditsSpent = images.length * (isQuality ? 2 : 1);
-          await supabase.from("usage_events").insert({
-            user_id: user.id,
-            email: user.email,
-            plan_id: credits.planId,
-            mode: isQuality ? "quality" : "fast",
-            images_count: images.length,
-            credits_spent: creditsSpent,
-          });
-        }
-      } catch (e) {
-        console.warn("usage analytics insert failed", e);
-      }
-
-      // ✅ Deduct correct credits: Fast=1x, Quality=2x
-      const updatedCredits = await consumeCredits(
-  credits,
-  images.length,
-  isQuality
-);
-setCredits(updatedCredits);
-
-
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("credits:update"));
-      }
-    } catch (err: any) {
-      console.error("HF Space error:", err);
-      setErrorMsg(
-        "Processing failed. Your HuggingFace Space may be cold-starting or overloaded. Try again in a moment."
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  }
-
-  async function handleDownloadAll() {
-    for (let i = 0; i < results.length; i++) {
-      const res = results[i];
-      try {
-        const r = await fetch(res.outputUrl);
-        const blob = await r.blob();
-        const blobUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `cleancut-${i + 1}.png`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        URL.revokeObjectURL(blobUrl);
-      } catch {
-        const a = document.createElement("a");
-        a.href = res.outputUrl;
-        a.download = `cleancut-${i + 1}.png`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-    }
-  }
-
-  const isQuality = allowQuality && qualityMode === "quality";
-  const perImageCost = isQuality ? 2 : 1;
-  const totalCost = images.length * perImageCost;
+  // ... keep everything else unchanged until paywall ...
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-white">
-            CleanCut AI – Background Removal App
-          </h1>
-          <p className="mt-1 text-xs text-slate-300">
-            Fast costs 1 credit/image. Quality costs 2 credits/image (paid plans only).
-          </p>
-        </div>
-        <CreditsBadge />
-      </header>
-
-      <section className="mt-6 grid gap-6 md:grid-cols-[2fr,2fr]">
-        <div className="card p-4">
-          <UploadArea onFilesSelected={onFilesSelected} />
-
-          <div className="mt-4 space-y-3 text-xs text-slate-300">
-            <div>
-              <span className="font-semibold text-slate-200">
-                Background mode
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(
-                  [
-                    "transparent",
-                    "white",
-                    "black",
-                    "custom",
-                    "blur",
-                    "shadow",
-                  ] as BgMode[]
-                ).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setBgMode(mode)}
-                    className={`rounded-full px-3 py-1 text-[11px] ${
-                      bgMode === mode
-                        ? "bg-indigo-500 text-white"
-                        : "bg-slate-800 text-slate-200"
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                ))}
-                {bgMode === "custom" && (
-                  <input
-                    type="color"
-                    className="h-6 w-10 cursor-pointer rounded"
-                    value={customColor}
-                    onChange={(e) => setCustomColor(e.target.value)}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Processing mode */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-              <div>
-                <div className="text-xs font-semibold text-slate-100">
-                  Processing mode
-                </div>
-                <div className="mt-1 text-[11px] text-slate-400">
-                  Fast = 1 credit/image. Quality = 2 credits/image (paid only).
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setQualityMode("fast")}
-                  className={`rounded-full px-3 py-1 text-[11px] ${
-                    qualityMode === "fast"
-                      ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30"
-                      : "bg-slate-800 text-slate-200"
-                  }`}
-                >
-                  Fast (1 credit)
-                </button>
-
-                <button
-                  onClick={() => setQualityMode("quality")}
-                  disabled={!allowQuality}
-                  title={!allowQuality ? "Quality mode is available on paid plans." : ""}
-                  className={`rounded-full px-3 py-1 text-[11px] border ${
-                    !allowQuality
-                      ? "cursor-not-allowed border-slate-800 bg-slate-900/40 text-slate-500"
-                      : qualityMode === "quality"
-                      ? "bg-indigo-500/20 text-indigo-200 border border-indigo-500/30"
-                      : "bg-slate-800 text-slate-200 border border-slate-800"
-                  }`}
-                >
-                  Quality (2 credits)
-                </button>
-              </div>
-            </div>
-
-            {/* HD Export (Coming soon) - Lifetime only, disabled */}
-            {allowHdUi && (
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                <div>
-                  <div className="text-xs font-semibold text-slate-100">
-                    HD Export
-                    <span className="ml-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
-                      Coming soon
-                    </span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-slate-400">
-                    True HD export will be enabled when GPU processing is added (Lifetime only).
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-2 text-[11px] text-slate-400">
-                  <input
-                    type="checkbox"
-                    checked={useHd}
-                    onChange={(e) => setUseHd(e.target.checked)}
-                    disabled
-                    className="h-3 w-3 cursor-not-allowed"
-                  />
-                  Disabled
-                </label>
-              </div>
-            )}
-
-            <button
-              onClick={handleProcess}
-              disabled={isProcessing || images.length === 0}
-              className="w-full rounded-full bg-indigo-500 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-700"
-            >
-              {isProcessing ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
-                  Processing {processedCount}/{images.length}
-                </span>
-              ) : (
-                `Process ${images.length || ""} image${
-                  images.length === 1 ? "" : "s"
-                } • Cost: ${totalCost} credit${totalCost === 1 ? "" : "s"}`
-              )}
-            </button>
-
-            {errorMsg && (
-              <p className="text-[11px] text-rose-400">{errorMsg}</p>
-            )}
-
-            {results.length > 0 && (
-              <button
-                onClick={handleDownloadAll}
-                className="w-full rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500"
-              >
-                Download all as PNG
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="card p-4">
-          <BeforeAfter
-            images={results}
-            bgMode={bgMode}
-            customColor={customColor}
-          />
-        </div>
-      </section>
+      {/* keep everything unchanged */}
 
       {showPaywall && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
@@ -573,14 +145,7 @@ setCredits(updatedCredits);
               You&apos;ve reached the limit for your current plan. Upgrade to
               process more images.
             </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Current selection:{" "}
-              <span className="text-slate-200">
-                {isQuality ? "quality" : "fast"}
-              </span>{" "}
-              • Cost per image:{" "}
-              <span className="text-slate-200">{perImageCost}</span> credit(s)
-            </p>
+
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setShowPaywall(false)}
@@ -589,7 +154,7 @@ setCredits(updatedCredits);
                 Close
               </button>
               <a
-                href="/pricing"
+                href="/cleancut/pricing"
                 className="rounded-full bg-indigo-500 px-4 py-1 text-xs font-semibold text-white hover:bg-indigo-600"
               >
                 See plans

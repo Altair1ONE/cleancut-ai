@@ -1,31 +1,40 @@
-// components/CreditsBadge.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { CreditState, loadCredits } from "../lib/credits";
 import { getPlanById } from "../lib/plans";
+import { useAuth } from "./AuthProvider";
 
 export function CreditsBadge() {
+  const { user } = useAuth();
   const [state, setState] = useState<CreditState | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    (async () => {
+    async function refresh() {
       try {
         const creditState = await loadCredits();
-        if (mounted) {
-          setState(creditState);
-        }
+        if (mounted) setState(creditState);
       } catch (err) {
         console.error("Failed to load credits:", err);
+        if (mounted) setState(null);
       }
-    })();
+    }
+
+    refresh();
+
+    function onCreditsUpdate() {
+      refresh();
+    }
+
+    window.addEventListener("credits:update", onCreditsUpdate);
 
     return () => {
       mounted = false;
+      window.removeEventListener("credits:update", onCreditsUpdate);
     };
-  }, []);
+  }, [user?.id]);
 
   if (!state) return null;
 

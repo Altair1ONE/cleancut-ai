@@ -20,18 +20,33 @@ export default function Navbar() {
     return createClient(url, key);
   }, []);
 
+  // ✅ Load credits whenever user changes + when credits update event fires
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  (async () => {
-    const state = await loadCredits();
-    if (mounted) setCredits(state);
-  })();
+    async function refresh() {
+      try {
+        const state = await loadCredits();
+        if (mounted) setCredits(state);
+      } catch (e) {
+        console.error("Navbar loadCredits failed:", e);
+        if (mounted) setCredits(null);
+      }
+    }
 
-  return () => {
-    mounted = false;
-  };
-}, []);
+    refresh();
+
+    function onCreditsUpdate() {
+      refresh();
+    }
+
+    window.addEventListener("credits:update", onCreditsUpdate);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("credits:update", onCreditsUpdate);
+    };
+  }, [user?.id]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -56,7 +71,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* LEFT: BRAND */}
-        <Link href="/" className="text-sm font-bold tracking-wide text-white">
+        <Link href="/cleancut" className="text-sm font-bold tracking-wide text-white">
           CleanCut<span className="text-indigo-400"> AI</span>
           <span className="ml-2 text-xs font-normal text-slate-400">
             by Xevora
@@ -65,20 +80,20 @@ export default function Navbar() {
 
         {/* CENTER: NAV LINKS */}
         <nav className="hidden items-center gap-6 md:flex">
-          <Link href="/app" className="text-sm text-slate-300 hover:text-white">
+          <Link href="/cleancut/app" className="text-sm text-slate-300 hover:text-white">
             App
           </Link>
           <Link
-            href="/pricing"
+            href="/cleancut/pricing"
             className="text-sm text-slate-300 hover:text-white"
           >
             Pricing
           </Link>
-          <Link href="/blog" className="text-sm text-slate-300 hover:text-white">
+          <Link href="/cleancut/blog" className="text-sm text-slate-300 hover:text-white">
             Blog
           </Link>
           <Link
-            href="/contact"
+            href="/cleancut/contact"
             className="text-sm text-slate-300 hover:text-white"
           >
             Contact
@@ -88,17 +103,17 @@ export default function Navbar() {
         {/* RIGHT */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
-  <div className="text-xs text-slate-300">
-    Credits:{" "}
-    <span className="font-semibold text-white">
-      {credits.creditsRemaining}
-    </span>
-  </div>
-)}
+            <div className="text-xs text-slate-300">
+              Credits:{" "}
+              <span className="font-semibold text-white">
+                {credits.creditsRemaining}
+              </span>
+            </div>
+          )}
 
           {!user && (
             <Link
-              href="/login"
+              href="/cleancut/login"
               className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
             >
               Sign in
@@ -122,7 +137,7 @@ export default function Navbar() {
                   </div>
 
                   <Link
-                    href="/profile"
+                    href="/cleancut/profile"
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                     onClick={() => setOpen(false)}
                   >
@@ -131,7 +146,7 @@ export default function Navbar() {
 
                   {/* ✅ ADDED: My Usage */}
                   <Link
-                    href="/usage"
+                    href="/cleancut/usage"
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                     onClick={() => setOpen(false)}
                   >
@@ -139,7 +154,7 @@ export default function Navbar() {
                   </Link>
 
                   <Link
-                    href="/pricing"
+                    href="/cleancut/pricing"
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                     onClick={() => setOpen(false)}
                   >
@@ -159,7 +174,7 @@ export default function Navbar() {
           )}
 
           <Link
-            href="/app"
+            href="/cleancut/app"
             className="hidden rounded-full border border-slate-700 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500 md:inline-flex"
           >
             Try Free

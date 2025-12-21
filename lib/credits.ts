@@ -34,15 +34,12 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
 
   if (error) throw error;
 
-  // ✅ FIRST-TIME USER → call server-only init (Option B)
-  // NOTE: With DB trigger on auth.users, this should usually already exist,
-  // but keeping this as a safe fallback.
+  // ✅ FIRST-TIME USER → call server-only init (fallback)
   if (!data) {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
 
     if (accessToken) {
-      // Server route grants 30 credits ONCE
       await fetch("/api/credits/init", {
         method: "POST",
         headers: {
@@ -52,7 +49,6 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
       });
     }
 
-    // Re-fetch after init (DB is source of truth)
     const { data: afterInit, error: err2 } = await supabase
       .from("user_credits")
       .select("plan_id, credits_remaining, last_reset_at")
@@ -62,7 +58,6 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
     if (err2) throw err2;
 
     if (!afterInit) {
-      // Extremely rare fallback
       return { planId: "free", creditsRemaining: 0, lastResetAt: null };
     }
 
@@ -73,7 +68,6 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
     };
   }
 
-  // Normal case: credits already exist
   return {
     planId: (data.plan_id as PlanId) || "free",
     creditsRemaining: Number(data.credits_remaining ?? 0),
@@ -112,8 +106,8 @@ export function canConsumeCredits(
  * 2) consumeCredits(imageCount, isQuality)
  *
  * IMPORTANT CHANGE:
- * - We now deduct credits using the secure RPC `consume_credits(p_amount)`
- * - This works with RLS (no client UPDATE policy needed)
+ * Deduction is now done server-side via /api/credits/consume
+ * (so RLS won't block it)
  */
 export async function consumeCredits(
   stateOrImageCount: CreditState | number,
@@ -123,9 +117,7 @@ export async function consumeCredits(
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
 
-  if (!user) {
-    throw new Error("Not signed in");
-  }
+  if (!user) throw new Error("Not signed in");
 
   // Normalize arguments
   let imageCount: number;
@@ -139,34 +131,34 @@ export async function consumeCredits(
     isQuality = Boolean(imageCountOrIsQuality);
   }
 
-  // Always base on latest DB state
-  const current = await loadCreditsFromDB();
+  // Get token
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
 
-  const perImage = isQuality ? 2 : 1;
-  const cost = Math.max(0, imageCount) * perImage;
+  if (!accessToken) throw new Error("Missing access token");
 
-  if (cost <= 0) return current;
-
-  // If insufficient, return current (your UI handles paywall)
-  if (current.creditsRemaining < cost) {
-    return current;
-  }
-
-  // ✅ Deduct using secure RPC (atomic + race-safe)
-  const { data, error } = await supabase.rpc("consume_credits", {
-    p_amount: cost,
+  // Call server route (deducts credits atomically)
+  const res = await fetch("/api/credits/consume", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ imageCount, isQuality }),
   });
 
-  if (error) throw error;
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j?.error || "Failed to deduct credits");
+  }
 
-  // RPC returns { credits_remaining, plan_id }
-  const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
-  if (!row) throw new Error("consume_credits returned no data");
+  const json = await res.json();
 
+  // Return fresh state
   return {
-    planId: (row.plan_id as PlanId) || current.planId || "free",
-    creditsRemaining: Number(row.credits_remaining ?? 0),
-    lastResetAt: current.lastResetAt ?? null,
+    planId: (json.planId as PlanId) || "free",
+    creditsRemaining: Number(json.creditsRemaining ?? 0),
+    lastResetAt: null,
   };
 }
 
@@ -175,7 +167,5 @@ export async function consumeCredits(
    ========================= */
 
 export async function switchPlan(_: PlanId): Promise<CreditState> {
-  // Client is NOT allowed to change plans.
-  // Plans are controlled by Paddle webhook.
   return loadCreditsFromDB();
 }

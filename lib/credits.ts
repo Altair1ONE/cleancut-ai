@@ -35,6 +35,8 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
   if (error) throw error;
 
   // ✅ FIRST-TIME USER → call server-only init (Option B)
+  // NOTE: With DB trigger on auth.users, this should usually already exist,
+  // but keeping this as a safe fallback.
   if (!data) {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
@@ -108,6 +110,10 @@ export function canConsumeCredits(
  * Supports BOTH call styles used in your app:
  * 1) consumeCredits(state, imageCount, isQuality)
  * 2) consumeCredits(imageCount, isQuality)
+ *
+ * IMPORTANT CHANGE:
+ * - We now deduct credits using the secure RPC `consume_credits(p_amount)`
+ * - This works with RLS (no client UPDATE policy needed)
  */
 export async function consumeCredits(
   stateOrImageCount: CreditState | number,
@@ -133,28 +139,35 @@ export async function consumeCredits(
     isQuality = Boolean(imageCountOrIsQuality);
   }
 
+  // Always base on latest DB state
   const current = await loadCreditsFromDB();
 
   const perImage = isQuality ? 2 : 1;
   const cost = Math.max(0, imageCount) * perImage;
 
+  if (cost <= 0) return current;
+
+  // If insufficient, return current (your UI handles paywall)
   if (current.creditsRemaining < cost) {
     return current;
   }
 
-  const nextRemaining = current.creditsRemaining - cost;
-
-  const { error } = await supabase
-    .from("user_credits")
-    .update({
-      credits_remaining: nextRemaining,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", user.id);
+  // ✅ Deduct using secure RPC (atomic + race-safe)
+  const { data, error } = await supabase.rpc("consume_credits", {
+    p_amount: cost,
+  });
 
   if (error) throw error;
 
-  return { ...current, creditsRemaining: nextRemaining };
+  // RPC returns { credits_remaining, plan_id }
+  const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
+  if (!row) throw new Error("consume_credits returned no data");
+
+  return {
+    planId: (row.plan_id as PlanId) || current.planId || "free",
+    creditsRemaining: Number(row.credits_remaining ?? 0),
+    lastResetAt: current.lastResetAt ?? null,
+  };
 }
 
 /* =========================

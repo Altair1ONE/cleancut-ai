@@ -1,6 +1,9 @@
 // app/pricing/page.tsx
 import Link from "next/link";
 import type { Metadata } from "next";
+// ADD at top with imports:
+import PaddleCheckoutButton from "../../components/PaddleCheckoutButton";
+
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -248,16 +251,30 @@ export default function PricingPage() {
               ))}
             </ul>
 
-            <Link
-              href={p.cta.href}
-              className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
-                p.highlight
-                  ? "bg-indigo-500 text-white hover:bg-indigo-600"
-                  : "border border-slate-700 text-slate-200 hover:border-slate-500"
-              }`}
-            >
-              {p.cta.label}
-            </Link>
+            {p.id === "free" ? (
+  <Link
+    href={p.cta.href}
+    className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
+      p.highlight
+        ? "bg-indigo-500 text-white hover:bg-indigo-600"
+        : "border border-slate-700 text-slate-200 hover:border-slate-500"
+    }`}
+  >
+    {p.cta.label}
+  </Link>
+) : (
+  <PaddleCheckoutButton
+    plan={p.id === "pro_monthly" ? "pro_monthly" : "lifetime"}
+    className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
+      p.highlight
+        ? "bg-indigo-500 text-white hover:bg-indigo-600"
+        : "border border-slate-700 text-slate-200 hover:border-slate-500"
+    }`}
+  >
+    {p.id === "pro_monthly" ? "Upgrade to Pro" : "Get Lifetime"}
+  </PaddleCheckoutButton>
+)}
+
 
             {p.note && <p className="mt-3 text-xs text-slate-400">{p.note}</p>}
 

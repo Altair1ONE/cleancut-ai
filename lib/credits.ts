@@ -34,7 +34,7 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
 
   if (error) throw error;
 
-  // ✅ FIRST-TIME USER → call server-only init (fallback)
+  // ✅ FIRST-TIME USER → fallback init
   if (!data) {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
@@ -105,9 +105,8 @@ export function canConsumeCredits(
  * 1) consumeCredits(state, imageCount, isQuality)
  * 2) consumeCredits(imageCount, isQuality)
  *
- * IMPORTANT CHANGE:
- * Deduction is now done server-side via /api/credits/consume
- * (so RLS won't block it)
+ * IMPORTANT:
+ * Deduction is done via /api/credits/consume (server-side using service role).
  */
 export async function consumeCredits(
   stateOrImageCount: CreditState | number,
@@ -119,7 +118,7 @@ export async function consumeCredits(
 
   if (!user) throw new Error("Not signed in");
 
-  // Normalize arguments
+  // Normalize args
   let imageCount: number;
   let isQuality: boolean;
 
@@ -131,13 +130,11 @@ export async function consumeCredits(
     isQuality = Boolean(imageCountOrIsQuality);
   }
 
-  // Get token
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData?.session?.access_token;
 
   if (!accessToken) throw new Error("Missing access token");
 
-  // Call server route (deducts credits atomically)
   const res = await fetch("/api/credits/consume", {
     method: "POST",
     headers: {
@@ -147,14 +144,13 @@ export async function consumeCredits(
     body: JSON.stringify({ imageCount, isQuality }),
   });
 
+  const json = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const j = await res.json().catch(() => ({}));
-    throw new Error(j?.error || "Failed to deduct credits");
+    console.error("consume failed:", res.status, json);
+    throw new Error(json?.error || "Failed to deduct credits");
   }
 
-  const json = await res.json();
-
-  // Return fresh state
   return {
     planId: (json.planId as PlanId) || "free",
     creditsRemaining: Number(json.creditsRemaining ?? 0),

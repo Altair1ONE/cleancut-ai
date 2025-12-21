@@ -7,6 +7,12 @@ export async function POST(req: Request) {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    console.log("[consume] env present?", {
+      supabaseUrl: Boolean(supabaseUrl),
+      anonKey: Boolean(anonKey),
+      serviceKey: Boolean(serviceKey),
+    });
+
     if (!supabaseUrl || !anonKey || !serviceKey) {
       return NextResponse.json(
         { error: "Missing Supabase env vars (URL/ANON/SERVICE_ROLE)." },
@@ -14,69 +20,83 @@ export async function POST(req: Request) {
       );
     }
 
-    // Read bearer token from client
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length)
       : null;
 
+    console.log("[consume] has bearer token?", Boolean(token));
+
     if (!token) {
-      return NextResponse.json({ error: "Missing bearer token." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Missing bearer token." },
+        { status: 401 }
+      );
     }
 
-    // Validate user using ANON client + token
+    // Validate user session
     const supabaseUser = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
     const { data: userData, error: userErr } = await supabaseUser.auth.getUser();
+
+    console.log("[consume] userErr?", userErr?.message || null);
+    console.log("[consume] user id?", userData?.user?.id || null);
+
     if (userErr || !userData?.user) {
       return NextResponse.json({ error: "Invalid session." }, { status: 401 });
     }
 
     const user = userData.user;
 
-    // Parse request body
+    // Parse body
     const body = await req.json().catch(() => ({}));
     const imageCount = Number(body?.imageCount ?? 0);
     const isQualityRequested = Boolean(body?.isQuality);
+
+    console.log("[consume] body", { imageCount, isQualityRequested });
 
     if (!Number.isFinite(imageCount) || imageCount <= 0) {
       return NextResponse.json({ error: "Invalid imageCount." }, { status: 400 });
     }
 
-    // Use SERVICE ROLE for secure DB operations
+    // Service role client
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
-    // Get current plan from credits row (source of truth)
+    // Read plan
     const { data: creditsRow, error: creditsErr } = await supabaseAdmin
       .from("user_credits")
-      .select("plan_id")
+      .select("plan_id, credits_remaining")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    console.log("[consume] creditsRow", creditsRow);
+    console.log("[consume] creditsErr", creditsErr?.message || null);
 
     if (creditsErr) {
       return NextResponse.json({ error: creditsErr.message }, { status: 500 });
     }
 
     const planId = (creditsRow?.plan_id ?? "free") as string;
-
-    // Enforce: free plan cannot use quality
     const isFree = planId === "free";
     const isQuality = !isFree && isQualityRequested;
 
-    // Cost rule
     const perImage = isQuality ? 2 : 1;
     const cost = imageCount * perImage;
 
-    // Atomic deduction via RPC
+    console.log("[consume] plan/cost", { planId, isFree, isQuality, perImage, cost });
+
+    // Deduct (RPC)
     const { data: rpcData, error: rpcErr } = await supabaseAdmin.rpc(
       "admin_consume_credits",
       { p_user_id: user.id, p_amount: cost }
     );
 
+    console.log("[consume] rpcErr", rpcErr?.message || null);
+    console.log("[consume] rpcData", rpcData);
+
     if (rpcErr) {
-      // Not enough credits
       if (rpcErr.message?.toLowerCase().includes("not enough")) {
         return NextResponse.json({ error: "Not enough credits." }, { status: 402 });
       }
@@ -85,14 +105,19 @@ export async function POST(req: Request) {
 
     const row = Array.isArray(rpcData) && rpcData.length > 0 ? rpcData[0] : null;
 
+    // IMPORTANT: Always return a number for creditsRemaining (fallback to existing creditsRow)
+    const creditsRemaining =
+      row?.credits_remaining ?? creditsRow?.credits_remaining ?? null;
+
     return NextResponse.json({
       ok: true,
       planId: row?.plan_id ?? planId,
-      creditsRemaining: row?.credits_remaining ?? null,
+      creditsRemaining,
       cost,
       mode: isQuality ? "quality" : "fast",
     });
   } catch (e: any) {
+    console.log("[consume] exception", e?.message || e);
     return NextResponse.json(
       { error: e?.message ?? "Unknown error" },
       { status: 500 }

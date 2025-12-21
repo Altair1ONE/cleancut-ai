@@ -2,6 +2,10 @@
 import { supabase } from "./supabaseClient";
 import type { PlanId } from "./plans";
 
+/* =========================
+   TYPES
+   ========================= */
+
 export type CreditState = {
   planId: PlanId;
   creditsRemaining: number;
@@ -16,10 +20,12 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
 
+  // Not logged in → no credits
   if (!user) {
     return { planId: "free", creditsRemaining: 0, lastResetAt: null };
   }
 
+  // Try reading existing credits row
   const { data, error } = await supabase
     .from("user_credits")
     .select("plan_id, credits_remaining, last_reset_at")
@@ -28,10 +34,44 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
 
   if (error) throw error;
 
+  // ✅ FIRST-TIME USER → call server-only init (Option B)
   if (!data) {
-    return { planId: "free", creditsRemaining: 0, lastResetAt: null };
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+
+    if (accessToken) {
+      // Server route grants 30 credits ONCE
+      await fetch("/api/credits/init", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    // Re-fetch after init (DB is source of truth)
+    const { data: afterInit, error: err2 } = await supabase
+      .from("user_credits")
+      .select("plan_id, credits_remaining, last_reset_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (err2) throw err2;
+
+    if (!afterInit) {
+      // Extremely rare fallback
+      return { planId: "free", creditsRemaining: 0, lastResetAt: null };
+    }
+
+    return {
+      planId: (afterInit.plan_id as PlanId) || "free",
+      creditsRemaining: Number(afterInit.credits_remaining ?? 0),
+      lastResetAt: afterInit.last_reset_at ?? null,
+    };
   }
 
+  // Normal case: credits already exist
   return {
     planId: (data.plan_id as PlanId) || "free",
     creditsRemaining: Number(data.credits_remaining ?? 0),
@@ -39,7 +79,7 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
   };
 }
 
-/* Backward-compatible alias */
+/* Backward-compatible alias (used across your app) */
 export async function loadCredits(): Promise<CreditState> {
   return loadCreditsFromDB();
 }
@@ -64,7 +104,11 @@ export function canConsumeCredits(
 /* =========================
    CREDIT DEDUCTION
    ========================= */
-
+/**
+ * Supports BOTH call styles used in your app:
+ * 1) consumeCredits(state, imageCount, isQuality)
+ * 2) consumeCredits(imageCount, isQuality)
+ */
 export async function consumeCredits(
   stateOrImageCount: CreditState | number,
   imageCountOrIsQuality: number | boolean,
@@ -77,16 +121,14 @@ export async function consumeCredits(
     throw new Error("Not signed in");
   }
 
-  // 🔹 Normalize arguments to support old UI calls
+  // Normalize arguments
   let imageCount: number;
   let isQuality: boolean;
 
   if (typeof stateOrImageCount === "object") {
-    // Called as: consumeCredits(state, imageCount, isQuality)
     imageCount = imageCountOrIsQuality as number;
     isQuality = Boolean(maybeIsQuality);
   } else {
-    // Called as: consumeCredits(imageCount, isQuality)
     imageCount = stateOrImageCount;
     isQuality = Boolean(imageCountOrIsQuality);
   }
@@ -120,5 +162,7 @@ export async function consumeCredits(
    ========================= */
 
 export async function switchPlan(_: PlanId): Promise<CreditState> {
+  // Client is NOT allowed to change plans.
+  // Plans are controlled by Paddle webhook.
   return loadCreditsFromDB();
 }

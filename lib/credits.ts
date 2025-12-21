@@ -40,7 +40,7 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
     const accessToken = sessionData?.session?.access_token;
 
     if (accessToken) {
-      await fetch("/api/credits/init", {
+      await fetch("api/credits/init", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -135,7 +135,7 @@ export async function consumeCredits(
 
   if (!accessToken) throw new Error("Missing access token");
 
-  const res = await fetch("/api/credits/consume", {
+  const res = await fetch("api/credits/consume", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,

@@ -11,7 +11,8 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
   if (!secret) return false;
   if (!signatureHeader) return false;
 
-  const parts = signatureHeader.split(",").map((p) => p.trim());
+  // Paddle header format: "ts=...;h1=..." (semicolon-separated)
+  const parts = signatureHeader.split(";").map((p) => p.trim());
   const tsPart = parts.find((p) => p.startsWith("ts="));
   const h1Part = parts.find((p) => p.startsWith("h1="));
 
@@ -29,6 +30,7 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
     return false;
   }
 }
+
 
 function creditsForPlan(planId: "free" | "pro_monthly" | "lifetime") {
   if (planId === "pro_monthly") return 1000;
@@ -93,7 +95,7 @@ export async function POST(req: Request) {
 
   try {
     // ✅ When payment succeeds (covers one-time and first subscription payment)
-    if (eventType === "transaction.completed" || eventType.includes("transaction")) {
+    if (eventType === "transaction.completed") {
       const items = data?.items || data?.details?.line_items || data?.line_items || [];
       const priceId =
         items?.[0]?.price?.id ||

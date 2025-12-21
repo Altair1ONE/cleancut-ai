@@ -22,49 +22,22 @@ function loadPaddleScript(): Promise<void> {
     if (typeof window === "undefined") return resolve();
     if (window.Paddle) return resolve();
 
-    const existing = document.querySelector<HTMLScriptElement>(
-      'script[data-paddle="v2"]'
-    );
-
-    if (existing) {
-      // If script exists but Paddle isn't ready yet, wait for load
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () =>
-        reject(new Error("Paddle script failed"))
-      );
-      return;
-    }
-
     const s = document.createElement("script");
     s.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
     s.async = true;
-    s.setAttribute("data-paddle", "v2");
     s.onload = () => resolve();
     s.onerror = () => reject(new Error("Paddle script failed"));
     document.head.appendChild(s);
   });
 }
 
-function normalizeEnv(env: string) {
-  const v = (env || "").toLowerCase().trim();
-  if (v === "sandbox") return "sandbox";
-  if (v === "production") return "production";
-  // common mistakes
-  if (v === "prod") return "production";
-  if (v === "live") return "production";
-  if (v === "test") return "sandbox";
-  return "production";
-}
-
 export default function PaddleCheckoutButton({ plan, className, children }: Props) {
   const { user, loading } = useAuth();
   const [ready, setReady] = useState(false);
   const [opening, setOpening] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || "";
-  const environment = normalizeEnv(process.env.NEXT_PUBLIC_PADDLE_ENV || "production");
-
   const priceId = useMemo(() => PADDLE_PRICE_IDS[plan], [plan]);
 
   useEffect(() => {
@@ -72,23 +45,21 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
 
     (async () => {
       try {
-        setInitError(null);
+        setError(null);
 
-        // Helpful debug (remove later if you want)
-        console.log("[Paddle] init start", {
+        console.log("[Paddle] init", {
           plan,
           hasToken: !!token,
-          environment,
           priceId,
         });
 
         if (!token) {
-          setInitError("Missing NEXT_PUBLIC_PADDLE_CLIENT_TOKEN");
+          setError("Missing NEXT_PUBLIC_PADDLE_CLIENT_TOKEN");
           return;
         }
 
         if (!priceId) {
-          setInitError(
+          setError(
             plan === "pro_monthly"
               ? "Missing NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY"
               : "Missing NEXT_PUBLIC_PADDLE_PRICE_LIFETIME"
@@ -99,77 +70,67 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
         await loadPaddleScript();
 
         if (!window.Paddle?.Initialize) {
-          setInitError("Paddle.Initialize not found (script failed or blocked)");
+          setError("Paddle.Initialize not available");
           return;
         }
 
+        // ✅ CORRECT for Paddle Billing v2
         window.Paddle.Initialize({
           token,
-          environment,
         });
 
         if (!cancelled) {
           setReady(true);
-          console.log("[Paddle] ready ✅", { plan, environment, priceId });
+          console.log("[Paddle] ready ✅", { plan, priceId });
         }
       } catch (e: any) {
-        if (!cancelled) {
-          setReady(false);
-          setInitError(e?.message || "Paddle init failed");
-          console.error("[Paddle] init error:", e);
-        }
+        console.error("[Paddle] init error", e);
+        if (!cancelled) setError(e?.message || "Paddle init failed");
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [token, environment, priceId, plan]);
+  }, [token, priceId, plan]);
 
-  const onClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Require user logged in (important for webhook mapping)
     if (loading) return;
 
     if (!user?.id) {
-      alert("Please sign in first to upgrade. (So we can link payment to your account.)");
+      alert("Please sign in first to upgrade.");
       return;
     }
 
     if (!ready || !priceId) {
-      // Show a useful message instead of silent failure
-      alert(
-        initError ||
-          "Payments are not configured yet. Check Paddle token/env/price IDs."
-      );
+      alert(error || "Payments not ready yet.");
       return;
     }
 
     setOpening(true);
-    try {
-      const email = user.email || undefined;
-      const supabaseUserId = user.id;
 
-      // Open Paddle Checkout Overlay
+    try {
       window.Paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
-        customer: email ? { email } : undefined,
-        customData: { supabase_user_id: supabaseUserId, plan },
+        customer: user.email ? { email: user.email } : undefined,
+        customData: {
+          supabase_user_id: user.id,
+          plan,
+        },
       });
     } catch (err) {
-      console.error("[Paddle] Checkout.open failed:", err);
-      alert("Checkout failed to open. Check console for details.");
+      console.error("[Paddle] Checkout error", err);
+      alert("Checkout failed to open.");
     } finally {
       setOpening(false);
     }
   };
 
-  const disabled = opening; // only disable while opening (so button still clicks & shows errors)
-
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={className}>
+    <button type="button" onClick={onClick} disabled={opening} className={className}>
       {children}
     </button>
   );

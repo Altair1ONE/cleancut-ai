@@ -1,4 +1,4 @@
-// app/api/credits/init/route.ts
+// app/api/credits/init/route.ts   (or src/app/api/credits/init/route.ts)
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
@@ -13,16 +13,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing bearer token" }, { status: 401 });
     }
 
-    // Verify user from Supabase using the access token (JWT)
+    // Validate user using the access token
     const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
-
     if (userErr || !userData?.user) {
       return NextResponse.json({ ok: false, error: "Invalid token" }, { status: 401 });
     }
 
     const userId = userData.user.id;
 
-    // If credits row already exists, do nothing
+    // If row already exists, do nothing
     const { data: existing, error: existErr } = await supabaseAdmin
       .from("user_credits")
       .select("user_id")
@@ -37,14 +36,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, created: false });
     }
 
-    // ✅ One-time free grant (no monthly reset)
+    // ✅ Grant one-time free credits
     const oneTimeFreeCredits = 30;
 
     const { error: insertErr } = await supabaseAdmin.from("user_credits").insert({
       user_id: userId,
       plan_id: "free",
       credits_remaining: oneTimeFreeCredits,
-      last_reset_at: null, // IMPORTANT: free does not reset monthly
+      last_reset_at: null, // free does NOT reset monthly
       updated_at: new Date().toISOString(),
     });
 
@@ -52,13 +51,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: insertErr.message }, { status: 500 });
     }
 
-    // Optional: also ensure user_plans exists
+    // Optional: ensure plan row exists
     await supabaseAdmin.from("user_plans").upsert(
-      {
-        user_id: userId,
-        plan_id: "free",
-        updated_at: new Date().toISOString(),
-      },
+      { user_id: userId, plan_id: "free", updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
 

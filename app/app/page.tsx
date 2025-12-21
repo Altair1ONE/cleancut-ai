@@ -149,7 +149,7 @@ export default function AppPage() {
     if (!loading && !session) {
       // ✅ FIX: if your login route is under /cleancut/login, use this.
       // If your login page is actually /login, then revert this line to "/login".
-      router.push("/cleancut/login");
+      router.push("/login");
     }
   }, [loading, session, router]);
 
@@ -603,7 +603,7 @@ function AppInner() {
                 Close
               </button>
               <a
-                href="/cleancut/pricing"
+                href="/pricing"
                 className="rounded-full bg-indigo-500 px-4 py-1 text-xs font-semibold text-white hover:bg-indigo-600"
               >
                 See plans

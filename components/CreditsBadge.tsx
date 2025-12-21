@@ -9,7 +9,22 @@ export function CreditsBadge() {
   const [state, setState] = useState<CreditState | null>(null);
 
   useEffect(() => {
-    setState(loadCredits());
+    let mounted = true;
+
+    (async () => {
+      try {
+        const creditState = await loadCredits();
+        if (mounted) {
+          setState(creditState);
+        }
+      } catch (err) {
+        console.error("Failed to load credits:", err);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (!state) return null;
@@ -21,10 +36,11 @@ export function CreditsBadge() {
       <span className="rounded-full bg-slate-800 px-2 py-[2px] text-[10px] uppercase tracking-wide text-slate-300">
         {plan.name}
       </span>
+
       <span>
         Credits:{" "}
         <span className="font-semibold text-emerald-300">
-          {state.creditsLeft}
+          {state.creditsRemaining}
         </span>
         /{plan.monthlyCredits}
       </span>

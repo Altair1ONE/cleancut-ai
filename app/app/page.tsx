@@ -187,8 +187,20 @@ function AppInner() {
   const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
-    setCredits(loadCredits());
-  }, []);
+  let mounted = true;
+
+  (async () => {
+    const state = await loadCredits();
+    if (mounted) {
+      setCredits(state);
+    }
+  })();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
+
 
   const plan = useMemo(
     () => (credits ? getPlanById(credits.planId) : getPlanById("free")),
@@ -333,8 +345,13 @@ function AppInner() {
       }
 
       // ✅ Deduct correct credits: Fast=1x, Quality=2x
-      const updatedCredits = consumeCredits(credits, images.length, isQuality);
-      setCredits(updatedCredits);
+      const updatedCredits = await consumeCredits(
+  credits,
+  images.length,
+  isQuality
+);
+setCredits(updatedCredits);
+
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("credits:update"));

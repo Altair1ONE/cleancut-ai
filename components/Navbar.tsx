@@ -21,9 +21,17 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const c = loadCredits();
-    setCredits(c);
-  }, []);
+  let mounted = true;
+
+  (async () => {
+    const state = await loadCredits();
+    if (mounted) setCredits(state);
+  })();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -80,13 +88,13 @@ export default function Navbar() {
         {/* RIGHT */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
-            <div className="hidden rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 md:block">
-              Credits:{" "}
-              <span className="font-semibold text-white">
-                {credits.creditsLeft}
-              </span>
-            </div>
-          )}
+  <div className="text-xs text-slate-300">
+    Credits:{" "}
+    <span className="font-semibold text-white">
+      {credits.creditsRemaining}
+    </span>
+  </div>
+)}
 
           {!user && (
             <Link

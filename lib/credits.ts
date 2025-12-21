@@ -1,129 +1,124 @@
 // lib/credits.ts
-"use client";
+import { supabase } from "./supabaseClient";
+import type { PlanId } from "./plans";
 
-import { PlanId, getPlanById } from "./plans";
-
-export interface CreditState {
+export type CreditState = {
   planId: PlanId;
-  creditsLeft: number;
-  lastReset: string; // month key for paid plans, "one-time" for free
-}
+  creditsRemaining: number;
+  lastResetAt?: string | null;
+};
 
-const STORAGE_KEY = "bg_saas_credits_v1";
+/* =========================
+   LOAD CREDITS (DB SOURCE)
+   ========================= */
 
-function getMonthKey(date: Date) {
-  return `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}`;
-}
+export async function loadCreditsFromDB(): Promise<CreditState> {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
 
-export function loadCredits(): CreditState {
-  if (typeof window === "undefined") {
-    return {
-      planId: "free",
-      creditsLeft: getPlanById("free").monthlyCredits, // 30
-      lastReset: "one-time",
-    };
+  if (!user) {
+    return { planId: "free", creditsRemaining: 0, lastResetAt: null };
   }
 
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  const now = new Date();
-  const thisMonth = getMonthKey(now);
+  const { data, error } = await supabase
+    .from("user_credits")
+    .select("plan_id, credits_remaining, last_reset_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  // First time user
-  if (!raw) {
-    const plan = getPlanById("free");
-    const initial: CreditState = {
-      planId: "free",
-      creditsLeft: plan.monthlyCredits, // 30 one-time
-      lastReset: "one-time",
-    };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-    return initial;
+  if (error) throw error;
+
+  if (!data) {
+    return { planId: "free", creditsRemaining: 0, lastResetAt: null };
   }
 
-  try {
-    const parsed: CreditState = JSON.parse(raw);
-
-    // ✅ Free tier is one-time credits: never reset monthly
-    if (parsed.planId === "free") {
-      return parsed;
-    }
-
-    // ✅ Paid plans: monthly reset
-    if (parsed.lastReset !== thisMonth) {
-      const plan = getPlanById(parsed.planId);
-      const resetState: CreditState = {
-        ...parsed,
-        creditsLeft: plan.monthlyCredits,
-        lastReset: thisMonth,
-      };
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(resetState));
-      return resetState;
-    }
-
-    return parsed;
-  } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
-    return loadCredits();
-  }
-}
-
-export function saveCredits(state: CreditState) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-export function switchPlan(planId: PlanId) {
-  const plan = getPlanById(planId);
-  const now = new Date();
-  const thisMonth = getMonthKey(now);
-
-  // ✅ Free = one-time 30 credits (no monthly reset)
-  const newState: CreditState =
-    planId === "free"
-      ? {
-          planId,
-          creditsLeft: plan.monthlyCredits, // 30 once
-          lastReset: "one-time",
-        }
-      : {
-          planId,
-          creditsLeft: plan.monthlyCredits,
-          lastReset: thisMonth,
-        };
-
-  saveCredits(newState);
-  return newState;
-}
-
-/**
- * NOTE: Your app uses the boolean flag to represent "2x cost mode" (Quality).
- * Fast => false (1 credit/image), Quality => true (2 credits/image)
- */
-export function canConsumeCredits(
-  state: CreditState,
-  imagesCount: number,
-  useHd: boolean
-): boolean {
-  const plan = getPlanById(state.planId);
-  const neededPerImage = useHd ? plan.hdMultiplier : 1;
-  const totalNeeded = neededPerImage * imagesCount;
-  return state.creditsLeft >= totalNeeded;
-}
-
-export function consumeCredits(
-  state: CreditState,
-  imagesCount: number,
-  useHd: boolean
-): CreditState {
-  const plan = getPlanById(state.planId);
-  const neededPerImage = useHd ? plan.hdMultiplier : 1;
-  const totalNeeded = neededPerImage * imagesCount;
-
-  const newState: CreditState = {
-    ...state,
-    creditsLeft: Math.max(0, state.creditsLeft - totalNeeded),
+  return {
+    planId: (data.plan_id as PlanId) || "free",
+    creditsRemaining: Number(data.credits_remaining ?? 0),
+    lastResetAt: data.last_reset_at ?? null,
   };
+}
 
-  saveCredits(newState);
-  return newState;
+/* Backward-compatible alias */
+export async function loadCredits(): Promise<CreditState> {
+  return loadCreditsFromDB();
+}
+
+/* =========================
+   CREDIT CHECK
+   ========================= */
+
+export function canConsumeCredits(
+  state: CreditState | null,
+  imageCount: number,
+  isQuality: boolean
+): boolean {
+  if (!state) return false;
+
+  const perImage = isQuality ? 2 : 1;
+  const cost = Math.max(0, imageCount) * perImage;
+
+  return state.creditsRemaining >= cost;
+}
+
+/* =========================
+   CREDIT DEDUCTION
+   ========================= */
+
+export async function consumeCredits(
+  stateOrImageCount: CreditState | number,
+  imageCountOrIsQuality: number | boolean,
+  maybeIsQuality?: boolean
+): Promise<CreditState> {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  // 🔹 Normalize arguments to support old UI calls
+  let imageCount: number;
+  let isQuality: boolean;
+
+  if (typeof stateOrImageCount === "object") {
+    // Called as: consumeCredits(state, imageCount, isQuality)
+    imageCount = imageCountOrIsQuality as number;
+    isQuality = Boolean(maybeIsQuality);
+  } else {
+    // Called as: consumeCredits(imageCount, isQuality)
+    imageCount = stateOrImageCount;
+    isQuality = Boolean(imageCountOrIsQuality);
+  }
+
+  const current = await loadCreditsFromDB();
+
+  const perImage = isQuality ? 2 : 1;
+  const cost = Math.max(0, imageCount) * perImage;
+
+  if (current.creditsRemaining < cost) {
+    return current;
+  }
+
+  const nextRemaining = current.creditsRemaining - cost;
+
+  const { error } = await supabase
+    .from("user_credits")
+    .update({
+      credits_remaining: nextRemaining,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+
+  return { ...current, creditsRemaining: nextRemaining };
+}
+
+/* =========================
+   NO-OP PLAN SWITCH (SAFETY)
+   ========================= */
+
+export async function switchPlan(_: PlanId): Promise<CreditState> {
+  return loadCreditsFromDB();
 }

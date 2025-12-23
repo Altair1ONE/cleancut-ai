@@ -58,18 +58,18 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -right-24 -bottom-24 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
 
         <h1 className="text-3xl font-bold text-white md:text-5xl">
-          AI Background Remover — Remove Background from Images Instantly{" "}
+          Remove image backgrounds in seconds{" "}
           <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
-            (No Watermark)
+            — clean PNGs, no watermark
           </span>
         </h1>
 
         <p className="mt-4 max-w-2xl text-base text-slate-300">
-          CleanCut AI by Xevora is a fast online tool to{" "}
-          <strong>remove backgrounds from images</strong> in seconds. Export{" "}
-          <strong>transparent PNG</strong> results, process files in{" "}
-          <strong>batch</strong>, and keep clean edges — perfect for e-commerce,
-          creators, and businesses.
+          CleanCut AI by Xevora is a fast, reliable{" "}
+          <strong>AI background remover</strong> for product photos, portraits, and
+          marketing images. Get a crisp{" "}
+          <strong>transparent PNG</strong>, process images in{" "}
+          <strong>batch</strong>, and keep clean edges that look professional.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -77,13 +77,13 @@ export default function HomePage() {
             href="/app"
             className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(99,102,241,0.25)] hover:bg-indigo-600"
           >
-            Remove Background Free
+            Start Free Background Removal
           </Link>
           <Link
             href="/pricing"
             className="inline-flex items-center justify-center rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
-            View Pricing
+            See pricing & limits
           </Link>
         </div>
 
@@ -95,21 +95,21 @@ export default function HomePage() {
             ✔ Transparent PNG export
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-            ✔ Batch background removal
+            ✔ Batch processing
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-            ✔ Fast / Quality modes
+            ✔ Fast & Quality modes
           </div>
         </div>
 
         <p className="mt-5 text-sm text-slate-400">
-          Need HD exports and bigger batches?{" "}
+          Want bigger batches, Quality mode, and more credits?{" "}
           <Link href="/pricing" className="text-indigo-300 hover:text-indigo-200">
-            See plans
+            Compare plans
           </Link>{" "}
           or{" "}
           <Link href="/app" className="text-indigo-300 hover:text-indigo-200">
-            try the remover now
+            try the app now
           </Link>
           .
         </p>
@@ -119,33 +119,31 @@ export default function HomePage() {
       <section className="mt-12 grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
           <h2 className="text-sm font-semibold text-white">
-            Clean Results That Preserve Image Quality
+            Crisp cutouts that look natural
           </h2>
           <p className="mt-2 text-sm text-slate-300">
-            Unlike many free background remover tools, CleanCut AI avoids heavy
-            compression and never adds watermarks. Your output stays sharp and
-            professional.
+            CleanCut AI aims for clean edges and solid subject separation—so your
+            exports look like real product-ready cutouts, not “rough AI blobs.”
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
           <h2 className="text-sm font-semibold text-white">
-            Built for E-commerce & Real Workflows
+            Built for real workflows, not demos
           </h2>
           <p className="mt-2 text-sm text-slate-300">
-            Remove backgrounds from product photos, portraits, and marketing
-            images — one by one or in bulk. Works great for Shopify, Amazon,
-            Etsy, and catalogs.
+            Remove backgrounds for catalogs, listings, thumbnails, and ads. Do it
+            one-by-one or in batch—then download transparent PNGs instantly.
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
           <h2 className="text-sm font-semibold text-white">
-            Simple Pricing (Cheaper Than Alternatives)
+            Simple pricing you can trust
           </h2>
           <p className="mt-2 text-sm text-slate-300">
-            CleanCut AI is designed to be affordable. Many users spend far less
-            per image compared to popular tools like Remove.bg and ClipDrop.
+            No hidden exports, no watermark tricks. Start free, upgrade only when
+            you need bigger batches and higher monthly limits.
           </p>
         </div>
       </section>
@@ -153,43 +151,43 @@ export default function HomePage() {
       {/* USE CASES */}
       <section className="mt-14">
         <h2 className="text-xl font-semibold text-white">
-          Best Use Cases for Background Removal
+          What people use CleanCut AI for
         </h2>
 
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          Whether you need a transparent PNG for design or clean product images
-          for an online store, CleanCut AI helps you remove backgrounds quickly
-          and consistently.
+          If you need transparent PNGs that look clean and consistent, CleanCut AI
+          fits right into your workflow—especially for e-commerce and content.
         </p>
 
         <ul className="mt-4 grid list-disc gap-2 pl-6 text-slate-300 md:grid-cols-2">
-          <li>Product photos for Shopify, Amazon, and Etsy</li>
-          <li>Marketing banners, ads, and landing pages</li>
-          <li>Social media content and thumbnails</li>
-          <li>Profile photos and portraits</li>
-          <li>Bulk image cleanup for catalogs</li>
-          <li>Transparent PNG assets for design work</li>
+          <li>Product photos for Shopify, Amazon, Etsy, and marketplaces</li>
+          <li>Brand assets for landing pages, ads, and banners</li>
+          <li>YouTube thumbnails and social posts</li>
+          <li>Portraits, profile photos, and creators</li>
+          <li>Bulk cleanup for catalogs and collections</li>
+          <li>Transparent PNG assets for designers</li>
         </ul>
       </section>
 
       {/* HOW IT WORKS */}
       <section className="mt-14">
         <h2 className="text-xl font-semibold text-white">
-          How to Remove Backgrounds in 3 Simple Steps
+          Remove backgrounds in 3 quick steps
         </h2>
 
         <ol className="mt-4 grid list-decimal gap-4 pl-6 text-slate-300 md:grid-cols-3">
           <li>
-            Upload your image (PNG, JPG, or WEBP) — or drag &amp; drop multiple
+            Upload an image (PNG, JPG, or WEBP) — or drag &amp; drop multiple
             files for batch processing.
           </li>
           <li>
-            Click <strong>Process</strong> and choose Fast or Quality mode based
-            on your needs.
+            Click <strong>Process</strong> and pick{" "}
+            <strong>Fast</strong> or <strong>Quality</strong> mode based on your
+            needs.
           </li>
           <li>
-            Download your <strong>transparent PNG</strong> instantly — no
-            watermark.
+            Download your <strong>transparent PNG</strong> instantly — always
+            watermark-free.
           </li>
         </ol>
 
@@ -198,7 +196,7 @@ export default function HomePage() {
             href="/app"
             className="inline-flex rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
-            Start Removing Backgrounds
+            Open the Background Remover
           </Link>
         </div>
       </section>
@@ -206,18 +204,18 @@ export default function HomePage() {
       {/* COMPARISON */}
       <section className="mt-14 rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
         <h2 className="text-xl font-semibold text-white">
-          Why Choose CleanCut AI by Xevora?
+          Why creators choose CleanCut AI
         </h2>
 
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          If you’re looking for a reliable AI background remover that’s fast,
-          clean, and affordable, CleanCut AI is built for you.
+          CleanCut AI is a straightforward background remover: clean PNG exports,
+          fast processing, and fair limits—built for repeat use.
         </p>
 
         <ul className="mt-4 space-y-2 text-slate-300">
           <li>• No watermark, even on the free plan</li>
-          <li>• Supports batch background removal</li>
-          <li>• Transparent PNG export</li>
+          <li>• Batch background removal for real workflows</li>
+          <li>• Transparent PNG export for design + e-commerce</li>
           <li>• Fast mode for speed, Quality mode for details</li>
           <li>• Simple pricing with a lifetime option</li>
         </ul>
@@ -227,13 +225,13 @@ export default function HomePage() {
             href="/app"
             className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
-            Try It Free
+            Try it free
           </Link>
           <Link
             href="/pricing"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
-            See Pricing
+            Compare plans
           </Link>
         </div>
       </section>
@@ -241,7 +239,7 @@ export default function HomePage() {
       {/* FAQ (VISIBLE) */}
       <section className="mt-14">
         <h2 className="text-xl font-semibold text-white">
-          Frequently Asked Questions
+          Frequently asked questions
         </h2>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -250,8 +248,9 @@ export default function HomePage() {
               Is CleanCut AI really free?
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              Yes. You can remove backgrounds for free without watermarks.
-              Monthly usage limits apply to keep the service fast and available.
+              Yes. You can remove backgrounds for free with watermark-free
+              exports. Usage limits exist to keep the app fast and fair for
+              everyone.
             </p>
           </div>
 
@@ -260,8 +259,8 @@ export default function HomePage() {
               Does it reduce image quality?
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              CleanCut AI is designed to preserve quality. For the best edges
-              (hair, complex objects), use Quality mode when available.
+              We focus on clean results that preserve detail. For hair and
+              complex edges, use <strong>Quality</strong> mode when available.
             </p>
           </div>
 
@@ -270,8 +269,8 @@ export default function HomePage() {
               Can I remove backgrounds in bulk?
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              Yes. Batch background removal is supported, with larger batch sizes
-              available on paid plans.
+              Yes. Batch background removal is supported. Paid plans unlock
+              bigger batch sizes and higher monthly usage.
             </p>
           </div>
 
@@ -280,7 +279,7 @@ export default function HomePage() {
               Do you add watermarks?
             </h3>
             <p className="mt-2 text-sm text-slate-300">
-              No. CleanCut AI never adds watermarks — even on the free tier.
+              Never. Exports are always watermark-free—free plan included.
             </p>
           </div>
         </div>
@@ -297,7 +296,7 @@ export default function HomePage() {
               Shopify product photos
             </div>
             <p className="mt-1 text-sm text-slate-300">
-              Remove backgrounds for listings & catalogs.
+              Clean cutouts for listings, collections, and catalogs.
             </p>
           </Link>
           <Link
@@ -306,7 +305,7 @@ export default function HomePage() {
           >
             <div className="text-sm font-semibold text-white">Amazon listings</div>
             <p className="mt-1 text-sm text-slate-300">
-              Clean subject isolation for marketplace images.
+              Professional subject isolation for marketplace images.
             </p>
           </Link>
           <Link
@@ -317,7 +316,7 @@ export default function HomePage() {
               YouTube thumbnails
             </div>
             <p className="mt-1 text-sm text-slate-300">
-              Make faces pop with transparent PNG exports.
+              Make subjects stand out with transparent PNG exports.
             </p>
           </Link>
         </div>

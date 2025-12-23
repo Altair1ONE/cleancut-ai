@@ -1,14 +1,12 @@
 // app/pricing/page.tsx
 import Link from "next/link";
 import type { Metadata } from "next";
-// ADD at top with imports:
 import PaddleCheckoutButton from "../../components/PaddleCheckoutButton";
-
 
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Affordable background removal pricing. Free plan with no watermark, Pro Monthly for higher limits, and Lifetime for best value. CleanCut AI by Xevora.",
+    "CleanCut AI pricing: start free with watermark-free exports. Upgrade to Pro Monthly for higher limits and Quality mode, or choose Lifetime for the best long-term value.",
   alternates: {
     canonical: "https://xevora.org/cleancut/pricing",
   },
@@ -33,8 +31,8 @@ const plans: PlanCard[] = [
     id: "free",
     name: "Free",
     price: "$0",
-    sub: "one-time",
-    badge: "Start here",
+    sub: "to start",
+    badge: "Try it now",
     creditsLabel: "30 credits total (one-time)",
     pills: [
       { label: "Fast mode", tone: "ok" },
@@ -42,21 +40,20 @@ const plans: PlanCard[] = [
       { label: "Transparent PNG", tone: "ok" },
     ],
     features: [
-      "No watermark",
-      "Transparent PNG export",
+      "Watermark-free exports",
+      "Transparent PNG downloads",
       "Fast mode included",
-      "Limited credits (one-time)",
+      "One-time free credits (great for testing)",
       "Small batch size",
-      "Quality mode locked (paid only)",
-      "HD export (Lifetime only — coming soon)",
+      "Quality mode available on paid plans",
     ],
-    cta: { label: "Try Free", href: "/app" },
+    cta: { label: "Start Free", href: "/app" },
   },
   {
     id: "pro_monthly",
     name: "Pro Monthly",
     price: "$4.99",
-    sub: "per month",
+    sub: "/ month",
     badge: "Most popular",
     highlight: true,
     creditsLabel: "1000 credits / month",
@@ -66,14 +63,14 @@ const plans: PlanCard[] = [
       { label: "Bigger batches", tone: "ok" },
     ],
     features: [
-      "1000 credits per month (resets monthly)",
+      "1000 credits every month (auto-refill)",
       "Bigger batch processing",
       "Fast + Quality modes",
       "Priority processing",
-      "HD export (Lifetime only — coming soon)",
+      "Best for frequent product photos & content",
     ],
-    cta: { label: "Upgrade (coming soon)", href: "/pricing#checkout" },
-    note: "Quality costs 2 credits/image. Fast costs 1 credit/image.",
+    cta: { label: "Upgrade", href: "/pricing#checkout" },
+    note: "Fast costs 1 credit/image. Quality costs 2 credits/image.",
   },
   {
     id: "lifetime",
@@ -85,17 +82,17 @@ const plans: PlanCard[] = [
     pills: [
       { label: "Fast mode", tone: "ok" },
       { label: "Quality mode", tone: "info" },
-      { label: "HD export (coming soon)", tone: "soon" },
+      { label: "Great long-term value", tone: "ok" },
     ],
     features: [
-      "One-time payment",
-      "200 credits per month forever (resets monthly)",
+      "One-time payment (no subscription)",
+      "200 credits every month forever (auto-refill)",
       "Bigger batch processing",
       "Fast + Quality modes",
-      "HD export option (coming soon — Lifetime only)",
+      "Perfect for steady monthly usage",
     ],
-    cta: { label: "Get Lifetime (coming soon)", href: "/pricing#checkout" },
-    note: "HD export will be enabled when GPU is added (Lifetime only).",
+    cta: { label: "Get Lifetime", href: "/pricing#checkout" },
+    note: "Lifetime gives monthly credits without a recurring subscription.",
   },
 ];
 
@@ -129,7 +126,6 @@ function JsonLd() {
     ],
   };
 
-  // ✅ Added: BreadcrumbList (keeps everything else untouched)
   const breadcrumbs = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -171,16 +167,16 @@ export default function PricingPage() {
       {/* HERO */}
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 md:p-12">
         <h1 className="text-3xl font-bold text-white md:text-5xl">
-          Simple pricing that stays{" "}
+          Pricing that’s{" "}
           <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
-            cheaper than alternatives
+            simple, fair, and made for real use
           </span>
         </h1>
 
         <p className="mt-4 max-w-3xl text-slate-300">
-          CleanCut AI is built for creators and businesses who need clean
-          background removal without watermarks. Start free, then upgrade only
-          when you need bigger batches, higher limits, and premium modes.
+          Start free with watermark-free exports. Upgrade when you need bigger
+          batches, higher monthly limits, and Quality mode for sharper edges on
+          complex subjects.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -252,35 +248,34 @@ export default function PricingPage() {
             </ul>
 
             {p.id === "free" ? (
-  <Link
-    href={p.cta.href}
-    className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
-      p.highlight
-        ? "bg-indigo-500 text-white hover:bg-indigo-600"
-        : "border border-slate-700 text-slate-200 hover:border-slate-500"
-    }`}
-  >
-    {p.cta.label}
-  </Link>
-) : (
-  <PaddleCheckoutButton
-    plan={p.id === "pro_monthly" ? "pro_monthly" : "lifetime"}
-    className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
-      p.highlight
-        ? "bg-indigo-500 text-white hover:bg-indigo-600"
-        : "border border-slate-700 text-slate-200 hover:border-slate-500"
-    }`}
-  >
-    {p.id === "pro_monthly" ? "Upgrade to Pro" : "Get Lifetime"}
-  </PaddleCheckoutButton>
-)}
-
+              <Link
+                href={p.cta.href}
+                className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
+                  p.highlight
+                    ? "bg-indigo-500 text-white hover:bg-indigo-600"
+                    : "border border-slate-700 text-slate-200 hover:border-slate-500"
+                }`}
+              >
+                {p.cta.label}
+              </Link>
+            ) : (
+              <PaddleCheckoutButton
+                plan={p.id === "pro_monthly" ? "pro_monthly" : "lifetime"}
+                className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
+                  p.highlight
+                    ? "bg-indigo-500 text-white hover:bg-indigo-600"
+                    : "border border-slate-700 text-slate-200 hover:border-slate-500"
+                }`}
+              >
+                {p.id === "pro_monthly" ? "Upgrade to Pro" : "Get Lifetime"}
+              </PaddleCheckoutButton>
+            )}
 
             {p.note && <p className="mt-3 text-xs text-slate-400">{p.note}</p>}
 
             {p.id !== "free" && (
               <p className="mt-3 text-xs text-slate-400">
-                Paddle checkout will be connected after verification (auto-upgrade will be fully automatic).
+                Secure checkout via Paddle. Your plan and credits are applied automatically after payment.
               </p>
             )}
           </div>
@@ -290,25 +285,31 @@ export default function PricingPage() {
       {/* COMPARISON */}
       <section className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
         <h2 className="text-xl font-semibold text-white">
-          Why CleanCut AI is a smarter deal
+          What you get with CleanCut AI
         </h2>
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          Many background removers charge more per image or hide exports behind watermarks.
-          CleanCut AI keeps it simple: clean PNGs, clear credits, and affordable upgrades.
+          Many tools lock exports behind watermarks or make pricing confusing.
+          CleanCut AI keeps it straightforward: clean transparent PNGs, clear credit costs, and upgrades only when you need them.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-semibold text-white">No watermark (even free)</h3>
-            <p className="mt-2 text-sm text-slate-300">Your exports are clean and usable from day one.</p>
+            <h3 className="text-sm font-semibold text-white">Watermark-free exports</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Your results stay clean—ready for stores, ads, and design.
+            </p>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Better for batches</h3>
-            <p className="mt-2 text-sm text-slate-300">Built for real workflows like catalogs and product photos.</p>
+            <h3 className="text-sm font-semibold text-white">Batch-ready workflow</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Process collections and product sets without manual repetition.
+            </p>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Lifetime plan = best value</h3>
-            <p className="mt-2 text-sm text-slate-300">One-time payment for ongoing monthly credits.</p>
+            <h3 className="text-sm font-semibold text-white">Quality when it matters</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Upgrade for cleaner edges on hair, complex objects, and fine detail.
+            </p>
           </div>
         </div>
       </section>
@@ -320,41 +321,43 @@ export default function PricingPage() {
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
             <h3 className="text-sm font-semibold text-white">Do you add watermarks on the free plan?</h3>
-            <p className="mt-2 text-sm text-slate-300">No. CleanCut AI never adds watermarks, even on the free tier.</p>
+            <p className="mt-2 text-sm text-slate-300">
+              No. CleanCut AI never adds watermarks—even on the free tier.
+            </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">What are credits?</h3>
+            <h3 className="text-sm font-semibold text-white">How do credits work?</h3>
             <p className="mt-2 text-sm text-slate-300">
-              Each processed image costs credits. Fast costs 1 credit/image. Quality costs 2 credits/image.
-              HD export is coming soon (Lifetime only).
+              Each processed image costs credits. Fast costs 1 credit/image.
+              Quality costs 2 credits/image. Your monthly credits refill automatically on paid plans.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
             <h3 className="text-sm font-semibold text-white">Can I upgrade later?</h3>
             <p className="mt-2 text-sm text-slate-300">
-              Yes. Start free and upgrade when you need bigger batches and premium modes.
+              Yes. Start free and upgrade only when you need higher limits and Quality mode.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">When will payments go live?</h3>
+            <h3 className="text-sm font-semibold text-white">Will my plan apply automatically after payment?</h3>
             <p className="mt-2 text-sm text-slate-300">
-              After Paddle verification. Then checkout + plan upgrades will be fully automatic.
+              Yes. Once checkout completes, your plan and credits are updated automatically.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Placeholder checkout */}
+      {/* Checkout anchor (keep structure) */}
       <section
         id="checkout"
         className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8"
       >
-        <h2 className="text-xl font-semibold text-white">Checkout (coming soon)</h2>
+        <h2 className="text-xl font-semibold text-white">Checkout</h2>
         <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          This becomes a real checkout after Paddle verification. For now, it’s a placeholder so the user journey feels complete.
+          Choose a plan above to open secure checkout. After payment, your account upgrades automatically and your credits are applied right away.
         </p>
         <Link
           href="/app"

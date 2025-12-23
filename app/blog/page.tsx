@@ -5,7 +5,7 @@ import { BLOG_POSTS } from "../../lib/blogPosts";
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Background removal guides, transparent PNG tips, and e-commerce workflows for product photos, thumbnails, and marketing. CleanCut AI by Xevora.",
+    "Practical background removal guides: transparent PNG tips, e-commerce photo workflows, thumbnails, and clean cutout best practices. CleanCut AI by Xevora.",
   alternates: { canonical: "https://xevora.org/cleancut/blog" },
 };
 
@@ -60,11 +60,11 @@ export default function BlogIndex() {
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
         <h1 className="text-3xl font-bold text-white md:text-4xl">
-          CleanCut AI Blog
+          Background removal guides & workflows
         </h1>
         <p className="mt-3 max-w-3xl text-slate-300">
-          Practical guides, use cases, and workflows for background removal —
-          product photos, thumbnails, transparent PNGs, and more.
+          Learn how to get clean cutouts, export transparent PNGs, and speed up
+          e-commerce and creator workflows—without sacrificing quality.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -72,13 +72,13 @@ export default function BlogIndex() {
             href="/app"
             className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
           >
-            Try the App
+            Open CleanCut AI
           </Link>
           <Link
             href="/pricing"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
-            View Pricing
+            See plans
           </Link>
 
           <a
@@ -121,7 +121,7 @@ export default function BlogIndex() {
               href={`/blog/${p.slug}`}
               className="mt-5 inline-flex rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-900"
             >
-              Read article →
+              Read guide →
             </Link>
           </article>
         ))}
@@ -129,10 +129,10 @@ export default function BlogIndex() {
 
       <section className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
         <h3 className="text-lg font-semibold text-white">
-          Want to remove a background right now?
+          Ready to remove a background right now?
         </h3>
         <p className="mt-2 text-sm text-slate-300">
-          Use the app and export a transparent PNG in seconds.
+          Open the app, upload your image, and download a watermark-free transparent PNG in seconds.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
@@ -145,7 +145,7 @@ export default function BlogIndex() {
             href="/contact"
             className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
           >
-            Contact / Refunds
+            Contact
           </Link>
         </div>
       </section>

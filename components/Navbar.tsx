@@ -71,7 +71,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* LEFT: BRAND */}
-        <Link href="/cleancut" className="text-sm font-bold tracking-wide text-white">
+        <Link href="" className="text-sm font-bold tracking-wide text-white">
           CleanCut<span className="text-indigo-400"> AI</span>
           <span className="ml-2 text-xs font-normal text-slate-400">by Xevora</span>
         </Link>

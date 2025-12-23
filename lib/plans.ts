@@ -23,14 +23,17 @@ export const PLANS: Plan[] = [
     hdMultiplier: 2,
   },
   {
-    id: "pro_monthly",
-    name: "Pro Monthly",
-    priceLabel: "$4.99 / mo",
-    priceNote: "Up to 5–10x cheaper per image",
-    monthlyCredits: 1000,
-    maxBatchSize: 20,
-    hdMultiplier: 2,
-    highlight: true,
+    
+  id: "pro_monthly",
+  name: "Pro Monthly",
+  priceLabel: "$4.99 / mo",
+  priceNote: "7-day free trial • Cancel anytime",
+  monthlyCredits: 1000,
+  maxBatchSize: 20,
+  hdMultiplier: 2,
+  highlight: true,
+
+
   },
   {
     id: "lifetime",

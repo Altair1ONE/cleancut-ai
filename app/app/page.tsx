@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Client } from "@gradio/client";
 
 import { useAuth } from "../../components/AuthProvider";
@@ -16,6 +15,7 @@ import { getPlanById } from "../../lib/plans";
 import { UploadArea } from "../../components/UploadArea";
 import { BeforeAfter } from "../../components/BeforeAfter";
 import { supabase } from "../../lib/supabaseClient";
+import DownloadGateModal from "../../components/DownloadGateModal";
 
 type BgMode =
   | "transparent"
@@ -139,41 +139,44 @@ async function asyncPool<T, R>(
   return Promise.all(ret);
 }
 
-/** -------------------------------------------------------- **/
+/** Download helper */
+async function downloadUrlAsFile(url: string, filename: string) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+}
+
+type PendingDownload =
+  | { type: "single"; url: string; filename: string }
+  | { type: "all" };
 
 export default function AppPage() {
-  const { session, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !session) {
-      // ✅ FIX: if your login route is under /cleancut/login, use this.
-      // If your login page is actually /login, then revert this line to "/login".
-      router.push("/login");
-    }
-  }, [loading, session, router]);
-
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
-        Loading…
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
-        Redirecting to login…
-      </div>
-    );
-  }
-
+  // ✅ NO redirect to login anymore — guest preview is allowed
   return <AppInner />;
 }
 
 function AppInner() {
-  const { user } = useAuth(); // ✅ FIX: use user to re-load credits after login/verify
+  const { user } = useAuth();
+
+  const isGuest = !user?.id;
 
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [images, setImages] = useState<QueuedImage[]>([]);
@@ -182,20 +185,31 @@ function AppInner() {
   const [customColor, setCustomColor] = useState("#ffffff");
   const [qualityMode, setQualityMode] = useState<QualityMode>("fast");
 
-  // HD export UI (coming soon, lifetime only)
-  const [useHd, setUseHd] = useState(false);
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [showPaywall, setShowPaywall] = useState(false);
 
-  // ✅ FIX: reload credits when user becomes available AND when credits:update fires
+  // ✅ Download gate modal
+  const [showDownloadGate, setShowDownloadGate] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<PendingDownload | null>(
+    null
+  );
+
+  // ✅ Load credits: real credits for logged-in users; fake credits for guests
   useEffect(() => {
     let mounted = true;
 
     async function refresh() {
       try {
+        if (!user?.id) {
+          // Guest: allow preview (no DB calls)
+          if (mounted)
+            setCredits({ planId: "free", creditsRemaining: 999, lastResetAt: null });
+          return;
+        }
+
         const state = await loadCredits();
         if (mounted) setCredits(state);
       } catch (e) {
@@ -227,19 +241,17 @@ function AppInner() {
   );
 
   const isFree = plan.id === "free";
-  const isLifetime = plan.id === "lifetime";
-  const allowQuality = !isFree; // ✅ quality allowed only for paid plans
-  const allowHdUi = isLifetime; // ✅ show HD export UI only on lifetime (disabled)
+  const allowQuality = !isFree && !isGuest; // ✅ quality only for signed-in paid users
 
-  // ✅ If user is on Free plan, force Fast mode
+  // ✅ Guests forced to Fast
   useEffect(() => {
-    if (isFree && qualityMode === "quality") {
+    if ((isGuest || isFree) && qualityMode === "quality") {
       setQualityMode("fast");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFree]);
+  }, [isGuest, isFree]);
 
-  // Cleanup preview object URLs when images change
+  // Cleanup preview URLs
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
@@ -247,16 +259,46 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images.length]);
 
+  // ✅ If user signs in from the modal, run pending download immediately (preview stays!)
+  useEffect(() => {
+    if (!user?.id) return;
+    if (!pendingDownload) return;
+
+    (async () => {
+      try {
+        if (pendingDownload.type === "single") {
+          await downloadUrlAsFile(pendingDownload.url, pendingDownload.filename);
+        } else {
+          // all
+          for (let i = 0; i < results.length; i++) {
+            await downloadUrlAsFile(results[i].outputUrl, `cleancut-${i + 1}.png`);
+          }
+        }
+      } finally {
+        setPendingDownload(null);
+        setShowDownloadGate(false);
+      }
+    })();
+  }, [user?.id, pendingDownload, results]);
+
   function onFilesSelected(files: File[]) {
-    const limited = files.slice(0, plan.maxBatchSize);
+    // Guest: restrict to 1 image (preview only). Signed in uses plan batch size.
+    const max = isGuest ? 1 : plan.maxBatchSize;
+
+    const limited = files.slice(0, max);
     const newItems: QueuedImage[] = limited.map((f) => ({
       id: `${f.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       file: f,
       previewUrl: URL.createObjectURL(f),
     }));
+
     setImages(newItems);
     setResults([]);
     setErrorMsg(null);
+
+    if (isGuest && files.length > 1) {
+      setErrorMsg("Guest preview supports 1 image. Sign up free to batch + download.");
+    }
   }
 
   async function handleProcess() {
@@ -272,11 +314,17 @@ function AppInner() {
       return;
     }
 
-    // ✅ Free tier cannot use Quality
+    // Guests: only Fast
     const isQuality = allowQuality && qualityMode === "quality";
 
-    // ✅ Quality costs 2 credits/image; Fast costs 1 credit/image
-    if (!canConsumeCredits(credits, images.length, isQuality)) {
+    // Guests: prevent batch
+    if (isGuest && images.length > 1) {
+      setErrorMsg("Guest preview supports 1 image. Sign up free to batch + download.");
+      return;
+    }
+
+    // Signed-in users: normal credit check
+    if (!isGuest && !canConsumeCredits(credits, images.length, isQuality)) {
       setShowPaywall(true);
       return;
     }
@@ -305,20 +353,12 @@ function AppInner() {
       const qualityFlag = isQuality;
 
       const processed = await asyncPool(concurrency, resized, async (img) => {
-        const result: any = await app.predict("/remove_bg", [
-          img.file,
-          qualityFlag,
-        ]);
+        const result: any = await app.predict("/remove_bg", [img.file, qualityFlag]);
 
         const raw =
-          Array.isArray(result?.data) && result.data.length > 0
-            ? result.data[0]
-            : null;
+          Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null;
 
-        if (!raw) {
-          console.error("HF response:", result);
-          throw new Error("Invalid response from HF");
-        }
+        if (!raw) throw new Error("Invalid response from HF");
 
         const outputUrl =
           typeof raw === "string"
@@ -327,9 +367,7 @@ function AppInner() {
             ? (raw as any).url
             : null;
 
-        if (!outputUrl) {
-          throw new Error("Could not extract output url");
-        }
+        if (!outputUrl) throw new Error("Could not extract output url");
 
         setProcessedCount((c) => c + 1);
 
@@ -342,33 +380,34 @@ function AppInner() {
 
       setResults(processed);
 
-      // ✅ Usage analytics (Supabase) - non-blocking
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+      // Signed-in users: log usage + deduct credits
+      if (!isGuest) {
+        try {
+          const {
+            data: { user: u },
+          } = await supabase.auth.getUser();
 
-        if (user) {
-          const creditsSpent = images.length * (isQuality ? 2 : 1);
-          await supabase.from("usage_events").insert({
-            user_id: user.id,
-            email: user.email,
-            plan_id: credits.planId,
-            mode: isQuality ? "quality" : "fast",
-            images_count: images.length,
-            credits_spent: creditsSpent,
-          });
+          if (u) {
+            const creditsSpent = images.length * (isQuality ? 2 : 1);
+            await supabase.from("usage_events").insert({
+              user_id: u.id,
+              email: u.email,
+              plan_id: credits.planId,
+              mode: isQuality ? "quality" : "fast",
+              images_count: images.length,
+              credits_spent: creditsSpent,
+            });
+          }
+        } catch (e) {
+          console.warn("usage analytics insert failed", e);
         }
-      } catch (e) {
-        console.warn("usage analytics insert failed", e);
-      }
 
-      // ✅ Deduct correct credits: Fast=1x, Quality=2x
-      const updatedCredits = await consumeCredits(credits, images.length, isQuality);
-      setCredits(updatedCredits);
+        const updatedCredits = await consumeCredits(credits, images.length, isQuality);
+        setCredits(updatedCredits);
 
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("credits:update"));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("credits:update"));
+        }
       }
     } catch (err: any) {
       console.error("HF Space error:", err);
@@ -380,30 +419,26 @@ function AppInner() {
     }
   }
 
+  function requestDownloadSingle(url: string, filename: string) {
+    if (isGuest) {
+      setPendingDownload({ type: "single", url, filename });
+      setShowDownloadGate(true);
+      return;
+    }
+    downloadUrlAsFile(url, filename);
+  }
+
   async function handleDownloadAll() {
+    if (results.length === 0) return;
+
+    if (isGuest) {
+      setPendingDownload({ type: "all" });
+      setShowDownloadGate(true);
+      return;
+    }
+
     for (let i = 0; i < results.length; i++) {
-      const res = results[i];
-      try {
-        const r = await fetch(res.outputUrl);
-        const blob = await r.blob();
-        const blobUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `cleancut-${i + 1}.png`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        URL.revokeObjectURL(blobUrl);
-      } catch {
-        const a = document.createElement("a");
-        a.href = res.outputUrl;
-        a.download = `cleancut-${i + 1}.png`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
+      await downloadUrlAsFile(results[i].outputUrl, `cleancut-${i + 1}.png`);
     }
   }
 
@@ -419,9 +454,13 @@ function AppInner() {
             CleanCut AI – Background Removal App
           </h1>
           <p className="mt-1 text-xs text-slate-300">
-            Fast costs 1 credit/image. Quality costs 2 credits/image (paid plans only).
+            {isGuest
+              ? "Guest preview: process 1 image (Fast). Sign up free to download + batch."
+              : "Fast costs 1 credit/image. Quality costs 2 credits/image (paid plans only)."}
           </p>
         </div>
+
+        {/* keep badge, but it may show free credits in guest mode */}
         <CreditsBadge />
       </header>
 
@@ -431,32 +470,23 @@ function AppInner() {
 
           <div className="mt-4 space-y-3 text-xs text-slate-300">
             <div>
-              <span className="font-semibold text-slate-200">
-                Background mode
-              </span>
+              <span className="font-semibold text-slate-200">Background mode</span>
               <div className="mt-2 flex flex-wrap gap-2">
-                {(
-                  [
-                    "transparent",
-                    "white",
-                    "black",
-                    "custom",
-                    "blur",
-                    "shadow",
-                  ] as BgMode[]
-                ).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setBgMode(mode)}
-                    className={`rounded-full px-3 py-1 text-[11px] ${
-                      bgMode === mode
-                        ? "bg-indigo-500 text-white"
-                        : "bg-slate-800 text-slate-200"
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                ))}
+                {(["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]).map(
+                  (mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setBgMode(mode)}
+                      className={`rounded-full px-3 py-1 text-[11px] ${
+                        bgMode === mode
+                          ? "bg-indigo-500 text-white"
+                          : "bg-slate-800 text-slate-200"
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  )
+                )}
                 {bgMode === "custom" && (
                   <input
                     type="color"
@@ -471,11 +501,11 @@ function AppInner() {
             {/* Processing mode */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
               <div>
-                <div className="text-xs font-semibold text-slate-100">
-                  Processing mode
-                </div>
+                <div className="text-xs font-semibold text-slate-100">Processing mode</div>
                 <div className="mt-1 text-[11px] text-slate-400">
-                  Fast = 1 credit/image. Quality = 2 credits/image (paid only).
+                  {isGuest
+                    ? "Guest preview supports Fast only."
+                    : "Fast = 1 credit/image. Quality = 2 credits/image (paid only)."}
                 </div>
               </div>
 
@@ -508,34 +538,6 @@ function AppInner() {
               </div>
             </div>
 
-            {/* HD Export (Coming soon) - Lifetime only, disabled */}
-            {allowHdUi && (
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                <div>
-                  <div className="text-xs font-semibold text-slate-100">
-                    HD Export
-                    <span className="ml-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
-                      Coming soon
-                    </span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-slate-400">
-                    True HD export will be enabled when GPU processing is added (Lifetime only).
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-2 text-[11px] text-slate-400">
-                  <input
-                    type="checkbox"
-                    checked={useHd}
-                    onChange={(e) => setUseHd(e.target.checked)}
-                    disabled
-                    className="h-3 w-3 cursor-not-allowed"
-                  />
-                  Disabled
-                </label>
-              </div>
-            )}
-
             <button
               onClick={handleProcess}
               disabled={isProcessing || images.length === 0}
@@ -549,13 +551,11 @@ function AppInner() {
               ) : (
                 `Process ${images.length || ""} image${
                   images.length === 1 ? "" : "s"
-                } • Cost: ${totalCost} credit${totalCost === 1 ? "" : "s"}`
+                } • Cost: ${isGuest ? 0 : totalCost} credit${totalCost === 1 ? "" : "s"}`
               )}
             </button>
 
-            {errorMsg && (
-              <p className="text-[11px] text-rose-400">{errorMsg}</p>
-            )}
+            {errorMsg && <p className="text-[11px] text-rose-400">{errorMsg}</p>}
 
             {results.length > 0 && (
               <button
@@ -565,6 +565,12 @@ function AppInner() {
                 Download all as PNG
               </button>
             )}
+
+            {results.length > 0 && isGuest && (
+              <p className="text-[11px] text-slate-400">
+                Downloads require a free account. Your preview is already ready.
+              </p>
+            )}
           </div>
         </div>
 
@@ -573,6 +579,7 @@ function AppInner() {
             images={results}
             bgMode={bgMode}
             customColor={customColor}
+            onDownloadRequested={requestDownloadSingle}
           />
         </div>
       </section>
@@ -580,20 +587,14 @@ function AppInner() {
       {showPaywall && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
           <div className="card max-w-sm p-4 text-xs text-slate-300">
-            <h2 className="text-sm font-semibold text-white">
-              You&apos;re out of credits
-            </h2>
+            <h2 className="text-sm font-semibold text-white">You&apos;re out of credits</h2>
             <p className="mt-2">
-              You&apos;ve reached the limit for your current plan. Upgrade to
-              process more images.
+              You&apos;ve reached the limit for your current plan. Upgrade to process more images.
             </p>
             <p className="mt-2 text-[11px] text-slate-400">
               Current selection:{" "}
-              <span className="text-slate-200">
-                {isQuality ? "quality" : "fast"}
-              </span>{" "}
-              • Cost per image:{" "}
-              <span className="text-slate-200">{perImageCost}</span> credit(s)
+              <span className="text-slate-200">{isQuality ? "quality" : "fast"}</span> •
+              Cost per image: <span className="text-slate-200">{perImageCost}</span> credit(s)
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -612,6 +613,14 @@ function AppInner() {
           </div>
         </div>
       )}
+
+      <DownloadGateModal
+        open={showDownloadGate}
+        onClose={() => {
+          setShowDownloadGate(false);
+          setPendingDownload(null);
+        }}
+      />
     </div>
   );
 }

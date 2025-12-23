@@ -14,16 +14,17 @@ export function BeforeAfter({
   images,
   bgMode,
   customColor,
+  onDownloadRequested,
 }: {
   images: ProcessedImage[];
   bgMode: BgMode;
   customColor: string;
+  onDownloadRequested?: (url: string, filename: string) => void;
 }) {
   const bgStyle = useMemo(() => {
     if (bgMode === "white") return { background: "#ffffff" };
     if (bgMode === "black") return { background: "#000000" };
     if (bgMode === "custom") return { background: customColor };
-    // transparent / blur / shadow use the default dark card background
     return {};
   }, [bgMode, customColor]);
 
@@ -34,8 +35,6 @@ export function BeforeAfter({
   }, [bgMode]);
 
   async function downloadImage(url: string, filename: string) {
-    // More reliable than <a href=...> for cross-domain images:
-    // fetch -> blob -> download
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Download failed");
@@ -51,7 +50,6 @@ export function BeforeAfter({
 
       URL.revokeObjectURL(blobUrl);
     } catch {
-      // Fallback: direct link download
       const a = document.createElement("a");
       a.href = url;
       a.download = filename;
@@ -61,11 +59,19 @@ export function BeforeAfter({
     }
   }
 
+  function handleDownload(url: string, filename: string) {
+    if (onDownloadRequested) {
+      onDownloadRequested(url, filename);
+      return;
+    }
+    downloadImage(url, filename);
+  }
+
   if (images.length === 0) {
     return (
       <div className="text-sm text-slate-300">
-        Upload an image and click <span className="text-slate-100">Process</span>
-        . Your before/after preview will show here.
+        Upload an image and click <span className="text-slate-100">Process</span>. Your
+        before/after preview will show here.
       </div>
     );
   }
@@ -80,25 +86,21 @@ export function BeforeAfter({
             </div>
 
             <button
-              onClick={() => downloadImage(img.outputUrl, `cleancut-${idx + 1}.png`)}
-              className="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white hover:bg-brand-dark"
+              onClick={() =>
+                handleDownload(img.outputUrl, `cleancut-${idx + 1}.png`)
+              }
+              className="rounded-full bg-indigo-500 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-600"
             >
               Download PNG
             </button>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            {/* BEFORE */}
             <div className="rounded-xl border border-slate-800 bg-slate-950 p-2">
               <div className="mb-2 text-[11px] text-slate-400">Before</div>
-              <img
-                src={img.inputUrl}
-                alt="Before"
-                className="h-auto w-full rounded-lg"
-              />
+              <img src={img.inputUrl} alt="Before" className="h-auto w-full rounded-lg" />
             </div>
 
-            {/* AFTER */}
             <div
               className="rounded-xl border border-slate-800 bg-slate-950 p-2"
               style={bgStyle}

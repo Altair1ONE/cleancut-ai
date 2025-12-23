@@ -10,6 +10,7 @@ type AuthContextType = {
   loading: boolean;
   justLoggedIn: boolean;
   displayName: string;
+  authEventNonce: number; // ✅ new: increments each SIGNED_IN
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   justLoggedIn: false,
   displayName: "",
+  authEventNonce: 0,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [justLoggedIn, setJustLoggedIn] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [authEventNonce, setAuthEventNonce] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -54,6 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (event === "SIGNED_IN") {
           setJustLoggedIn(true);
+          setAuthEventNonce((n) => n + 1); // ✅ trigger login-based effects
+
           setTimeout(() => setJustLoggedIn(false), 3000);
         }
       }
@@ -66,7 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, loading, justLoggedIn, displayName }}
+      value={{
+        session,
+        user,
+        loading,
+        justLoggedIn,
+        displayName,
+        authEventNonce,
+      }}
     >
       {children}
     </AuthContext.Provider>

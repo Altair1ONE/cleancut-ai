@@ -10,7 +10,7 @@ export default function DownloadGateModal({
   open,
   onClose,
   title = "Create a free account to download",
-  subtitle = "Preview is free. Downloads require a free account to prevent abuse.",
+  subtitle = " Downloads require a free account to prevent abuse.",
 }: {
   open: boolean;
   onClose: () => void;
@@ -202,7 +202,7 @@ export default function DownloadGateModal({
           </button>
 
           <p className="text-center text-xs text-slate-500">
-            Tip: You can preview for free. Downloads require a free account.
+            Tip: Downloads require a free account.
           </p>
         </form>
       </div>

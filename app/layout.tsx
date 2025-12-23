@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import TrialPopup from "../components/TrialPopup";
 import WelcomeBar from "../components/WelcomeBar";
 import Footer from "../components/Footer";
 import { AuthProvider } from "../components/AuthProvider";
@@ -134,6 +135,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <Navbar />
           <WelcomeBar />
+          <TrialPopup />
           {children}
           <Footer />
         </AuthProvider>

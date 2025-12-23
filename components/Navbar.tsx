@@ -73,9 +73,7 @@ export default function Navbar() {
         {/* LEFT: BRAND */}
         <Link href="/cleancut" className="text-sm font-bold tracking-wide text-white">
           CleanCut<span className="text-indigo-400"> AI</span>
-          <span className="ml-2 text-xs font-normal text-slate-400">
-            by Xevora
-          </span>
+          <span className="ml-2 text-xs font-normal text-slate-400">by Xevora</span>
         </Link>
 
         {/* CENTER: NAV LINKS */}
@@ -83,20 +81,14 @@ export default function Navbar() {
           <Link href="/app" className="text-sm text-slate-300 hover:text-white">
             App
           </Link>
-          <Link
-            href="/pricing"
-            className="text-sm text-slate-300 hover:text-white"
-          >
+          <Link href="/pricing" className="text-sm text-slate-300 hover:text-white">
             Pricing
           </Link>
           <Link href="/blog" className="text-sm text-slate-300 hover:text-white">
             Blog
           </Link>
-          <Link
-            href="/contact"
-            className="text-sm text-slate-300 hover:text-white"
-          >
-            Contact
+          <Link href="/contact" className="text-sm text-slate-300 hover:text-white">
+            Support
           </Link>
         </nav>
 
@@ -131,7 +123,7 @@ export default function Navbar() {
               </button>
 
               {open && (
-                <div className="absolute right-0 top-12 w-48 rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-xl">
+                <div className="absolute right-0 top-12 w-56 rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-xl">
                   <div className="px-3 py-2 text-xs text-slate-400">
                     {user.email}
                   </div>
@@ -144,13 +136,12 @@ export default function Navbar() {
                     Profile
                   </Link>
 
-                  {/* ✅ ADDED: My Usage */}
                   <Link
                     href="/usage"
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                     onClick={() => setOpen(false)}
                   >
-                    My Usage
+                    Usage & Credits
                   </Link>
 
                   <Link
@@ -158,7 +149,7 @@ export default function Navbar() {
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                     onClick={() => setOpen(false)}
                   >
-                    Billing
+                    Plans & Billing
                   </Link>
 
                   <button
@@ -177,7 +168,7 @@ export default function Navbar() {
             href="/app"
             className="hidden rounded-full border border-slate-700 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500 md:inline-flex"
           >
-            Try Free
+            Remove Background
           </Link>
         </div>
       </div>

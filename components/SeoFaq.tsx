@@ -2,41 +2,59 @@ export function SeoFaq() {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": [
+    mainEntity: [
       {
         "@type": "Question",
-        "name": "Is CleanCut AI really free?",
-        "acceptedAnswer": {
+        name: "How do I remove a background from an image online?",
+        acceptedAnswer: {
           "@type": "Answer",
-          "text":
-            "Yes. CleanCut AI offers a free background remover with no watermark. Usage limits apply to keep the service fast and fair.",
+          text:
+            "Upload your image to CleanCut AI, click Process, and download a transparent PNG. It works for product photos, portraits, and marketing images—no design skills needed.",
         },
       },
       {
         "@type": "Question",
-        "name": "Does CleanCut AI reduce image quality?",
-        "acceptedAnswer": {
+        name: "Is CleanCut AI a free background remover with no watermark?",
+        acceptedAnswer: {
           "@type": "Answer",
-          "text":
-            "No. CleanCut AI preserves image quality and allows transparent PNG export. Quality mode improves edge accuracy for complex images.",
+          text:
+            "Yes. CleanCut AI offers watermark-free exports on the free plan. Usage limits apply to keep the service fast and fair for everyone.",
         },
       },
       {
         "@type": "Question",
-        "name": "Can I remove backgrounds in bulk?",
-        "acceptedAnswer": {
+        name: "Does background removal reduce image quality?",
+        acceptedAnswer: {
           "@type": "Answer",
-          "text":
-            "Yes. CleanCut AI supports batch background removal. Batch size depends on your selected plan.",
+          text:
+            "CleanCut AI is designed to preserve detail and create clean edges. For hair and complex subjects, Quality mode can improve edge accuracy when available on your plan.",
         },
       },
       {
         "@type": "Question",
-        "name": "Is there a watermark on free images?",
-        "acceptedAnswer": {
+        name: "Can I remove backgrounds in bulk (batch processing)?",
+        acceptedAnswer: {
           "@type": "Answer",
-          "text":
-            "No. CleanCut AI never adds watermarks, even on the free plan.",
+          text:
+            "Yes. CleanCut AI supports batch background removal. Your batch size and monthly credit limits depend on your plan.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do you store or sell uploaded images?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Images are processed only to provide background removal. CleanCut AI does not sell your uploaded images, and we aim to keep processing private and secure.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What are credits and how many credits does one image use?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Credits are the usage units for processing. Fast mode typically costs 1 credit per image, while Quality mode typically costs 2 credits per image (when available).",
         },
       },
     ],

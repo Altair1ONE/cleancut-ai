@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Terms of Service for CleanCut AI by Xevora. Learn the rules, responsibilities, and usage terms of our AI background removal service.",
+    "Terms of Service for CleanCut AI by Xevora. Understand your rights, responsibilities, and acceptable use when using our AI background removal service.",
+  alternates: { canonical: "https://xevora.org/cleancut/terms" },
 };
 
 export default function TermsPage() {
@@ -12,56 +13,53 @@ export default function TermsPage() {
       <h1 className="text-3xl font-bold text-white">Terms of Service</h1>
 
       <p className="mt-4 text-slate-300">
-        Welcome to CleanCut AI, a service operated by Xevora. By accessing or
-        using our website and services, you agree to these Terms of Service.
-        Please read them carefully.
+        These Terms of Service (“Terms”) govern your use of CleanCut AI, a web-based
+        background removal tool operated by Xevora (“we”, “us”, “our”). By accessing
+        or using the service, you agree to these Terms.
       </p>
 
       <section className="mt-8 space-y-4 text-slate-300">
-        <h2 className="text-xl font-semibold text-white">1. Service Description</h2>
+        <h2 className="text-xl font-semibold text-white">1. What CleanCut AI does</h2>
         <p>
-          CleanCut AI provides AI-powered background removal tools that allow
-          users to upload images and export processed results such as transparent
-          PNG files.
+          CleanCut AI lets you upload images and generates processed results, such as
+          transparent PNG files with the background removed.
         </p>
 
-        <h2 className="text-xl font-semibold text-white">2. User Responsibilities</h2>
+        <h2 className="text-xl font-semibold text-white">2. Your responsibilities</h2>
         <p>
-          You agree not to upload illegal, harmful, or copyrighted content that
-          you do not have permission to use. You are solely responsible for the
-          images you upload.
+          You agree not to upload content that is illegal, harmful, or that you do not
+          have permission to use. You are responsible for the images you upload and how
+          you use the outputs.
         </p>
 
-        <h2 className="text-xl font-semibold text-white">3. Accounts & Usage</h2>
+        <h2 className="text-xl font-semibold text-white">3. Accounts, plans & limits</h2>
         <p>
-          Some features may require account registration. Usage limits apply
-          based on your selected plan. Abuse or excessive automated usage may
-          result in account suspension.
+          Some features require an account. Your plan may include usage limits (credits)
+          and batch limits. Abuse (including excessive automation that harms service
+          performance) may result in throttling or account suspension to protect the platform.
         </p>
 
-        <h2 className="text-xl font-semibold text-white">4. Intellectual Property</h2>
+        <h2 className="text-xl font-semibold text-white">4. Intellectual property</h2>
         <p>
-          CleanCut AI, its design, branding, and software are the intellectual
-          property of Xevora. You may not copy or resell the service without
-          permission.
+          CleanCut AI, its software, design, branding, and content are owned by Xevora.
+          You may not copy, resell, or reverse engineer the service without written permission.
         </p>
 
-        <h2 className="text-xl font-semibold text-white">5. Disclaimer</h2>
+        <h2 className="text-xl font-semibold text-white">5. Service availability</h2>
         <p>
-          The service is provided “as is” without warranties of any kind. We do
-          not guarantee uninterrupted or error-free operation.
+          We aim to keep CleanCut AI available and reliable, but the service is provided
+          on an “as is” basis. We do not guarantee uninterrupted, error-free operation.
         </p>
 
-        <h2 className="text-xl font-semibold text-white">6. Changes to Terms</h2>
+        <h2 className="text-xl font-semibold text-white">6. Changes to these Terms</h2>
         <p>
-          We may update these Terms from time to time. Continued use of the
-          service means you accept the updated Terms.
+          We may update these Terms from time to time. If you continue using the service
+          after changes, you accept the updated Terms.
         </p>
 
         <h2 className="text-xl font-semibold text-white">7. Contact</h2>
         <p>
-          If you have any questions about these Terms, please contact us through
-          the website.
+          For questions about these Terms, please contact us via the Support page.
         </p>
       </section>
     </main>

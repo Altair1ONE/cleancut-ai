@@ -19,23 +19,28 @@ export default function Footer() {
               CleanCut AI <span className="text-slate-400">by</span>{" "}
               <span className="text-indigo-300">Xevora</span>
             </div>
+
             <p className="mt-3 text-sm text-slate-400">
-              AI background removal with transparent PNG export, batch
-              processing, and simple pricing.
+              A fast AI background remover for clean, professional cutouts.
+              Export transparent PNGs with no watermark and process images in batch.
             </p>
+
+            <div className="mt-4 text-xs text-slate-500">
+              Watermark-free • Transparent PNG • Batch processing
+            </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href="/app"
                 className="rounded-full bg-indigo-500 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-600"
               >
-                Open App
+                Open the App
               </Link>
               <Link
                 href="/pricing"
                 className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500"
               >
-                Pricing
+                See Pricing
               </Link>
             </div>
           </div>
@@ -45,13 +50,13 @@ export default function Footer() {
             <div className="text-sm font-semibold text-white">Product</div>
             <ul className="mt-4 space-y-2 text-sm text-slate-300">
               <li>
-                <Link className="hover:text-white" href="/">
+                <Link className="hover:text-white" href="/cleancut">
                   Home
                 </Link>
               </li>
               <li>
                 <Link className="hover:text-white" href="/app">
-                  Background Remover App
+                  Background Remover
                 </Link>
               </li>
               <li>
@@ -61,12 +66,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link className="hover:text-white" href="/blog">
-                  Blog
+                  Guides & Blog
                 </Link>
               </li>
               <li>
                 <Link className="hover:text-white" href="/contact">
-                  Contact
+                  Support / Contact
                 </Link>
               </li>
             </ul>
@@ -78,10 +83,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-2 text-sm text-slate-300">
               {popularUseCases.map((u) => (
                 <li key={u.slug}>
-                  <Link
-                    className="hover:text-white"
-                    href={`/use-cases/${u.slug}`}
-                  >
+                  <Link className="hover:text-white" href={`/use-cases/${u.slug}`}>
                     {u.title}
                   </Link>
                 </li>

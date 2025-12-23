@@ -3,29 +3,77 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
+import { loadCredits } from "../lib/credits";
 
 const STORAGE_KEY = "trial_popup_dismissed";
 
 export default function TrialPopup() {
   const { user, authEventNonce } = useAuth();
   const [open, setOpen] = useState(false);
+  const [isEligible, setIsEligible] = useState(false);
 
-  // Show only after SIGNED_IN (not on page refresh)
+  // Decide eligibility based on plan (free only)
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkEligibility() {
+      if (!user?.id) {
+        if (mounted) {
+          setIsEligible(false);
+          setOpen(false);
+        }
+        return;
+      }
+
+      try {
+        const credits = await loadCredits();
+        const eligible = credits?.planId === "free";
+        if (!mounted) return;
+
+        setIsEligible(eligible);
+
+        // If user is paid, ensure popup is closed + not stored
+        if (!eligible) {
+          try {
+            sessionStorage.removeItem(STORAGE_KEY);
+          } catch {}
+          setOpen(false);
+        }
+      } catch {
+        // If credits fail, safest is: don't show popup
+        if (mounted) {
+          setIsEligible(false);
+          setOpen(false);
+        }
+      }
+    }
+
+    checkEligibility();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
+
+  // Show only after SIGNED_IN, only if eligible (free plan)
   useEffect(() => {
     if (!user?.id) return;
+    if (!isEligible) return;
 
-    // When a new SIGNED_IN happens, we want popup to show again,
-    // so we clear the dismissal on login.
+    // On each new sign-in, allow it to show again
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {}
 
     setOpen(true);
-  }, [authEventNonce, user?.id]);
+  }, [authEventNonce, user?.id, isEligible]);
 
-  // If user dismissed in this session, keep closed (even if they navigate)
+  // Respect "dismissed for this session"
   useEffect(() => {
     if (!user?.id) {
+      setOpen(false);
+      return;
+    }
+    if (!isEligible) {
       setOpen(false);
       return;
     }
@@ -34,7 +82,7 @@ export default function TrialPopup() {
       const dismissed = sessionStorage.getItem(STORAGE_KEY) === "1";
       if (dismissed) setOpen(false);
     } catch {}
-  }, [user?.id]);
+  }, [user?.id, isEligible]);
 
   function dismiss() {
     try {
@@ -44,6 +92,7 @@ export default function TrialPopup() {
   }
 
   if (!user?.id) return null;
+  if (!isEligible) return null;
   if (!open) return null;
 
   return (

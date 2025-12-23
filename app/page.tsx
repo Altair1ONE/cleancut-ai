@@ -177,7 +177,7 @@ export default function HomePage() {
 
         <ol className="mt-4 grid list-decimal gap-4 pl-6 text-slate-300 md:grid-cols-3">
           <li>
-            Upload an image (PNG, JPG, or WEBP) — or drag &amp; drop multiple
+            Upload an image (PNG, JPG, or WEBP) or drag &amp; drop multiple
             files for batch processing.
           </li>
           <li>

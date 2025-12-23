@@ -11,6 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  const SUPPORT_EMAIL = "support@xevora.org";
+  const SUPPORT_EMAIL = "contactxevora@gmail.com";
   return <ContactClient supportEmail={SUPPORT_EMAIL} />;
 }

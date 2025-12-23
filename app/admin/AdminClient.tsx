@@ -15,7 +15,7 @@ type UsageRow = {
   created_at: string;
 };
 
-// ✅ Fallback (so you never get locked out if env isn't injected properly)
+// UI-only allowlist (not security) — real security is enforced server-side in /api/admin/credits
 const FALLBACK_ADMIN_EMAILS = ["inbox2hammad@gmail.com"];
 
 function parseAdminEmails(raw: string) {
@@ -41,6 +41,14 @@ export default function AdminClient() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Credit override states
+  const [targetUserId, setTargetUserId] = useState("");
+  const [action, setAction] = useState<"add" | "deduct" | "set">("add");
+  const [amount, setAmount] = useState<number>(30);
+  const [planId, setPlanId] = useState<string>(""); // optional
+  const [adminResult, setAdminResult] = useState<any>(null);
+  const [adminBusy, setAdminBusy] = useState(false);
+
   const adminOk = useMemo(() => isAdminEmail(user?.email), [user?.email]);
 
   useEffect(() => {
@@ -56,46 +64,10 @@ export default function AdminClient() {
   }
 
   if (!adminOk) {
-    const envRaw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-    const allowedFromEnv = parseAdminEmails(envRaw);
-    const effectiveAllowed = allowedFromEnv.length
-      ? allowedFromEnv
-      : FALLBACK_ADMIN_EMAILS;
-
     return (
       <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
         <div className="text-white font-semibold">Access denied</div>
-        <div className="mt-2">
-          Your email is not in{" "}
-          <code className="text-slate-200">NEXT_PUBLIC_ADMIN_EMAILS</code>.
-        </div>
-
-        {/* ✅ Debug panel so you can see EXACTLY what's happening */}
-        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-xs">
-          <div className="text-slate-200 font-semibold mb-2">Debug</div>
-          <div>
-            <span className="text-slate-400">Logged-in email:</span>{" "}
-            <span className="text-slate-100">{user.email ?? "(null)"}</span>
-          </div>
-          <div className="mt-1">
-            <span className="text-slate-400">Env raw:</span>{" "}
-            <span className="text-slate-100">
-              {envRaw ? JSON.stringify(envRaw) : "(empty/undefined)"}
-            </span>
-          </div>
-          <div className="mt-1">
-            <span className="text-slate-400">Effective allow-list:</span>{" "}
-            <span className="text-slate-100">
-              {effectiveAllowed.join(", ")}
-            </span>
-          </div>
-
-          <div className="mt-3 text-slate-400">
-            If <b>Env raw</b> is empty, your Vercel env var isn’t being injected
-            into the client build. In that case the fallback list is used.
-          </div>
-        </div>
-
+        <div className="mt-2">Your email is not allowed to view this page.</div>
         <button
           onClick={() => router.push("/")}
           className="mt-5 rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
@@ -131,15 +103,153 @@ export default function AdminClient() {
     }
   }
 
+  async function runCreditOverride() {
+    setError(null);
+    setAdminResult(null);
+
+    if (!targetUserId.trim()) {
+      setError("Please paste a target user_id (UUID).");
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError("Amount must be a positive number.");
+      return;
+    }
+
+    setAdminBusy(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error("Missing access token");
+
+      const res = await fetch("api/admin/credits", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: targetUserId.trim(),
+          action,
+          amount,
+          planId: planId.trim() ? planId.trim() : null,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(json?.error || `Admin request failed (${res.status})`);
+      }
+
+      setAdminResult(json);
+    } catch (e: any) {
+      setError(e?.message || "Admin action failed");
+    } finally {
+      setAdminBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
         <p className="mt-2 text-sm text-slate-300">
-          View user usage analytics (latest 100). Credit override panel will
-          become fully active once credits are stored in Supabase (after Paddle
-          automation).
+          Paddle still awards credits automatically on successful payment. This admin panel is only
+          for support: manual credit adjustments, fixing failed transactions, and controlled plan overrides.
         </p>
+      </section>
+
+      {/* Credit Override Panel */}
+      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <h2 className="text-lg font-semibold text-white">Credit override panel</h2>
+        <p className="mt-2 text-sm text-slate-300">
+          Use this only when needed (failed transaction / bonus credits). This is enforced server-side
+          by <code className="text-slate-200">ADMIN_EMAILS</code>.
+        </p>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div>
+            <label className="text-xs text-slate-400">Target user_id (UUID)</label>
+            <input
+              value={targetUserId}
+              onChange={(e) => setTargetUserId(e.target.value)}
+              placeholder="e.g. 3f5c6a7e-9b1a-4b2e-9f01-..."
+              className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400">Action</label>
+            <select
+              value={action}
+              onChange={(e) => setAction(e.target.value as any)}
+              className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            >
+              <option value="add">Add credits</option>
+              <option value="deduct">Deduct credits</option>
+              <option value="set">Set credits to exact value</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400">Amount</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400">Optional plan override</label>
+            <input
+              value={planId}
+              onChange={(e) => setPlanId(e.target.value)}
+              placeholder="free | pro_monthly | lifetime (optional)"
+              className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 flex gap-3">
+          <button
+            onClick={runCreditOverride}
+            disabled={adminBusy}
+            className="rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60"
+          >
+            {adminBusy ? "Applying…" : "Apply"}
+          </button>
+
+          <button
+            onClick={() => {
+              setTargetUserId("");
+              setPlanId("");
+              setAmount(30);
+              setAction("add");
+              setAdminResult(null);
+              setError(null);
+            }}
+            className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+          >
+            Reset
+          </button>
+        </div>
+
+        {error && <div className="mt-3 text-sm text-rose-400">{error}</div>}
+
+        {adminResult && (
+          <pre className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-200">
+{JSON.stringify(adminResult, null, 2)}
+          </pre>
+        )}
+      </section>
+
+      {/* Usage viewer */}
+      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <h2 className="text-lg font-semibold text-white">Usage events (latest 100)</h2>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <input
@@ -165,16 +275,9 @@ export default function AdminClient() {
           </button>
         </div>
 
-        {error && <div className="mt-3 text-sm text-rose-400">{error}</div>}
-      </section>
-
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-        <h2 className="text-lg font-semibold text-white">Usage events</h2>
-
         {rows.length === 0 ? (
           <p className="mt-3 text-sm text-slate-300">
-            No events yet. Process an image while logged in to generate
-            analytics.
+            No events yet. Process an image while logged in to generate analytics.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
@@ -206,17 +309,6 @@ export default function AdminClient() {
             </table>
           </div>
         )}
-      </section>
-
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-        <h2 className="text-lg font-semibold text-white">
-          Credit override panel (coming next)
-        </h2>
-        <p className="mt-2 text-sm text-slate-300">
-          After Paddle is connected, we’ll store credits & plan in Supabase per
-          user and enable: manual credit top-up, plan switch, refund handling,
-          and support bonuses — all from here.
-        </p>
       </section>
     </div>
   );

@@ -119,7 +119,7 @@ export default function TrialPopup() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
-          href="/pricing#checkout"
+          href="/pricing"
           className="rounded-full bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
         >
           Start 7-day trial

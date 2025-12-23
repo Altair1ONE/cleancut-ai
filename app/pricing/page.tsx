@@ -68,6 +68,7 @@ const plans: PlanCard[] = [
       "Fast + Quality modes",
       "Priority processing",
       "Best for frequent product photos & content",
+      "7-day free trial",
     ],
     cta: { label: "Upgrade", href: "/pricing#checkout" },
     note: "Fast costs 1 credit/image. Quality costs 2 credits/image.",

@@ -80,7 +80,7 @@ const plans: PlanCard[] = [
     price: "$19.99",
     sub: "one-time",
     badge: "Best value",
-    creditsLabel: "200 credits / month (forever)",
+    creditsLabel: "500 credits / month (forever)",
     pills: [
       { label: "Fast mode", tone: "ok" },
       { label: "Quality mode", tone: "info" },

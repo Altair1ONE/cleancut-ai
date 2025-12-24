@@ -197,6 +197,30 @@ function AppInner() {
     null
   );
 
+  // ✅ NEW: cold start hint (only show once ever)
+  const [hasSeenColdStartHint, setHasSeenColdStartHint] = useState(true);
+
+  useEffect(() => {
+    // Read once on mount
+    try {
+      const seen =
+        typeof window !== "undefined" &&
+        window.localStorage.getItem("cleancut_seen_first_process_hint") === "1";
+      setHasSeenColdStartHint(!!seen);
+    } catch {
+      setHasSeenColdStartHint(true); // fail-safe: don't annoy user
+    }
+  }, []);
+
+  function markColdStartHintSeen() {
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("cleancut_seen_first_process_hint", "1");
+      }
+    } catch {}
+    setHasSeenColdStartHint(true);
+  }
+
   // ✅ Load credits: real credits for logged-in users; fake credits for guests
   useEffect(() => {
     let mounted = true;
@@ -206,7 +230,11 @@ function AppInner() {
         if (!user?.id) {
           // Guest: allow preview (no DB calls)
           if (mounted)
-            setCredits({ planId: "free", creditsRemaining: 999, lastResetAt: null });
+            setCredits({
+              planId: "free",
+              creditsRemaining: 999,
+              lastResetAt: null,
+            });
           return;
         }
 
@@ -267,11 +295,17 @@ function AppInner() {
     (async () => {
       try {
         if (pendingDownload.type === "single") {
-          await downloadUrlAsFile(pendingDownload.url, pendingDownload.filename);
+          await downloadUrlAsFile(
+            pendingDownload.url,
+            pendingDownload.filename
+          );
         } else {
           // all
           for (let i = 0; i < results.length; i++) {
-            await downloadUrlAsFile(results[i].outputUrl, `cleancut-${i + 1}.png`);
+            await downloadUrlAsFile(
+              results[i].outputUrl,
+              `cleancut-${i + 1}.png`
+            );
           }
         }
       } finally {
@@ -297,7 +331,9 @@ function AppInner() {
     setErrorMsg(null);
 
     if (isGuest && files.length > 1) {
-      setErrorMsg("Guest preview supports 1 image. Sign up free to batch + download.");
+      setErrorMsg(
+        "Guest preview supports 1 image. Sign up free to batch + download."
+      );
     }
   }
 
@@ -319,7 +355,9 @@ function AppInner() {
 
     // Guests: prevent batch
     if (isGuest && images.length > 1) {
-      setErrorMsg("Guest preview supports 1 image. Sign up free to batch + download.");
+      setErrorMsg(
+        "Guest preview supports 1 image. Sign up free to batch + download."
+      );
       return;
     }
 
@@ -339,9 +377,13 @@ function AppInner() {
     setProcessedCount(0);
 
     try {
+      // ✅ On first-ever processing, show hint while this cold-start happens
       const app = await Client.connect(spaceId);
 
-      const maxSide = getMaxSidePx(credits.planId, isQuality ? "quality" : "fast");
+      const maxSide = getMaxSidePx(
+        credits.planId,
+        isQuality ? "quality" : "fast"
+      );
       const resized = await Promise.all(
         images.map(async (img) => {
           const resizedFile = await resizeImageFile(img.file, maxSide);
@@ -353,10 +395,15 @@ function AppInner() {
       const qualityFlag = isQuality;
 
       const processed = await asyncPool(concurrency, resized, async (img) => {
-        const result: any = await app.predict("/remove_bg", [img.file, qualityFlag]);
+        const result: any = await app.predict("/remove_bg", [
+          img.file,
+          qualityFlag,
+        ]);
 
         const raw =
-          Array.isArray(result?.data) && result.data.length > 0 ? result.data[0] : null;
+          Array.isArray(result?.data) && result.data.length > 0
+            ? result.data[0]
+            : null;
 
         if (!raw) throw new Error("Invalid response from HF");
 
@@ -380,6 +427,11 @@ function AppInner() {
 
       setResults(processed);
 
+      // ✅ Mark "first time hint" as seen after first successful processing
+      if (!hasSeenColdStartHint) {
+        markColdStartHintSeen();
+      }
+
       // Signed-in users: log usage + deduct credits
       if (!isGuest) {
         try {
@@ -402,7 +454,11 @@ function AppInner() {
           console.warn("usage analytics insert failed", e);
         }
 
-        const updatedCredits = await consumeCredits(credits, images.length, isQuality);
+        const updatedCredits = await consumeCredits(
+          credits,
+          images.length,
+          isQuality
+        );
         setCredits(updatedCredits);
 
         if (typeof window !== "undefined") {
@@ -446,6 +502,9 @@ function AppInner() {
   const perImageCost = isQuality ? 2 : 1;
   const totalCost = images.length * perImageCost;
 
+  // ✅ show this message only while processing AND only if user hasn't seen it before
+  const showFirstTimeHint = isProcessing && !hasSeenColdStartHint;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -472,21 +531,21 @@ function AppInner() {
             <div>
               <span className="font-semibold text-slate-200">Background mode</span>
               <div className="mt-2 flex flex-wrap gap-2">
-                {(["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]).map(
-                  (mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setBgMode(mode)}
-                      className={`rounded-full px-3 py-1 text-[11px] ${
-                        bgMode === mode
-                          ? "bg-indigo-500 text-white"
-                          : "bg-slate-800 text-slate-200"
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  )
-                )}
+                {(
+                  ["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]
+                ).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setBgMode(mode)}
+                    className={`rounded-full px-3 py-1 text-[11px] ${
+                      bgMode === mode
+                        ? "bg-indigo-500 text-white"
+                        : "bg-slate-800 text-slate-200"
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                ))}
                 {bgMode === "custom" && (
                   <input
                     type="color"
@@ -538,6 +597,19 @@ function AppInner() {
               </div>
             </div>
 
+            {/* ✅ NEW: first-time cold start hint */}
+            {showFirstTimeHint && (
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 text-[11px] text-slate-300">
+                <div className="font-semibold text-slate-100">
+                  ⏳ First-time setup may take longer
+                </div>
+                <div className="mt-1 text-slate-400">
+                  The first processing can take extra time while our AI starts up. Please
+                  wait — next runs will be faster.
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleProcess}
               disabled={isProcessing || images.length === 0}
@@ -551,7 +623,9 @@ function AppInner() {
               ) : (
                 `Process ${images.length || ""} image${
                   images.length === 1 ? "" : "s"
-                } • Cost: ${isGuest ? 0 : totalCost} credit${totalCost === 1 ? "" : "s"}`
+                } • Cost: ${isGuest ? 0 : totalCost} credit${
+                  totalCost === 1 ? "" : "s"
+                }`
               )}
             </button>
 
@@ -589,12 +663,14 @@ function AppInner() {
           <div className="card max-w-sm p-4 text-xs text-slate-300">
             <h2 className="text-sm font-semibold text-white">You&apos;re out of credits</h2>
             <p className="mt-2">
-              You&apos;ve reached the limit for your current plan. Upgrade to process more images.
+              You&apos;ve reached the limit for your current plan. Upgrade to process more
+              images.
             </p>
             <p className="mt-2 text-[11px] text-slate-400">
               Current selection:{" "}
               <span className="text-slate-200">{isQuality ? "quality" : "fast"}</span> •
-              Cost per image: <span className="text-slate-200">{perImageCost}</span> credit(s)
+              Cost per image:{" "}
+              <span className="text-slate-200">{perImageCost}</span> credit(s)
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button

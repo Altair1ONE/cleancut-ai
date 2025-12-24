@@ -66,6 +66,7 @@ const plans: PlanCard[] = [
       "1000 credits every month (auto-refill)",
       "Bigger batch processing",
       "Fast + Quality modes",
+      "Batch uploads upto 20",
       "Priority processing",
       "Best for frequent product photos & content",
       "7-day free trial",
@@ -87,8 +88,8 @@ const plans: PlanCard[] = [
     ],
     features: [
       "One-time payment (no subscription)",
-      "200 credits every month forever (auto-refill)",
-      "Bigger batch processing",
+      "500 credits every month forever (auto-refill)",
+      "Batch uploads upto 20",
       "Fast + Quality modes",
       "Perfect for steady monthly usage",
     ],

@@ -19,7 +19,7 @@ export const PLANS: Plan[] = [
     priceLabel: "$0",
     priceNote: "No watermark • Great for testing",
     monthlyCredits: 30,
-    maxBatchSize: 5,
+    maxBatchSize: 2,
     hdMultiplier: 2,
   },
   {
@@ -40,8 +40,8 @@ export const PLANS: Plan[] = [
     name: "Lifetime",
     priceLabel: "$19.99 one-time",
     priceNote: "Best value over time",
-    monthlyCredits: 200,
-    maxBatchSize: 10,
+    monthlyCredits: 500,
+    maxBatchSize: 20,
     hdMultiplier: 2,
   },
 ];

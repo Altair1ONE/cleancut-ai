@@ -1,21 +1,17 @@
-// app/api/paddle/webhook/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { adminDb } from "../../../../lib/firebaseAdmin";
 import { planIdFromPriceId } from "../../../../lib/paddlePrices";
 
 export const runtime = "nodejs";
 
 function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) {
   const secret = process.env.PADDLE_WEBHOOK_SECRET || "";
-  if (!secret) return false;
-  if (!signatureHeader) return false;
+  if (!secret || !signatureHeader) return false;
 
-  // Paddle header format: "ts=...;h1=..." (semicolon-separated)
   const parts = signatureHeader.split(";").map((p) => p.trim());
   const tsPart = parts.find((p) => p.startsWith("ts="));
   const h1Part = parts.find((p) => p.startsWith("h1="));
-
   if (!tsPart || !h1Part) return false;
 
   const ts = tsPart.slice(3);
@@ -31,11 +27,10 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
   }
 }
 
-
 function creditsForPlan(planId: "free" | "pro_monthly" | "lifetime") {
   if (planId === "pro_monthly") return 1000;
-  if (planId === "lifetime") return 200;
-  return 30; // free (you can keep free one-time separate if you want)
+  if (planId === "lifetime") return 500; // ✅ updated
+  return 30;
 }
 
 export async function POST(req: Request) {
@@ -43,58 +38,35 @@ export async function POST(req: Request) {
   const sig = req.headers.get("Paddle-Signature");
 
   const ok = verifyPaddleSignature(rawBody, sig);
-  if (!ok) {
-    return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
-  }
+  if (!ok) return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
 
   const event = JSON.parse(rawBody);
-
   const eventType: string = event?.event_type || event?.eventType || "";
   const data = event?.data || event?.data?.object || event?.data?.data || event?.data;
 
   const customData = data?.custom_data || data?.customData || {};
-  const supabaseUserId: string | undefined = customData?.supabase_user_id;
+  const uid: string | undefined = customData?.firebase_uid;
 
-  if (!supabaseUserId) {
+  if (!uid) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
   async function setPlanAndCredits(planId: "free" | "pro_monthly" | "lifetime") {
-    // 1) upsert plan table
-    const { error: planErr } = await supabaseAdmin
-      .from("user_plans")
-      .upsert(
-        {
-          user_id: supabaseUserId,
-          plan_id: planId,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
-
-    if (planErr) throw planErr;
-
-    // 2) restore credits instantly on successful purchase
     const credits = creditsForPlan(planId);
+    const userRef = adminDb.collection("users").doc(uid);
 
-    const { error: credErr } = await supabaseAdmin
-      .from("user_credits")
-      .upsert(
-        {
-          user_id: supabaseUserId,
-          plan_id: planId,
-          credits_remaining: credits,
-          last_reset_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
-
-    if (credErr) throw credErr;
+    await userRef.set(
+      {
+        plan_id: planId,
+        credits_remaining: credits,
+        last_reset_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { merge: true }
+    );
   }
 
   try {
-    // ✅ When payment succeeds (covers one-time and first subscription payment)
     if (eventType === "transaction.completed") {
       const items = data?.items || data?.details?.line_items || data?.line_items || [];
       const priceId =
@@ -106,31 +78,22 @@ export async function POST(req: Request) {
 
       if (priceId) {
         const planId = planIdFromPriceId(priceId);
-        if (planId) {
-          await setPlanAndCredits(planId);
-        }
+        if (planId) await setPlanAndCredits(planId);
       }
     }
 
-    // ✅ Keep subscription status updated
     if (eventType.startsWith("subscription.")) {
       const subscriptionId = data?.id || data?.subscription_id || data?.subscriptionId;
       const status = data?.status;
 
-      await supabaseAdmin
-        .from("user_plans")
-        .upsert(
-          {
-            user_id: supabaseUserId,
-            paddle_subscription_id: subscriptionId || null,
-            paddle_status: status || null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        );
-
-      // OPTIONAL: if subscription renews and Paddle sends a new transaction.completed,
-      // your credits will be restored there automatically. That’s ideal.
+      await adminDb.collection("users").doc(uid).set(
+        {
+          paddle_subscription_id: subscriptionId || null,
+          paddle_status: status || null,
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
     }
 
     return NextResponse.json({ ok: true });

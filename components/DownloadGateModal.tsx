@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { supabase } from "../lib/supabaseClient";
+import { firebaseAuth } from "../lib/firebaseClient";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 type Mode = "signin" | "signup";
 
@@ -10,7 +11,7 @@ export default function DownloadGateModal({
   open,
   onClose,
   title = "Create a free account to download",
-  subtitle = " Downloads require a free account to prevent abuse.",
+  subtitle = "Downloads require a free account to prevent abuse.",
 }: {
   open: boolean;
   onClose: () => void;
@@ -47,36 +48,13 @@ export default function DownloadGateModal({
     setLoading(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-
-        // AuthProvider will update user/session automatically
+        await signInWithEmailAndPassword(firebaseAuth, email, password);
         setMsg("Signed in. Starting download…");
         setTimeout(() => onClose(), 600);
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            // keep this basePath-safe for email confirmation flows
-            emailRedirectTo: "https://xevora.org/cleancut/login",
-          },
-        });
-        if (error) throw error;
-
-        // If email confirmation is OFF, Supabase returns a session and user is instantly signed in
-        if (data?.session) {
-          setMsg("Account created. Starting download…");
-          setTimeout(() => onClose(), 800);
-        } else {
-          // If email confirmation is ON, tell them what to do
-          setMsg(
-            "Check your email to confirm your account, then come back to download."
-          );
-        }
+        await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        setMsg("Account created. Starting download…");
+        setTimeout(() => onClose(), 800);
       }
     } catch (e: any) {
       setErr(e?.message || "Something went wrong. Please try again.");
@@ -103,7 +81,6 @@ export default function DownloadGateModal({
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="mt-5 flex gap-2">
           <button
             type="button"
@@ -153,9 +130,7 @@ export default function DownloadGateModal({
               required
               minLength={6}
             />
-            {mode === "signup" && (
-              <p className="mt-2 text-xs text-slate-500">Minimum 6 characters.</p>
-            )}
+            {mode === "signup" && <p className="mt-2 text-xs text-slate-500">Minimum 6 characters.</p>}
           </div>
 
           {mode === "signup" && (
@@ -194,16 +169,10 @@ export default function DownloadGateModal({
             disabled={loading || !canSubmit}
             className="w-full rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-700"
           >
-            {loading
-              ? "Please wait…"
-              : mode === "signup"
-              ? "Create free account"
-              : "Sign in"}
+            {loading ? "Please wait…" : mode === "signup" ? "Create free account" : "Sign in"}
           </button>
 
-          <p className="text-center text-xs text-slate-500">
-            Tip: Downloads require a free account.
-          </p>
+          <p className="text-center text-xs text-slate-500">Tip: Downloads require a free account.</p>
         </form>
       </div>
     </div>

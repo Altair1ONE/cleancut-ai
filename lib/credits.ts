@@ -1,10 +1,6 @@
 // lib/credits.ts
-import { supabase } from "./supabaseClient";
 import type { PlanId } from "./plans";
-
-/* =========================
-   TYPES
-   ========================= */
+import { firebaseAuth } from "./firebaseClient";
 
 export type CreditState = {
   planId: PlanId;
@@ -12,77 +8,51 @@ export type CreditState = {
   lastResetAt?: string | null;
 };
 
-/* =========================
-   LOAD CREDITS (DB SOURCE)
-   ========================= */
-
 export async function loadCreditsFromDB(): Promise<CreditState> {
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth?.user;
+  const user = firebaseAuth.currentUser;
 
-  // Not logged in → no credits
-  if (!user) {
-    return { planId: "free", creditsRemaining: 0, lastResetAt: null };
-  }
+  if (!user) return { planId: "free", creditsRemaining: 0, lastResetAt: null };
 
-  // Try reading existing credits row
-  const { data, error } = await supabase
-    .from("user_credits")
-    .select("plan_id, credits_remaining, last_reset_at")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const token = await user.getIdToken();
 
-  if (error) throw error;
+  // Ask server for current credits (server can init if missing)
+  const res = await fetch("/api/credits/get", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-  // ✅ FIRST-TIME USER → fallback init
-  if (!data) {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
+  if (!res.ok) {
+    // fallback: try init then re-get
+    await fetch("/api/credits/init", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    if (accessToken) {
-      await fetch("api/credits/init", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-    }
+    const res2 = await fetch("/api/credits/get", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    const { data: afterInit, error: err2 } = await supabase
-      .from("user_credits")
-      .select("plan_id, credits_remaining, last_reset_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (err2) throw err2;
-
-    if (!afterInit) {
-      return { planId: "free", creditsRemaining: 0, lastResetAt: null };
-    }
-
+    if (!res2.ok) return { planId: "free", creditsRemaining: 0, lastResetAt: null };
+    const json2 = await res2.json();
     return {
-      planId: (afterInit.plan_id as PlanId) || "free",
-      creditsRemaining: Number(afterInit.credits_remaining ?? 0),
-      lastResetAt: afterInit.last_reset_at ?? null,
+      planId: (json2.planId as PlanId) || "free",
+      creditsRemaining: Number(json2.creditsRemaining ?? 0),
+      lastResetAt: json2.lastResetAt ?? null,
     };
   }
 
+  const json = await res.json();
   return {
-    planId: (data.plan_id as PlanId) || "free",
-    creditsRemaining: Number(data.credits_remaining ?? 0),
-    lastResetAt: data.last_reset_at ?? null,
+    planId: (json.planId as PlanId) || "free",
+    creditsRemaining: Number(json.creditsRemaining ?? 0),
+    lastResetAt: json.lastResetAt ?? null,
   };
 }
 
-/* Backward-compatible alias (used across your app) */
 export async function loadCredits(): Promise<CreditState> {
   return loadCreditsFromDB();
 }
-
-/* =========================
-   CREDIT CHECK
-   ========================= */
 
 export function canConsumeCredits(
   state: CreditState | null,
@@ -90,35 +60,19 @@ export function canConsumeCredits(
   isQuality: boolean
 ): boolean {
   if (!state) return false;
-
   const perImage = isQuality ? 2 : 1;
   const cost = Math.max(0, imageCount) * perImage;
-
   return state.creditsRemaining >= cost;
 }
 
-/* =========================
-   CREDIT DEDUCTION
-   ========================= */
-/**
- * Supports BOTH call styles used in your app:
- * 1) consumeCredits(state, imageCount, isQuality)
- * 2) consumeCredits(imageCount, isQuality)
- *
- * IMPORTANT:
- * Deduction is done via /api/credits/consume (server-side using service role).
- */
 export async function consumeCredits(
   stateOrImageCount: CreditState | number,
   imageCountOrIsQuality: number | boolean,
   maybeIsQuality?: boolean
 ): Promise<CreditState> {
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth?.user;
-
+  const user = firebaseAuth.currentUser;
   if (!user) throw new Error("Not signed in");
 
-  // Normalize args
   let imageCount: number;
   let isQuality: boolean;
 
@@ -130,15 +84,12 @@ export async function consumeCredits(
     isQuality = Boolean(imageCountOrIsQuality);
   }
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData?.session?.access_token;
+  const token = await user.getIdToken();
 
-  if (!accessToken) throw new Error("Missing access token");
-
-  const res = await fetch("api/credits/consume", {
+  const res = await fetch("/api/credits/consume", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ imageCount, isQuality }),
@@ -154,13 +105,9 @@ export async function consumeCredits(
   return {
     planId: (json.planId as PlanId) || "free",
     creditsRemaining: Number(json.creditsRemaining ?? 0),
-    lastResetAt: null,
+    lastResetAt: json.lastResetAt ?? null,
   };
 }
-
-/* =========================
-   NO-OP PLAN SWITCH (SAFETY)
-   ========================= */
 
 export async function switchPlan(_: PlanId): Promise<CreditState> {
   return loadCreditsFromDB();

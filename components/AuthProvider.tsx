@@ -1,16 +1,17 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import type { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import type { User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { firebaseAuth } from "../lib/firebaseClient";
 
 type AuthContextType = {
-  session: Session | null;
-  user: User | null;
+  session: any | null; // keep field for compatibility
+  user: FirebaseUser | null;
   loading: boolean;
   justLoggedIn: boolean;
   displayName: string;
-  authEventNonce: number; // ✅ new: increments each SIGNED_IN
+  authEventNonce: number;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,56 +24,39 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [justLoggedIn, setJustLoggedIn] = useState(false);
-  const [displayName, setDisplayName] = useState("");
   const [authEventNonce, setAuthEventNonce] = useState(0);
 
+  const displayName = useMemo(() => {
+    const email = user?.email || "";
+    return (user?.displayName || email.charAt(0).toUpperCase() || "").trim();
+  }, [user]);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setDisplayName(
-        data.session?.user?.user_metadata?.name ||
-          data.session?.user?.email?.charAt(0).toUpperCase() ||
-          ""
-      );
+    const unsub = onAuthStateChanged(firebaseAuth, (u) => {
+      const wasLoggedOut = !user?.uid;
+      setUser(u);
       setLoading(false);
+
+      // Equivalent of SIGNED_IN event
+      if (u && wasLoggedOut) {
+        setJustLoggedIn(true);
+        setAuthEventNonce((n) => n + 1);
+        setTimeout(() => setJustLoggedIn(false), 3000);
+      }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          setDisplayName(
-            session.user.user_metadata?.name ||
-              session.user.email?.charAt(0).toUpperCase() ||
-              ""
-          );
-        }
-
-        if (event === "SIGNED_IN") {
-          setJustLoggedIn(true);
-          setAuthEventNonce((n) => n + 1); // ✅ trigger login-based effects
-
-          setTimeout(() => setJustLoggedIn(false), 3000);
-        }
-      }
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
-        session,
+        session: null, // keep for compatibility
         user,
         loading,
         justLoggedIn,

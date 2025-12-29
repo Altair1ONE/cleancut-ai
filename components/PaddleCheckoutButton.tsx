@@ -117,9 +117,10 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
         items: [{ priceId, quantity: 1 }],
         customer: user.email ? { email: user.email } : undefined,
         customData: {
-          supabase_user_id: user.id,
-          plan,
-        },
+  firebase_uid: user.uid,
+  plan,
+},
+
       });
     } catch (err) {
       console.error("[Paddle] Checkout error", err);

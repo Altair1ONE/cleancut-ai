@@ -1,31 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadCredits, CreditState } from "../lib/credits";
 import { useAuth } from "./AuthProvider";
-import { createClient } from "@supabase/supabase-js";
+import { signOut } from "firebase/auth";
+import { firebaseAuth } from "../lib/firebaseClient";
 
 export default function Navbar() {
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { user } = useAuth(); // your AuthProvider already provides this
+  const { user } = useAuth();
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  // Supabase client (safe on client)
-  const supabase = useMemo(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    return createClient(url, key);
-  }, []);
-
-  // ✅ Load credits whenever user changes + when credits update event fires
   useEffect(() => {
     let mounted = true;
 
     async function refresh() {
       try {
+        if (!user?.uid) {
+          if (mounted) setCredits(null);
+          return;
+        }
         const state = await loadCredits();
         if (mounted) setCredits(state);
       } catch (e) {
@@ -41,14 +38,12 @@ export default function Navbar() {
     }
 
     window.addEventListener("credits:update", onCreditsUpdate);
-
     return () => {
       mounted = false;
       window.removeEventListener("credits:update", onCreditsUpdate);
     };
-  }, [user?.id]);
+  }, [user?.uid]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!wrapRef.current) return;
@@ -59,9 +54,8 @@ export default function Navbar() {
   }, []);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    await signOut(firebaseAuth);
     setOpen(false);
-    // optional hard refresh so UI updates everywhere
     window.location.href = "/";
   }
 
@@ -70,13 +64,11 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        {/* LEFT: BRAND */}
         <Link href="/" className="text-sm font-bold tracking-wide text-white">
           CleanCut<span className="text-indigo-400"> AI</span>
           <span className="ml-2 text-xs font-normal text-slate-400">by Xevora</span>
         </Link>
 
-        {/* CENTER: NAV LINKS */}
         <nav className="hidden items-center gap-6 md:flex">
           <Link href="/app" className="text-sm text-slate-300 hover:text-white">
             App
@@ -92,14 +84,10 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        {/* RIGHT */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
             <div className="text-xs text-slate-300">
-              Credits:{" "}
-              <span className="font-semibold text-white">
-                {credits.creditsRemaining}
-              </span>
+              Credits: <span className="font-semibold text-white">{credits.creditsRemaining}</span>
             </div>
           )}
 
@@ -124,9 +112,7 @@ export default function Navbar() {
 
               {open && (
                 <div className="absolute right-0 top-12 w-56 rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-xl">
-                  <div className="px-3 py-2 text-xs text-slate-400">
-                    {user.email}
-                  </div>
+                  <div className="px-3 py-2 text-xs text-slate-400">{user.email}</div>
 
                   <Link
                     href="/profile"

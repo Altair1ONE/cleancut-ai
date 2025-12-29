@@ -14,7 +14,6 @@ import {
 import { getPlanById } from "../../lib/plans";
 import { UploadArea } from "../../components/UploadArea";
 import { BeforeAfter } from "../../components/BeforeAfter";
-import { supabase } from "../../lib/supabaseClient";
 import DownloadGateModal from "../../components/DownloadGateModal";
 
 type BgMode =
@@ -176,7 +175,7 @@ export default function AppPage() {
 function AppInner() {
   const { user } = useAuth();
 
-  const isGuest = !user?.id;
+  const isGuest = !user?.uid;
 
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [images, setImages] = useState<QueuedImage[]>([]);
@@ -227,7 +226,7 @@ function AppInner() {
 
     async function refresh() {
       try {
-        if (!user?.id) {
+        if (!user?.uid) {
           // Guest: allow preview (no DB calls)
           if (mounted)
             setCredits({
@@ -261,7 +260,7 @@ function AppInner() {
         window.removeEventListener("credits:update", onCreditsUpdate);
       }
     };
-  }, [user?.id]);
+  }, [user?.uid]);
 
   const plan = useMemo(
     () => (credits ? getPlanById(credits.planId) : getPlanById("free")),
@@ -289,7 +288,7 @@ function AppInner() {
 
   // ✅ If user signs in from the modal, run pending download immediately (preview stays!)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     if (!pendingDownload) return;
 
     (async () => {
@@ -313,7 +312,7 @@ function AppInner() {
         setShowDownloadGate(false);
       }
     })();
-  }, [user?.id, pendingDownload, results]);
+  }, [user?.uid, pendingDownload, results]);
 
   function onFilesSelected(files: File[]) {
     // Guest: restrict to 1 image (preview only). Signed in uses plan batch size.
@@ -433,38 +432,7 @@ function AppInner() {
       }
 
       // Signed-in users: log usage + deduct credits
-      if (!isGuest) {
-        try {
-          const {
-            data: { user: u },
-          } = await supabase.auth.getUser();
-
-          if (u) {
-            const creditsSpent = images.length * (isQuality ? 2 : 1);
-            await supabase.from("usage_events").insert({
-              user_id: u.id,
-              email: u.email,
-              plan_id: credits.planId,
-              mode: isQuality ? "quality" : "fast",
-              images_count: images.length,
-              credits_spent: creditsSpent,
-            });
-          }
-        } catch (e) {
-          console.warn("usage analytics insert failed", e);
-        }
-
-        const updatedCredits = await consumeCredits(
-          credits,
-          images.length,
-          isQuality
-        );
-        setCredits(updatedCredits);
-
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new Event("credits:update"));
-        }
-      }
+      
     } catch (err: any) {
       console.error("HF Space error:", err);
       setErrorMsg(

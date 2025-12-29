@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { firebaseAuth } from "../../lib/firebaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,28 +14,16 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // ✅ Correct redirect (basePath safe)
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
       router.push("/app");
     } catch (err: any) {
-      setError(err.message || "Invalid login credentials");
+      setError(err?.message || "Invalid login credentials");
     } finally {
       setLoading(false);
     }
@@ -44,9 +33,7 @@ export default function LoginPage() {
     <main className="mx-auto max-w-md px-4 py-12">
       <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <h1 className="text-2xl font-bold text-white">Sign in</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Access your CleanCut AI account.
-        </p>
+        <p className="mt-2 text-sm text-slate-300">Access your CleanCut AI account.</p>
 
         <form onSubmit={handleLogin} className="mt-6 space-y-4">
           <div>

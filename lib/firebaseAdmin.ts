@@ -1,0 +1,22 @@
+// lib/firebaseAdmin.ts
+import admin from "firebase-admin";
+
+function getPrivateKey() {
+  const key = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  if (!key) throw new Error("Missing FIREBASE_ADMIN_PRIVATE_KEY");
+  return key.replace(/\\n/g, "\n");
+}
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+      privateKey: getPrivateKey(),
+    }),
+  });
+}
+
+export const adminAuth = admin.auth();
+export const adminDb = admin.firestore();
+export const adminFieldValue = admin.firestore.FieldValue;

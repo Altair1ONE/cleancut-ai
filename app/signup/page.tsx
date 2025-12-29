@@ -2,18 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { firebaseAuth } from "../../lib/firebaseClient";
 
 export default function SignupPage() {
   const router = useRouter();
-
-  const supabase = useMemo(() => {
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }, []);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,12 +15,10 @@ export default function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    setMsg(null);
     setErr(null);
 
     if (!agree) {
@@ -36,19 +28,11 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // IMPORTANT: basePath-safe email confirmation redirect
-          emailRedirectTo: "https://xevora.org/cleancut/login",
-        },
-      });
+      await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
-      if (error) throw error;
-
-      // Show a dedicated page explaining next steps
-      router.push(`/check-email?email=${encodeURIComponent(email)}`);
+      // You used /check-email before for Supabase verification.
+      // For Firebase (no verification), just go to app:
+      router.push("/app");
     } catch (e: any) {
       setErr(e?.message || "Signup failed. Please try again.");
     } finally {
@@ -120,7 +104,6 @@ export default function SignupPage() {
           </div>
 
           {err && <p className="text-sm text-rose-400">{err}</p>}
-          {msg && <p className="text-sm text-emerald-400">{msg}</p>}
 
           <button
             type="submit"

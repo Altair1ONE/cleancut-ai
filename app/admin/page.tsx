@@ -25,6 +25,7 @@ type AdminUserRow = {
   paddle_status: string | null;
   paddle_subscription_id: string | null;
   updated_at: string | null;
+  email_verified: boolean | null;
 };
 
 function safeIso(v: any): string | null {
@@ -58,8 +59,9 @@ export default function AdminPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ IMPORTANT: client pages should use NEXT_PUBLIC_* only
   const adminEmails = useMemo(() => {
-    const raw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || process.env.ADMIN_EMAILS || "";
+    const raw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
     return raw
       .split(",")
       .map((s) => s.trim().toLowerCase())
@@ -72,32 +74,49 @@ export default function AdminPage() {
     return adminEmails.includes(email);
   }, [user?.email, adminEmails]);
 
-  // If not logged in, send to login
+  const isVerified = Boolean(user?.emailVerified);
+
+  // ✅ If not logged in -> login
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [loading, user, router]);
 
-  // Load users for admins
+  // ✅ If logged in but not verified -> send them to check-email
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return;
+    if (isVerified) return;
+
+    const email = user.email || "";
+    router.push(`/check-email?email=${encodeURIComponent(email)}`);
+  }, [loading, user, isVerified, router]);
+
+  // ✅ Load users for admins (with safe fallback if orderBy fails)
   useEffect(() => {
     async function load() {
       if (loading) return;
       if (!user) return;
+      if (!isVerified) return;
       if (!isAdmin) return;
 
       setStatus("loading");
       setError(null);
 
       try {
-        // ✅ Most recent updated users first (if updated_at exists)
-        // If your Firestore docs don’t have updated_at as sortable field,
-        // remove orderBy() and it will still work.
-        const q = query(
-          collection(db, "users"),
-          orderBy("updated_at", "desc"),
-          limit(200)
-        );
-
-        const snap = await getDocs(q);
+        // Try ordered query first
+        let snap;
+        try {
+          const q1 = query(
+            collection(db, "users"),
+            orderBy("updated_at", "desc"),
+            limit(200)
+          );
+          snap = await getDocs(q1);
+        } catch (orderErr) {
+          // Fallback: no orderBy (works even if field missing / mixed types)
+          const q2 = query(collection(db, "users"), limit(200));
+          snap = await getDocs(q2);
+        }
 
         const out: AdminUserRow[] = snap.docs.map((d) => {
           const data: any = d.data();
@@ -114,7 +133,18 @@ export default function AdminPage() {
             paddle_status: data?.paddle_status ?? null,
             paddle_subscription_id: data?.paddle_subscription_id ?? null,
             updated_at: safeIso(data?.updated_at),
+            email_verified:
+              typeof data?.email_verified === "boolean"
+                ? data.email_verified
+                : null,
           };
+        });
+
+        // If we had to fallback (no orderBy), let's sort locally by updated_at
+        out.sort((a, b) => {
+          const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+          const tb = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+          return tb - ta;
         });
 
         setRows(out);
@@ -127,7 +157,7 @@ export default function AdminPage() {
     }
 
     load();
-  }, [loading, user, isAdmin]);
+  }, [loading, user, isAdmin, isVerified]);
 
   if (loading) {
     return (
@@ -145,6 +175,41 @@ export default function AdminPage() {
     );
   }
 
+  if (!isVerified) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+          <h1 className="text-xl font-bold text-white">Verify your email</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Please verify your email address to continue.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // ✅ Helpful debug if env not set
+  if (adminEmails.length === 0) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+          <h1 className="text-xl font-bold text-white">Admin not configured</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            <b>NEXT_PUBLIC_ADMIN_EMAILS</b> is not set, so no one can pass the admin
+            check.
+          </p>
+          <p className="mt-2 text-xs text-slate-400">
+            Set it in your .env.local / Vercel env to:
+            <br />
+            <code className="text-slate-200">
+              NEXT_PUBLIC_ADMIN_EMAILS=inbox2hammad@gmail.com
+            </code>
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
@@ -152,6 +217,9 @@ export default function AdminPage() {
           <h1 className="text-xl font-bold text-white">Admin</h1>
           <p className="mt-2 text-sm text-slate-300">
             You don’t have access to this page.
+          </p>
+          <p className="mt-2 text-xs text-slate-400">
+            Signed in as: <span className="text-slate-200">{user.email}</span>
           </p>
         </div>
       </main>
@@ -162,7 +230,7 @@ export default function AdminPage() {
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
       <p className="mt-2 text-sm text-slate-300">
-        Latest users (from Firestore <code className="text-slate-200">users</code>{" "}
+        Latest users (Firestore <code className="text-slate-200">users</code>{" "}
         collection).
       </p>
 
@@ -183,6 +251,7 @@ export default function AdminPage() {
               <thead className="text-slate-300">
                 <tr className="border-b border-slate-800">
                   <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Verified</th>
                   <th className="py-2 pr-4">UID</th>
                   <th className="py-2 pr-4">Plan</th>
                   <th className="py-2 pr-4">Credits</th>
@@ -193,24 +262,27 @@ export default function AdminPage() {
               <tbody className="text-slate-200">
                 {rows.map((r) => (
                   <tr key={r.uid} className="border-b border-slate-900">
-                    <td className="py-2 pr-4 text-slate-200">
-                      {r.email || "-"}
+                    <td className="py-2 pr-4">{r.email || "-"}</td>
+                    <td className="py-2 pr-4">
+                      {r.email_verified === true
+                        ? "✅"
+                        : r.email_verified === false
+                        ? "❌"
+                        : "-"}
                     </td>
                     <td className="py-2 pr-4 text-slate-400">{r.uid}</td>
                     <td className="py-2 pr-4">{r.plan_id || "-"}</td>
+                    <td className="py-2 pr-4">{r.credits_remaining ?? "-"}</td>
                     <td className="py-2 pr-4">
-                      {r.credits_remaining ?? "-"}
-                    </td>
-                    <td className="py-2 pr-4">
-                      <div className="text-slate-200">
-                        {r.paddle_status || "-"}
-                      </div>
+                      <div>{r.paddle_status || "-"}</div>
                       <div className="text-xs text-slate-500">
                         {r.paddle_subscription_id || ""}
                       </div>
                     </td>
                     <td className="py-2 pr-4 text-slate-400">
-                      {r.updated_at ? new Date(r.updated_at).toLocaleString() : "-"}
+                      {r.updated_at
+                        ? new Date(r.updated_at).toLocaleString()
+                        : "-"}
                     </td>
                   </tr>
                 ))}

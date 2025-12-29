@@ -1,17 +1,24 @@
 // lib/firebaseAdmin.ts
 import admin from "firebase-admin";
 
+function required(name: string, v?: string) {
+  if (!v) throw new Error(`Missing ${name}`);
+  return v;
+}
+
 function getPrivateKey() {
-  const key = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
-  if (!key) throw new Error("Missing FIREBASE_ADMIN_PRIVATE_KEY");
+  const key = required("FIREBASE_ADMIN_PRIVATE_KEY", process.env.FIREBASE_ADMIN_PRIVATE_KEY);
   return key.replace(/\\n/g, "\n");
 }
 
 if (!admin.apps.length) {
+  const projectId = required("FIREBASE_ADMIN_PROJECT_ID", process.env.FIREBASE_ADMIN_PROJECT_ID);
+  const clientEmail = required("FIREBASE_ADMIN_CLIENT_EMAIL", process.env.FIREBASE_ADMIN_CLIENT_EMAIL);
+
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+      projectId,
+      clientEmail,
       privateKey: getPrivateKey(),
     }),
   });

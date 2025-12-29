@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signInWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+} from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { firebaseAuth, db } from "../../lib/firebaseClient";
 
@@ -13,7 +17,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -23,17 +26,17 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setInfo(null);
     setLoading(true);
 
     try {
       const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
 
+      // ✅ Important: reload user to get latest emailVerified
+      await cred.user.reload();
+
       if (!cred.user.emailVerified) {
-        // resend verification email
         await sendEmailVerification(cred.user, { url: continueUrl, handleCodeInApp: false });
 
-        // keep Firestore in sync (optional)
         await setDoc(
           doc(db, "users", cred.user.uid),
           {
@@ -47,7 +50,7 @@ export default function LoginPage() {
 
         await signOut(firebaseAuth);
 
-        setError("Please verify your email first. We sent you a new verification email.");
+        router.push(`/check-email?email=${encodeURIComponent(email)}`);
         return;
       }
 
@@ -101,7 +104,6 @@ export default function LoginPage() {
           </div>
 
           {error && <p className="text-sm text-rose-400">{error}</p>}
-          {info && <p className="text-sm text-emerald-400">{info}</p>}
 
           <button
             disabled={loading}

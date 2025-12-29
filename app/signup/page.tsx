@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import { useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+} from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { firebaseAuth, db } from "../../lib/firebaseClient";
 
@@ -15,17 +19,14 @@ export default function SignupPage() {
 
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  const continueUrl = `${siteUrl}${basePath}/login`; // where user goes after clicking verify link
+  const continueUrl = `${siteUrl}${basePath}/login`;
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    setMsg(null);
     setErr(null);
 
     if (!agree) {
@@ -37,7 +38,7 @@ export default function SignupPage() {
     try {
       const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
-      // ✅ create Firestore user doc (so Admin panel shows them)
+      // ✅ Create Firestore user doc so Admin panel shows user
       await setDoc(
         doc(db, "users", cred.user.uid),
         {
@@ -45,21 +46,21 @@ export default function SignupPage() {
           email: cred.user.email || email,
           plan_id: "free",
           credits_remaining: 30,
+          created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
           last_reset_at: null,
-          created_at: serverTimestamp(),
           email_verified: false,
         },
         { merge: true }
       );
 
-      // ✅ send verification email
+      // ✅ Send verification email
       await sendEmailVerification(cred.user, {
         url: continueUrl,
         handleCodeInApp: false,
       });
 
-      // Optional but recommended: sign out until verified
+      // ✅ Prevent “half logged-in” UI: sign out and move to Check Email page
       await signOut(firebaseAuth);
 
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
@@ -85,7 +86,6 @@ export default function SignupPage() {
               className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -98,7 +98,6 @@ export default function SignupPage() {
               className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
               type="password"
               autoComplete="new-password"
-              placeholder="Create a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -134,7 +133,6 @@ export default function SignupPage() {
           </div>
 
           {err && <p className="text-sm text-rose-400">{err}</p>}
-          {msg && <p className="text-sm text-emerald-400">{msg}</p>}
 
           <button
             type="submit"

@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://xevora.org";
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const continueUrl = `${siteUrl}${basePath}/login`;
 

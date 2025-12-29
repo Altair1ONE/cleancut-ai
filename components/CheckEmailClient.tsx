@@ -1,58 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useMemo, useState, useEffect } from "react";
 import { sendEmailVerification } from "firebase/auth";
-import { firebaseAuth } from "../lib/firebaseClient";
+import { firebaseAuth, db } from "../lib/firebaseClient";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
 export default function CheckEmailClient() {
   const sp = useSearchParams();
+  const router = useRouter();
   const email = sp.get("email") || "";
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const continueUrl = useMemo(() => {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    return `${siteUrl}${basePath}/login`;
-  }, []);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://xevora.org";
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const continueUrl = `${siteUrl}${basePath}/login`;
+
+  // If user is already verified, update firestore + move them on
+  useEffect(() => {
+    const u = firebaseAuth.currentUser;
+    if (!u) return;
+
+    if (u.emailVerified) {
+      (async () => {
+        try {
+          await setDoc(
+            doc(db, "users", u.uid),
+            { email_verified: true, updated_at: serverTimestamp() },
+            { merge: true }
+          );
+        } catch {}
+        router.push("/login");
+      })();
+    }
+  }, [router]);
 
   async function resend() {
     setMsg(null);
     setErr(null);
 
-    // In Firebase, resend requires a signed-in user in this browser.
     const u = firebaseAuth.currentUser;
 
+    // If you followed my signup fix, currentUser will exist here.
     if (!u) {
-      setErr(
-        "To resend, please sign in first. Then come back here and press Resend."
-      );
-      return;
-    }
-
-    if (u.emailVerified) {
-      setMsg("Your email is already verified. You can sign in now.");
+      setErr("Session missing. Please refresh this page once and try again.");
       return;
     }
 
     setLoading(true);
     try {
-      await u.reload();
-      if (u.emailVerified) {
-        setMsg("Your email is already verified. You can sign in now.");
-        return;
-      }
-
       await sendEmailVerification(u, {
         url: continueUrl,
         handleCodeInApp: false,
       });
 
-      setMsg("Verification email sent again. Check Inbox + Spam/Promotions.");
+      setMsg("Confirmation email resent. Please check Inbox + Spam/Promotions.");
     } catch (e: any) {
       setErr(e?.message || "Could not resend email. Try again in a minute.");
     } finally {
@@ -65,26 +71,17 @@ export default function CheckEmailClient() {
       <h1 className="text-2xl font-bold text-white">Check your email</h1>
 
       <p className="mt-3 text-slate-300">
-        We sent a verification link to{" "}
-        <span className="font-semibold text-white">
-          {email || "your email"}
-        </span>
-        .
+        We sent a confirmation link to{" "}
+        <span className="font-semibold text-white">{email || "your email"}</span>.
       </p>
 
       <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-300">
         <ul className="list-disc space-y-2 pl-5">
           <li>
-            Check <b>Spam</b> / <b>Promotions</b>.
+            Check your <b>Spam</b> / <b>Promotions</b> folder.
           </li>
           <li>Wait 1–3 minutes (email delivery can be delayed).</li>
-          <li>
-            If you don’t see it, click <b>Resend</b>.
-          </li>
-          <li>
-            If Resend says “sign in first”, go to Login, sign in once, then come
-            back here and press Resend.
-          </li>
+          <li>If you still don’t see it, press “Resend”.</li>
         </ul>
       </div>
 

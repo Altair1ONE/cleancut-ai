@@ -2,12 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  signOut,
-} from "firebase/auth";
+import { useState } from "react";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { firebaseAuth, db } from "../../lib/firebaseClient";
 
@@ -21,14 +17,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // ✅ popup after successful signup
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const continueUrl = useMemo(() => {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    return `${siteUrl}${basePath}/login`;
-  }, []);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const continueUrl = `${siteUrl}${basePath}/login`;
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -41,49 +32,34 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(
-        firebaseAuth,
-        email.trim(),
-        password
-      );
+      const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
-      // ✅ Create/merge Firestore user doc (so Admin panel can show them)
+      // Create Firestore user doc so Admin shows user immediately
       await setDoc(
         doc(db, "users", cred.user.uid),
         {
           uid: cred.user.uid,
-          email: cred.user.email || email.trim(),
+          email: cred.user.email || email,
           plan_id: "free",
           credits_remaining: 30,
           created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
           last_reset_at: null,
-          // keep a flag in DB for admin UI convenience
-          email_verified: false,
+          email_verified: cred.user.emailVerified || false,
         },
         { merge: true }
       );
 
-      // ✅ Send verification email
+      // Send verification email
       await sendEmailVerification(cred.user, {
         url: continueUrl,
         handleCodeInApp: false,
       });
 
-      // ✅ show popup (human UX)
-      setShowSuccess(true);
-
-      // ✅ Prevent “half logged-in” UI: sign out, then redirect
-      setTimeout(async () => {
-        try {
-          await signOut(firebaseAuth);
-        } finally {
-          router.push(`/check-email?email=${encodeURIComponent(email.trim())}`);
-        }
-      }, 900);
+      // ✅ IMPORTANT: do NOT sign out here
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (e: any) {
       setErr(e?.message || "Signup failed. Please try again.");
-      setShowSuccess(false);
     } finally {
       setLoading(false);
     }
@@ -91,24 +67,6 @@ export default function SignupPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-12">
-      {/* ✅ Success popup */}
-      {showSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Almost done ✅</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              We sent a verification link to{" "}
-              <span className="font-semibold text-white">{email}</span>.
-              <br />
-              Please verify your email to activate your account.
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Redirecting you to “Check email”…
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <h1 className="text-2xl font-bold text-white">Create your account</h1>
         <p className="mt-2 text-sm text-slate-300">
@@ -152,24 +110,15 @@ export default function SignupPage() {
               />
               <span>
                 I have read and agree to the{" "}
-                <Link
-                  href="/terms"
-                  className="text-indigo-300 hover:text-indigo-200"
-                >
+                <Link href="/terms" className="text-indigo-300 hover:text-indigo-200">
                   Terms of Service
                 </Link>
                 ,{" "}
-                <Link
-                  href="/privacy"
-                  className="text-indigo-300 hover:text-indigo-200"
-                >
+                <Link href="/privacy" className="text-indigo-300 hover:text-indigo-200">
                   Privacy Policy
                 </Link>
                 , and{" "}
-                <Link
-                  href="/refund"
-                  className="text-indigo-300 hover:text-indigo-200"
-                >
+                <Link href="/refund" className="text-indigo-300 hover:text-indigo-200">
                   Refund Policy
                 </Link>
                 .
@@ -189,10 +138,7 @@ export default function SignupPage() {
 
           <p className="text-center text-sm text-slate-400">
             Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-indigo-300 hover:text-indigo-200"
-            >
+            <Link href="/login" className="text-indigo-300 hover:text-indigo-200">
               Sign in
             </Link>
           </p>

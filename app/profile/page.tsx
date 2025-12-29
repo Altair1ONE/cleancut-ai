@@ -40,10 +40,11 @@ export default function ProfilePage() {
       <div className="mt-4">
         <label className="text-xs text-slate-400">Email</label>
         <input
-          className="mt-1 w-full rounded-xl bg-slate-950 p-3 text-sm text-slate-400"
-          value={user.email}
-          disabled
-        />
+  className="mt-1 w-full rounded-xl bg-slate-950 p-3 text-sm text-slate-400"
+  value={user.email ?? ""}
+  disabled
+/>
+
       </div>
 
       {success && (

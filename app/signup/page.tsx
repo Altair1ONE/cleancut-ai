@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { firebaseAuth } from "../../lib/firebaseClient";
+import { useMemo, useState } from "react";
+import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { firebaseAuth, db } from "../../lib/firebaseClient";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,10 +16,16 @@ export default function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const continueUrl = `${siteUrl}${basePath}/login`; // where user goes after clicking verify link
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
+    setMsg(null);
     setErr(null);
 
     if (!agree) {
@@ -28,11 +35,34 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
-      // You used /check-email before for Supabase verification.
-      // For Firebase (no verification), just go to app:
-      router.push("/app");
+      // ✅ create Firestore user doc (so Admin panel shows them)
+      await setDoc(
+        doc(db, "users", cred.user.uid),
+        {
+          uid: cred.user.uid,
+          email: cred.user.email || email,
+          plan_id: "free",
+          credits_remaining: 30,
+          updated_at: serverTimestamp(),
+          last_reset_at: null,
+          created_at: serverTimestamp(),
+          email_verified: false,
+        },
+        { merge: true }
+      );
+
+      // ✅ send verification email
+      await sendEmailVerification(cred.user, {
+        url: continueUrl,
+        handleCodeInApp: false,
+      });
+
+      // Optional but recommended: sign out until verified
+      await signOut(firebaseAuth);
+
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (e: any) {
       setErr(e?.message || "Signup failed. Please try again.");
     } finally {
@@ -104,6 +134,7 @@ export default function SignupPage() {
           </div>
 
           {err && <p className="text-sm text-rose-400">{err}</p>}
+          {msg && <p className="text-sm text-emerald-400">{msg}</p>}
 
           <button
             type="submit"

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { firebaseAuth } from "../../lib/firebaseClient";
+import { signInWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { firebaseAuth, db } from "../../lib/firebaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,15 +13,56 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const continueUrl = `${siteUrl}${basePath}/login`;
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
+      const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
+
+      if (!cred.user.emailVerified) {
+        // resend verification email
+        await sendEmailVerification(cred.user, { url: continueUrl, handleCodeInApp: false });
+
+        // keep Firestore in sync (optional)
+        await setDoc(
+          doc(db, "users", cred.user.uid),
+          {
+            uid: cred.user.uid,
+            email: cred.user.email || email,
+            email_verified: false,
+            updated_at: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        await signOut(firebaseAuth);
+
+        setError("Please verify your email first. We sent you a new verification email.");
+        return;
+      }
+
+      // ✅ Mark verified in Firestore
+      await setDoc(
+        doc(db, "users", cred.user.uid),
+        {
+          uid: cred.user.uid,
+          email: cred.user.email || email,
+          email_verified: true,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
       router.push("/app");
     } catch (err: any) {
       setError(err?.message || "Invalid login credentials");
@@ -59,6 +101,7 @@ export default function LoginPage() {
           </div>
 
           {error && <p className="text-sm text-rose-400">{error}</p>}
+          {info && <p className="text-sm text-emerald-400">{info}</p>}
 
           <button
             disabled={loading}

@@ -1,51 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { sendEmailVerification, signOut } from "firebase/auth";
+import { firebaseAuth } from "../lib/firebaseClient";
 
 export default function CheckEmailClient() {
   const sp = useSearchParams();
-  const email = sp.get("email") || "";
+  const router = useRouter();
 
-  const supabase = useMemo(() => {
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }, []);
+  const emailFromQuery = sp.get("email") || "";
 
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
-  const emailRedirectTo = useMemo(() => {
+  const continueUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
     return `${window.location.origin}${basePath}/login`;
   }, [basePath]);
 
+  const [email, setEmail] = useState(emailFromQuery);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // If user is already verified, kick them to login (or app)
+  useEffect(() => {
+    const u = firebaseAuth.currentUser;
+    if (u?.email) setEmail(u.email);
+
+    if (u?.emailVerified) {
+      router.push("/login");
+    }
+  }, [router]);
 
   async function resend() {
     setMsg(null);
     setErr(null);
 
-    if (!email) {
-      setErr("Missing email. Please go back and sign up again.");
+    const u = firebaseAuth.currentUser;
+
+    if (!u) {
+      // If user refreshed the page and lost session, we can't resend without login.
+      setErr("Session expired. Please login once, then resend verification.");
+      return;
+    }
+
+    if (u.emailVerified) {
+      setMsg("Your email is already verified. You can login now.");
       return;
     }
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-        options: { emailRedirectTo },
+      await sendEmailVerification(u, {
+        url: continueUrl,
+        handleCodeInApp: false,
       });
-      if (error) throw error;
 
-      setMsg("Confirmation email resent. Please check Inbox + Spam/Promotions.");
+      setMsg("Verification email resent. Please check Inbox + Spam/Promotions.");
     } catch (e: any) {
       setErr(e?.message || "Could not resend email. Try again in a minute.");
     } finally {
@@ -53,12 +66,17 @@ export default function CheckEmailClient() {
     }
   }
 
+  async function logout() {
+    await signOut(firebaseAuth);
+    router.push("/login");
+  }
+
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
       <h1 className="text-2xl font-bold text-white">Check your email</h1>
 
       <p className="mt-3 text-slate-300">
-        We sent a confirmation link to{" "}
+        We sent a verification link to{" "}
         <span className="font-semibold text-white">{email || "your email"}</span>.
       </p>
 
@@ -91,6 +109,14 @@ export default function CheckEmailClient() {
         >
           Go to login
         </Link>
+
+        <button
+          onClick={logout}
+          className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+          type="button"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

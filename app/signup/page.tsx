@@ -3,11 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  signOut,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { firebaseAuth, db } from "../../lib/firebaseClient";
 
@@ -21,10 +17,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // basePath should stay from env (you use /cleancut)
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
-  // ✅ always correct in production + local (no localhost fallback mistakes)
   const continueUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
     return `${window.location.origin}${basePath}/login`;
@@ -41,13 +35,8 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(
-        firebaseAuth,
-        email,
-        password
-      );
+      const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
-      // ✅ Create Firestore user doc so Admin panel shows user
       await setDoc(
         doc(db, "users", cred.user.uid),
         {
@@ -63,15 +52,12 @@ export default function SignupPage() {
         { merge: true }
       );
 
-      // ✅ Send verification email with correct continue URL
       await sendEmailVerification(cred.user, {
-        url: continueUrl, // <— IMPORTANT
+        url: continueUrl,
         handleCodeInApp: false,
       });
 
-      // ✅ Prevent “half logged-in” UI
-      await signOut(firebaseAuth);
-
+      // ✅ Keep user signed-in so "Resend" works without logging in again
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (e: any) {
       setErr(e?.message || "Signup failed. Please try again.");

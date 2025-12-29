@@ -1,65 +1,60 @@
 "use client";
 
-import { useState } from "react";
 import { useAuth } from "../../components/AuthProvider";
-import { supabase } from "../../lib/supabaseClient";
 
 export default function ProfilePage() {
-  const { user, displayName } = useAuth();
-  const [name, setName] = useState(displayName);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const { user, loading } = useAuth();
 
-  if (!user) return null;
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
+          Loading…
+        </div>
+      </main>
+    );
+  }
 
-  async function saveProfile() {
-    setSaving(true);
-    setSuccess(false);
-
-    await supabase.auth.updateUser({
-      data: { name },
-    });
-
-    setSaving(false);
-    setSuccess(true);
+  if (!user) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
+          You’re not signed in.
+        </div>
+      </main>
+    );
   }
 
   return (
-    <div className="mx-auto mt-20 max-w-md rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-      <h1 className="text-xl font-semibold text-white">Your profile</h1>
-
-      <div className="mt-4">
-        <label className="text-xs text-slate-400">Display name</label>
-        <input
-          className="mt-1 w-full rounded-xl bg-slate-950 p-3 text-sm"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-
-      <div className="mt-4">
-        <label className="text-xs text-slate-400">Email</label>
-        <input
-  className="mt-1 w-full rounded-xl bg-slate-950 p-3 text-sm text-slate-400"
-  value={user.email ?? ""}
-  disabled
-/>
-
-      </div>
-
-      {success && (
-        <p className="mt-3 text-xs text-green-400">
-          ✅ Profile updated successfully
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <h1 className="text-xl font-bold text-white">Profile</h1>
+        <p className="mt-2 text-sm text-slate-300">
+          Your account details.
         </p>
-      )}
 
-      <button
-        onClick={saveProfile}
-        disabled={saving}
-        className="mt-4 w-full rounded-full bg-indigo-500 py-2 text-sm text-white"
-      >
-        {saving ? "Saving..." : "Save changes"}
-      </button>
-    </div>
+        <div className="mt-6 space-y-4">
+          <div>
+            <label className="text-xs text-slate-300">Email</label>
+            <input
+              className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 p-3 text-sm text-slate-300"
+              value={user.email ?? ""}   // ✅ never null (fixes TS + build)
+              disabled
+              readOnly
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-300">User ID</label>
+            <input
+              className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950 p-3 text-sm text-slate-300"
+              value={user.uid}
+              disabled
+              readOnly
+            />
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

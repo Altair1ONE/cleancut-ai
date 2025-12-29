@@ -34,7 +34,7 @@ export function CreditsBadge() {
       mounted = false;
       window.removeEventListener("credits:update", onCreditsUpdate);
     };
-  }, [user?.id]);
+  }, [user?.uid]);
 
   if (!state) return null;
 

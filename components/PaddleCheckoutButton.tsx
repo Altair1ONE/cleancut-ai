@@ -100,7 +100,7 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
 
     if (loading) return;
 
-    if (!user?.id) {
+    if (!user?.uid) {
       alert("Please sign in first to upgrade.");
       return;
     }

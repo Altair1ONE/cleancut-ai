@@ -17,7 +17,7 @@ export default function TrialPopup() {
     let mounted = true;
 
     async function checkEligibility() {
-      if (!user?.id) {
+      if (!user?.uid) {
         if (mounted) {
           setIsEligible(false);
           setOpen(false);
@@ -52,11 +52,11 @@ export default function TrialPopup() {
     return () => {
       mounted = false;
     };
-  }, [user?.id]);
+  }, [user?.uid]);
 
   // Show only after SIGNED_IN, only if eligible (free plan)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     if (!isEligible) return;
 
     // On each new sign-in, allow it to show again
@@ -65,11 +65,11 @@ export default function TrialPopup() {
     } catch {}
 
     setOpen(true);
-  }, [authEventNonce, user?.id, isEligible]);
+  }, [authEventNonce, user?.uid, isEligible]);
 
   // Respect "dismissed for this session"
   useEffect(() => {
-    if (!user?.id) {
+    if (!user?.uid) {
       setOpen(false);
       return;
     }
@@ -82,7 +82,7 @@ export default function TrialPopup() {
       const dismissed = sessionStorage.getItem(STORAGE_KEY) === "1";
       if (dismissed) setOpen(false);
     } catch {}
-  }, [user?.id, isEligible]);
+  }, [user?.uid, isEligible]);
 
   function dismiss() {
     try {
@@ -91,7 +91,7 @@ export default function TrialPopup() {
     setOpen(false);
   }
 
-  if (!user?.id) return null;
+  if (!user?.uid) return null;
   if (!isEligible) return null;
   if (!open) return null;
 

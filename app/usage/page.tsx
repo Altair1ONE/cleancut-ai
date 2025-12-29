@@ -1,49 +1,90 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/AuthProvider";
-import { supabase } from "../../lib/supabaseClient";
+
+// Firebase client DB (you should already have this in your firebase client file)
+import { db } from "../../lib/firebaseClient";
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  Timestamp,
+} from "firebase/firestore";
 
 type UsageRow = {
-  id: number;
-  email: string | null;
+  id: string; // firestore doc id
   plan_id: string | null;
   mode: string | null;
   images_count: number;
   credits_spent: number;
-  created_at: string;
+  created_at: string; // ISO string for UI
 };
+
+function toIsoStringSafe(v: any): string {
+  // Firestore Timestamp
+  if (v instanceof Timestamp) return v.toDate().toISOString();
+  // Serialized timestamp-like object
+  if (v?.seconds && typeof v.seconds === "number") {
+    return new Date(v.seconds * 1000).toISOString();
+  }
+  // ISO already
+  if (typeof v === "string") return v;
+  // Date
+  if (v instanceof Date) return v.toISOString();
+  // fallback
+  return new Date().toISOString();
+}
 
 export default function UsagePage() {
   const router = useRouter();
-  const { session, loading, user } = useAuth();
+  const { user, loading } = useAuth();
 
   const [rows, setRows] = useState<UsageRow[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  const uid = user?.uid ?? null;
+
+  // Redirect if not signed in (Firebase)
   useEffect(() => {
-    if (!loading && !session) router.push("/login");
-  }, [loading, session, router]);
+    if (!loading && !uid) router.push("/login");
+  }, [loading, uid, router]);
 
   useEffect(() => {
     async function load() {
-      if (!user) return;
+      if (!uid) return;
 
       setStatus("loading");
       setError(null);
 
       try {
-        const { data, error } = await supabase
-          .from("usage_events")
-          .select("id,email,plan_id,mode,images_count,credits_spent,created_at")
-          .order("created_at", { ascending: false })
-          .limit(50);
+        // Recommended path: users/{uid}/usage_events
+        const q = query(
+          collection(db, "users", uid, "usage_events"),
+          orderBy("created_at", "desc"),
+          limit(50)
+        );
 
-        if (error) throw error;
+        const snap = await getDocs(q);
 
-        setRows((data || []) as UsageRow[]);
+        const mapped: UsageRow[] = snap.docs.map((doc) => {
+          const d = doc.data() as any;
+
+          return {
+            id: doc.id,
+            plan_id: d.plan_id ?? null,
+            mode: d.mode ?? null,
+            images_count: Number(d.images_count ?? 0),
+            credits_spent: Number(d.credits_spent ?? 0),
+            created_at: toIsoStringSafe(d.created_at),
+          };
+        });
+
+        setRows(mapped);
         setStatus("idle");
       } catch (e: any) {
         setStatus("error");
@@ -52,20 +93,26 @@ export default function UsagePage() {
     }
 
     load();
-  }, [user]);
+  }, [uid]);
+
+  const title = useMemo(() => {
+    if (loading) return "Loading…";
+    if (!uid) return "Redirecting…";
+    return "My Usage";
+  }, [loading, uid]);
 
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
-        Loading…
+        {title}
       </div>
     );
   }
 
-  if (!session) {
+  if (!uid) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
-        Redirecting…
+        {title}
       </div>
     );
   }

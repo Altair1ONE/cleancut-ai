@@ -16,6 +16,10 @@ import { UploadArea } from "../../components/UploadArea";
 import { BeforeAfter } from "../../components/BeforeAfter";
 import DownloadGateModal from "../../components/DownloadGateModal";
 
+// ✅ Firebase (usage logging)
+import { db } from "../../lib/firebaseClient";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+
 type BgMode =
   | "transparent"
   | "white"
@@ -196,18 +200,17 @@ function AppInner() {
     null
   );
 
-  // ✅ NEW: cold start hint (only show once ever)
+  // ✅ cold start hint (only show once ever)
   const [hasSeenColdStartHint, setHasSeenColdStartHint] = useState(true);
 
   useEffect(() => {
-    // Read once on mount
     try {
       const seen =
         typeof window !== "undefined" &&
         window.localStorage.getItem("cleancut_seen_first_process_hint") === "1";
       setHasSeenColdStartHint(!!seen);
     } catch {
-      setHasSeenColdStartHint(true); // fail-safe: don't annoy user
+      setHasSeenColdStartHint(true);
     }
   }, []);
 
@@ -220,14 +223,13 @@ function AppInner() {
     setHasSeenColdStartHint(true);
   }
 
-  // ✅ Load credits: real credits for logged-in users; fake credits for guests
+  // ✅ Load credits
   useEffect(() => {
     let mounted = true;
 
     async function refresh() {
       try {
         if (!user?.uid) {
-          // Guest: allow preview (no DB calls)
           if (mounted)
             setCredits({
               planId: "free",
@@ -268,9 +270,8 @@ function AppInner() {
   );
 
   const isFree = plan.id === "free";
-  const allowQuality = !isFree && !isGuest; // ✅ quality only for signed-in paid users
+  const allowQuality = !isFree && !isGuest;
 
-  // ✅ Guests forced to Fast
   useEffect(() => {
     if ((isGuest || isFree) && qualityMode === "quality") {
       setQualityMode("fast");
@@ -278,7 +279,6 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGuest, isFree]);
 
-  // Cleanup preview URLs
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
@@ -286,7 +286,7 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images.length]);
 
-  // ✅ If user signs in from the modal, run pending download immediately (preview stays!)
+  // ✅ If user signs in from the modal, run pending download immediately
   useEffect(() => {
     if (!user?.uid) return;
     if (!pendingDownload) return;
@@ -299,7 +299,6 @@ function AppInner() {
             pendingDownload.filename
           );
         } else {
-          // all
           for (let i = 0; i < results.length; i++) {
             await downloadUrlAsFile(
               results[i].outputUrl,
@@ -315,7 +314,6 @@ function AppInner() {
   }, [user?.uid, pendingDownload, results]);
 
   function onFilesSelected(files: File[]) {
-    // Guest: restrict to 1 image (preview only). Signed in uses plan batch size.
     const max = isGuest ? 1 : plan.maxBatchSize;
 
     const limited = files.slice(0, max);
@@ -330,9 +328,7 @@ function AppInner() {
     setErrorMsg(null);
 
     if (isGuest && files.length > 1) {
-      setErrorMsg(
-        "Guest preview supports 1 image. Sign up free to batch + download."
-      );
+      setErrorMsg("Guest preview supports 1 image. Sign up free to batch + download.");
     }
   }
 
@@ -349,18 +345,13 @@ function AppInner() {
       return;
     }
 
-    // Guests: only Fast
     const isQuality = allowQuality && qualityMode === "quality";
 
-    // Guests: prevent batch
     if (isGuest && images.length > 1) {
-      setErrorMsg(
-        "Guest preview supports 1 image. Sign up free to batch + download."
-      );
+      setErrorMsg("Guest preview supports 1 image. Sign up free to batch + download.");
       return;
     }
 
-    // Signed-in users: normal credit check
     if (!isGuest && !canConsumeCredits(credits, images.length, isQuality)) {
       setShowPaywall(true);
       return;
@@ -376,13 +367,13 @@ function AppInner() {
     setProcessedCount(0);
 
     try {
-      // ✅ On first-ever processing, show hint while this cold-start happens
       const app = await Client.connect(spaceId);
 
       const maxSide = getMaxSidePx(
         credits.planId,
         isQuality ? "quality" : "fast"
       );
+
       const resized = await Promise.all(
         images.map(async (img) => {
           const resizedFile = await resizeImageFile(img.file, maxSide);
@@ -426,13 +417,36 @@ function AppInner() {
 
       setResults(processed);
 
-      // ✅ Mark "first time hint" as seen after first successful processing
       if (!hasSeenColdStartHint) {
         markColdStartHintSeen();
       }
 
-      // Signed-in users: log usage + deduct credits
-      
+      // ✅ Signed-in users: log usage + deduct credits (FIRESTORE)
+      if (!isGuest && user?.uid) {
+        const creditsSpent = images.length * (isQuality ? 2 : 1);
+
+        // 1) log usage event (non-blocking)
+        try {
+          await addDoc(collection(db, "users", user.uid, "usage_events"), {
+            email: user.email ?? null,
+            plan_id: credits.planId,
+            mode: isQuality ? "quality" : "fast",
+            images_count: images.length,
+            credits_spent: creditsSpent,
+            created_at: serverTimestamp(),
+          });
+        } catch (e) {
+          console.warn("usage log failed:", e);
+        }
+
+        // 2) deduct credits (your existing credits.ts should handle Firebase now)
+        const updatedCredits = await consumeCredits(credits, images.length, isQuality);
+        setCredits(updatedCredits);
+
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("credits:update"));
+        }
+      }
     } catch (err: any) {
       console.error("HF Space error:", err);
       setErrorMsg(
@@ -470,7 +484,6 @@ function AppInner() {
   const perImageCost = isQuality ? 2 : 1;
   const totalCost = images.length * perImageCost;
 
-  // ✅ show this message only while processing AND only if user hasn't seen it before
   const showFirstTimeHint = isProcessing && !hasSeenColdStartHint;
 
   return (
@@ -487,7 +500,6 @@ function AppInner() {
           </p>
         </div>
 
-        {/* keep badge, but it may show free credits in guest mode */}
         <CreditsBadge />
       </header>
 
@@ -525,7 +537,6 @@ function AppInner() {
               </div>
             </div>
 
-            {/* Processing mode */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
               <div>
                 <div className="text-xs font-semibold text-slate-100">Processing mode</div>
@@ -565,7 +576,6 @@ function AppInner() {
               </div>
             </div>
 
-            {/* ✅ NEW: first-time cold start hint */}
             {showFirstTimeHint && (
               <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 text-[11px] text-slate-300">
                 <div className="font-semibold text-slate-100">

@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { useMemo, useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+} from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { firebaseAuth, db } from "../../lib/firebaseClient";
 
@@ -17,9 +21,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  // basePath should stay from env (you use /cleancut)
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  const continueUrl = `${siteUrl}${basePath}/login`;
+
+  // ✅ always correct in production + local (no localhost fallback mistakes)
+  const continueUrl = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}${basePath}/login`;
+  }, [basePath]);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -32,9 +41,13 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const cred = await createUserWithEmailAndPassword(
+        firebaseAuth,
+        email,
+        password
+      );
 
-      // Create Firestore user doc so Admin shows user immediately
+      // ✅ Create Firestore user doc so Admin panel shows user
       await setDoc(
         doc(db, "users", cred.user.uid),
         {
@@ -45,18 +58,20 @@ export default function SignupPage() {
           created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
           last_reset_at: null,
-          email_verified: cred.user.emailVerified || false,
+          email_verified: false,
         },
         { merge: true }
       );
 
-      // Send verification email
+      // ✅ Send verification email with correct continue URL
       await sendEmailVerification(cred.user, {
-        url: continueUrl,
+        url: continueUrl, // <— IMPORTANT
         handleCodeInApp: false,
       });
 
-      // ✅ IMPORTANT: do NOT sign out here
+      // ✅ Prevent “half logged-in” UI
+      await signOut(firebaseAuth);
+
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (e: any) {
       setErr(e?.message || "Signup failed. Please try again.");

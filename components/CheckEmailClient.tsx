@@ -1,62 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
-import { sendEmailVerification } from "firebase/auth";
-import { firebaseAuth, db } from "../lib/firebaseClient";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
 export default function CheckEmailClient() {
   const sp = useSearchParams();
-  const router = useRouter();
   const email = sp.get("email") || "";
+
+  const supabase = useMemo(() => {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }, []);
+
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
+  const emailRedirectTo = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}${basePath}/login`;
+  }, [basePath]);
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://xevora.org";
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  const continueUrl = `${siteUrl}${basePath}/login`;
-
-  // If user is already verified, update firestore + move them on
-  useEffect(() => {
-    const u = firebaseAuth.currentUser;
-    if (!u) return;
-
-    if (u.emailVerified) {
-      (async () => {
-        try {
-          await setDoc(
-            doc(db, "users", u.uid),
-            { email_verified: true, updated_at: serverTimestamp() },
-            { merge: true }
-          );
-        } catch {}
-        router.push("/login");
-      })();
-    }
-  }, [router]);
-
   async function resend() {
     setMsg(null);
     setErr(null);
 
-    const u = firebaseAuth.currentUser;
-
-    // If you followed my signup fix, currentUser will exist here.
-    if (!u) {
-      setErr("Session missing. Please refresh this page once and try again.");
+    if (!email) {
+      setErr("Missing email. Please go back and sign up again.");
       return;
     }
 
     setLoading(true);
     try {
-      await sendEmailVerification(u, {
-        url: continueUrl,
-        handleCodeInApp: false,
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo },
       });
+      if (error) throw error;
 
       setMsg("Confirmation email resent. Please check Inbox + Spam/Promotions.");
     } catch (e: any) {

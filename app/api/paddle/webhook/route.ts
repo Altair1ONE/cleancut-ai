@@ -1,3 +1,4 @@
+// app/api/paddle/webhook/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb } from "../../../../lib/firebaseAdmin";
@@ -9,6 +10,7 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
   const secret = process.env.PADDLE_WEBHOOK_SECRET || "";
   if (!secret || !signatureHeader) return false;
 
+  // Paddle header format: "ts=...;h1=..." (semicolon-separated)
   const parts = signatureHeader.split(";").map((p) => p.trim());
   const tsPart = parts.find((p) => p.startsWith("ts="));
   const h1Part = parts.find((p) => p.startsWith("h1="));
@@ -18,10 +20,16 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
   const h1 = h1Part.slice(3);
 
   const signedPayload = `${ts}:${rawBody}`;
-  const digest = crypto.createHmac("sha256", secret).update(signedPayload).digest("hex");
+  const digest = crypto
+    .createHmac("sha256", secret)
+    .update(signedPayload)
+    .digest("hex");
 
   try {
-    return crypto.timingSafeEqual(Buffer.from(digest, "hex"), Buffer.from(h1, "hex"));
+    return crypto.timingSafeEqual(
+      Buffer.from(digest, "hex"),
+      Buffer.from(h1, "hex")
+    );
   } catch {
     return false;
   }
@@ -38,7 +46,12 @@ export async function POST(req: Request) {
   const sig = req.headers.get("Paddle-Signature");
 
   const ok = verifyPaddleSignature(rawBody, sig);
-  if (!ok) return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
+  if (!ok) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid signature" },
+      { status: 401 }
+    );
+  }
 
   const event = JSON.parse(rawBody);
   const eventType: string = event?.event_type || event?.eventType || "";
@@ -47,13 +60,20 @@ export async function POST(req: Request) {
   const customData = data?.custom_data || data?.customData || {};
   const uid: string | undefined = customData?.firebase_uid;
 
+  // ✅ must have uid to attach purchase to a user
   if (!uid) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  async function setPlanAndCredits(planId: "free" | "pro_monthly" | "lifetime") {
+  // ✅ make TS happy: uid is now a guaranteed string for the rest of this request
+  const safeUid = uid;
+
+  async function setPlanAndCredits(
+    uidParam: string,
+    planId: "free" | "pro_monthly" | "lifetime"
+  ) {
     const credits = creditsForPlan(planId);
-    const userRef = adminDb.collection("users").doc(uid);
+    const userRef = adminDb.collection("users").doc(uidParam);
 
     await userRef.set(
       {
@@ -67,8 +87,11 @@ export async function POST(req: Request) {
   }
 
   try {
+    // ✅ When payment succeeds (covers one-time and first subscription payment)
     if (eventType === "transaction.completed") {
-      const items = data?.items || data?.details?.line_items || data?.line_items || [];
+      const items =
+        data?.items || data?.details?.line_items || data?.line_items || [];
+
       const priceId =
         items?.[0]?.price?.id ||
         items?.[0]?.price_id ||
@@ -77,16 +100,20 @@ export async function POST(req: Request) {
         data?.priceId;
 
       if (priceId) {
-        const planId = planIdFromPriceId(priceId);
-        if (planId) await setPlanAndCredits(planId);
+        const planId = planIdFromPriceId(String(priceId));
+        if (planId) {
+          await setPlanAndCredits(safeUid, planId);
+        }
       }
     }
 
+    // ✅ Keep subscription status updated
     if (eventType.startsWith("subscription.")) {
-      const subscriptionId = data?.id || data?.subscription_id || data?.subscriptionId;
+      const subscriptionId =
+        data?.id || data?.subscription_id || data?.subscriptionId;
       const status = data?.status;
 
-      await adminDb.collection("users").doc(uid).set(
+      await adminDb.collection("users").doc(safeUid).set(
         {
           paddle_subscription_id: subscriptionId || null,
           paddle_status: status || null,
@@ -98,6 +125,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "Webhook error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: e?.message || "Webhook error" },
+      { status: 500 }
+    );
   }
 }

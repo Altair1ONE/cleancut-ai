@@ -52,6 +52,8 @@ export default function SignupPage() {
         { merge: true }
       );
 
+      const continueUrl = "https://xevora.org/cleancut/login";
+
       await sendEmailVerification(cred.user, {
         url: continueUrl,
         handleCodeInApp: false,

@@ -1,21 +1,12 @@
-// app/admin/page.tsx
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/AuthProvider";
-import { db } from "../../lib/firebaseClient";
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  Timestamp,
-} from "firebase/firestore";
 
-// ✅ Prevent SSG/prerender assumptions for admin dashboards
 export const dynamic = "force-dynamic";
+
+type PlanId = "free" | "pro_monthly" | "lifetime";
 
 type AdminUserRow = {
   uid: string;
@@ -28,27 +19,15 @@ type AdminUserRow = {
   email_verified: boolean | null;
 };
 
-function safeIso(v: any): string | null {
-  if (!v) return null;
-
-  // Firestore Timestamp
-  if (v instanceof Timestamp) return v.toDate().toISOString();
-
-  // string date
-  if (typeof v === "string") {
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d.toISOString();
-  }
-
-  // Date
-  if (v instanceof Date) return v.toISOString();
-
-  // object with seconds/nanoseconds
-  if (typeof v === "object" && typeof v.seconds === "number") {
-    return new Date(v.seconds * 1000).toISOString();
-  }
-
-  return null;
+async function authedFetch(user: any, url: string, init?: RequestInit) {
+  const token = await user.getIdToken();
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...(init?.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }
 
 export default function AdminPage() {
@@ -59,7 +38,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ IMPORTANT: client pages should use NEXT_PUBLIC_* only
+  // UI-only gate (real security is server route)
   const adminEmails = useMemo(() => {
     const raw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
     return raw
@@ -68,20 +47,17 @@ export default function AdminPage() {
       .filter(Boolean);
   }, []);
 
-  const isAdmin = useMemo(() => {
+  const isAdminUi = useMemo(() => {
     const email = (user?.email || "").toLowerCase();
-    if (!email) return false;
-    return adminEmails.includes(email);
+    return !!email && adminEmails.includes(email);
   }, [user?.email, adminEmails]);
 
   const isVerified = Boolean(user?.emailVerified);
 
-  // ✅ If not logged in -> login
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [loading, user, router]);
 
-  // ✅ If logged in but not verified -> send them to check-email
   useEffect(() => {
     if (loading) return;
     if (!user) return;
@@ -91,73 +67,50 @@ export default function AdminPage() {
     router.push(`/check-email?email=${encodeURIComponent(email)}`);
   }, [loading, user, isVerified, router]);
 
-  // ✅ Load users for admins (with safe fallback if orderBy fails)
-  useEffect(() => {
-    async function load() {
-      if (loading) return;
-      if (!user) return;
-      if (!isVerified) return;
-      if (!isAdmin) return;
+  async function load() {
+    if (!user) return;
+    setStatus("loading");
+    setError(null);
 
-      setStatus("loading");
-      setError(null);
+    try {
+      const res = await authedFetch(user, "/api/admin/users/list");
+      const json = await res.json().catch(() => ({}));
 
-      try {
-        // Try ordered query first
-        let snap;
-        try {
-          const q1 = query(
-            collection(db, "users"),
-            orderBy("updated_at", "desc"),
-            limit(200)
-          );
-          snap = await getDocs(q1);
-        } catch (orderErr) {
-          // Fallback: no orderBy (works even if field missing / mixed types)
-          const q2 = query(collection(db, "users"), limit(200));
-          snap = await getDocs(q2);
-        }
+      if (!res.ok) throw new Error(json?.error || "Failed to load admin users");
 
-        const out: AdminUserRow[] = snap.docs.map((d) => {
-          const data: any = d.data();
-          return {
-            uid: d.id,
-            email: data?.email ?? null,
-            plan_id: data?.plan_id ?? null,
-            credits_remaining:
-              typeof data?.credits_remaining === "number"
-                ? data.credits_remaining
-                : data?.credits_remaining != null
-                ? Number(data.credits_remaining)
-                : null,
-            paddle_status: data?.paddle_status ?? null,
-            paddle_subscription_id: data?.paddle_subscription_id ?? null,
-            updated_at: safeIso(data?.updated_at),
-            email_verified:
-              typeof data?.email_verified === "boolean"
-                ? data.email_verified
-                : null,
-          };
-        });
-
-        // If we had to fallback (no orderBy), let's sort locally by updated_at
-        out.sort((a, b) => {
-          const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-          const tb = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-          return tb - ta;
-        });
-
-        setRows(out);
-        setStatus("idle");
-      } catch (e: any) {
-        console.error(e);
-        setStatus("error");
-        setError(e?.message || "Failed to load admin data.");
-      }
+      setRows((json.rows || []) as AdminUserRow[]);
+      setStatus("idle");
+    } catch (e: any) {
+      setStatus("error");
+      setError(e?.message || "Failed to load admin data.");
     }
+  }
 
+  useEffect(() => {
+    if (!user || loading) return;
+    if (!isVerified) return;
+    if (!isAdminUi) return; // UI gate (server still enforces)
     load();
-  }, [loading, user, isAdmin, isVerified]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, loading, isVerified, isAdminUi]);
+
+  async function updateUser(uid: string, payload: any) {
+    if (!user) return;
+    setError(null);
+
+    try {
+      const res = await authedFetch(user, "/api/admin/users/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid, ...payload }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Update failed");
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Update failed");
+    }
+  }
 
   if (loading) {
     return (
@@ -188,36 +141,25 @@ export default function AdminPage() {
     );
   }
 
-  // ✅ Helpful debug if env not set
   if (adminEmails.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
         <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
           <h1 className="text-xl font-bold text-white">Admin not configured</h1>
           <p className="mt-2 text-sm text-slate-300">
-            <b>NEXT_PUBLIC_ADMIN_EMAILS</b> is not set, so no one can pass the admin
-            check.
-          </p>
-          <p className="mt-2 text-xs text-slate-400">
-            Set it in your .env.local / Vercel env to:
-            <br />
-            <code className="text-slate-200">
-              NEXT_PUBLIC_ADMIN_EMAILS=inbox2hammad@gmail.com
-            </code>
+            <b>NEXT_PUBLIC_ADMIN_EMAILS</b> is not set.
           </p>
         </div>
       </main>
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdminUi) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
         <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
           <h1 className="text-xl font-bold text-white">Admin</h1>
-          <p className="mt-2 text-sm text-slate-300">
-            You don’t have access to this page.
-          </p>
+          <p className="mt-2 text-sm text-slate-300">You don’t have access.</p>
           <p className="mt-2 text-xs text-slate-400">
             Signed in as: <span className="text-slate-200">{user.email}</span>
           </p>
@@ -228,11 +170,20 @@ export default function AdminPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-      <p className="mt-2 text-sm text-slate-300">
-        Latest users (Firestore <code className="text-slate-200">users</code>{" "}
-        collection).
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Users from Firestore <code className="text-slate-200">users</code> collection.
+          </p>
+        </div>
+        <button
+          onClick={load}
+          className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500"
+        >
+          Refresh
+        </button>
+      </div>
 
       {error && (
         <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
@@ -255,34 +206,74 @@ export default function AdminPage() {
                   <th className="py-2 pr-4">UID</th>
                   <th className="py-2 pr-4">Plan</th>
                   <th className="py-2 pr-4">Credits</th>
+                  <th className="py-2 pr-4">Actions</th>
                   <th className="py-2 pr-4">Paddle</th>
                   <th className="py-2 pr-4">Updated</th>
                 </tr>
               </thead>
+
               <tbody className="text-slate-200">
                 {rows.map((r) => (
-                  <tr key={r.uid} className="border-b border-slate-900">
+                  <tr key={r.uid} className="border-b border-slate-900 align-top">
                     <td className="py-2 pr-4">{r.email || "-"}</td>
+
                     <td className="py-2 pr-4">
-                      {r.email_verified === true
-                        ? "✅"
-                        : r.email_verified === false
-                        ? "❌"
-                        : "-"}
+                      {r.email_verified === true ? "✅" : r.email_verified === false ? "❌" : "-"}
                     </td>
+
                     <td className="py-2 pr-4 text-slate-400">{r.uid}</td>
+
                     <td className="py-2 pr-4">{r.plan_id || "-"}</td>
+
                     <td className="py-2 pr-4">{r.credits_remaining ?? "-"}</td>
+
+                    <td className="py-2 pr-4">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          {(["free", "pro_monthly", "lifetime"] as PlanId[]).map((p) => (
+                            <button
+                              key={p}
+                              onClick={() => updateUser(r.uid, { action: "set_plan", planId: p })}
+                              className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
+                              title="Set plan"
+                            >
+                              Set {p}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => updateUser(r.uid, { action: "add_credits", delta: 100 })}
+                            className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
+                          >
+                            +100
+                          </button>
+                          <button
+                            onClick={() => updateUser(r.uid, { action: "add_credits", delta: 500 })}
+                            className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
+                          >
+                            +500
+                          </button>
+                          <button
+                            onClick={() => updateUser(r.uid, { action: "set_credits", credits: 0 })}
+                            className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
+                          >
+                            Set 0
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
                     <td className="py-2 pr-4">
                       <div>{r.paddle_status || "-"}</div>
                       <div className="text-xs text-slate-500">
                         {r.paddle_subscription_id || ""}
                       </div>
                     </td>
+
                     <td className="py-2 pr-4 text-slate-400">
-                      {r.updated_at
-                        ? new Date(r.updated_at).toLocaleString()
-                        : "-"}
+                      {r.updated_at ? new Date(r.updated_at).toLocaleString() : "-"}
                     </td>
                   </tr>
                 ))}

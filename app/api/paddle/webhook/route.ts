@@ -56,28 +56,39 @@ export async function POST(req: Request) {
   const customData = data?.custom_data || data?.customData || {};
   const uid: string | undefined = customData?.firebase_uid;
 
-  if (!uid) {
-    return NextResponse.json({ ok: true, ignored: true });
-  }
+  // must have uid to attach purchase to a user
+  if (!uid) return NextResponse.json({ ok: true, ignored: true });
 
   const safeUid = uid;
 
-  async function setPlanAndCredits(uidParam: string, planId: PlanId) {
-    const credits = creditsForPlan(planId);
-    const userRef = adminDb.collection("users").doc(uidParam);
+  async function grantPlanCredits(uidParam: string, planId: PlanId) {
+    const award = creditsForPlan(planId);
+    const ref = adminDb.collection("users").doc(uidParam);
 
-    await userRef.set(
-      {
-        plan_id: planId,
-        credits_remaining: credits,
-        last_reset_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    await adminDb.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const current = snap.exists
+        ? Number((snap.data() as any)?.credits_remaining ?? 0)
+        : 0;
+
+      const next = Math.max(0, Math.floor(current + award));
+
+      tx.set(
+        ref,
+        {
+          plan_id: planId,
+          credits_remaining: next,
+          // track when we granted credits (useful for debugging)
+          last_reset_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    });
   }
 
   try {
+    // ✅ When payment succeeds (covers one-time and subscription renewals)
     if (eventType === "transaction.completed") {
       const items =
         data?.items || data?.details?.line_items || data?.line_items || [];
@@ -91,12 +102,14 @@ export async function POST(req: Request) {
 
       if (priceId) {
         const planId = planIdFromPriceId(String(priceId));
-        if (planId) {
-          await setPlanAndCredits(safeUid, planId);
+        if (planId && planId !== "free") {
+          // ✅ ADD credits instead of resetting
+          await grantPlanCredits(safeUid, planId);
         }
       }
     }
 
+    // ✅ Keep subscription status updated (no credit logic here)
     if (eventType.startsWith("subscription.")) {
       const subscriptionId =
         data?.id || data?.subscription_id || data?.subscriptionId;

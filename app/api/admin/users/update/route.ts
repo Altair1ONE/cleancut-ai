@@ -60,9 +60,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
 
-    const userRef = adminDb.collection("users").doc(uid);
+    const ref = adminDb.collection("users").doc(uid);
 
-    const patch: any = {
+    const patchBase: any = {
       updated_at: new Date().toISOString(),
     };
 
@@ -71,6 +71,7 @@ export async function POST(req: Request) {
     const hasAddCredits = body?.add_credits != null;
 
     // ---- plan_id ----
+    let planIdToSet: PlanId | null = null;
     if (hasPlanChange) {
       if (!isPlanId(body.plan_id)) {
         return NextResponse.json(
@@ -78,10 +79,11 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      patch.plan_id = body.plan_id;
+      planIdToSet = body.plan_id;
+      patchBase.plan_id = body.plan_id;
     }
 
-    // ---- credits_remaining explicit set ----
+    // ---- credits_remaining explicit set (hard override) ----
     if (hasExplicitCredits) {
       const n = Number(body.credits_remaining);
       if (!Number.isFinite(n) || n < 0) {
@@ -90,23 +92,20 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      patch.credits_remaining = Math.floor(n);
-      // if you explicitly set credits, it is a "reset"
-      patch.last_reset_at = new Date().toISOString();
+
+      await ref.set(
+        {
+          ...patchBase,
+          credits_remaining: Math.floor(n),
+          last_reset_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      return NextResponse.json({ ok: true });
     }
 
-    /**
-     * ✅ KEY CHANGE:
-     * If admin changed plan_id AND did NOT explicitly set credits_remaining
-     * AND did NOT use add_credits, then we auto-apply credits for that plan.
-     */
-    if (hasPlanChange && !hasExplicitCredits && !hasAddCredits) {
-      const planId = patch.plan_id as PlanId;
-      patch.credits_remaining = creditsForPlan(planId);
-      patch.last_reset_at = new Date().toISOString();
-    }
-
-    // ---- add_credits supports negative too (keeps your existing behavior) ----
+    // ---- add_credits (can be negative) ----
     if (hasAddCredits) {
       const add = Number(body.add_credits);
       if (!Number.isFinite(add)) {
@@ -117,20 +116,44 @@ export async function POST(req: Request) {
       }
 
       await adminDb.runTransaction(async (tx) => {
-        const snap = await tx.get(userRef);
+        const snap = await tx.get(ref);
+        const current = snap.exists
+          ? Number((snap.data() as any)?.credits_remaining ?? 0)
+          : 0;
+        const next = Math.max(0, Math.floor(current + add));
+
+        tx.set(ref, { ...patchBase, credits_remaining: next }, { merge: true });
+      });
+
+      return NextResponse.json({ ok: true });
+    }
+
+    /**
+     * ✅ KEY CHANGE:
+     * If admin changes plan and does NOT explicitly set credits_remaining or add_credits,
+     * then auto-grant credits according to the plan (ADD, not reset).
+     *
+     * - free: no auto-grant (free should not “monthly reset”)
+     * - pro/lifetime: add plan credits to whatever the user currently has
+     */
+    if (planIdToSet && planIdToSet !== "free") {
+      const award = creditsForPlan(planIdToSet);
+
+      await adminDb.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
         const current = snap.exists
           ? Number((snap.data() as any)?.credits_remaining ?? 0)
           : 0;
 
-        const next = Math.max(0, Math.floor(current + add));
+        const next = Math.max(0, Math.floor(current + award));
 
-        // If plan_id was changed in the same request, keep it.
         tx.set(
-          userRef,
+          ref,
           {
-            ...patch,
+            ...patchBase,
+            plan_id: planIdToSet,
             credits_remaining: next,
-            // don't force last_reset_at on add_credits unless you want it.
+            last_reset_at: new Date().toISOString(),
           },
           { merge: true }
         );
@@ -139,7 +162,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    await userRef.set(patch, { merge: true });
+    // If only plan_id=free or no plan change, just patch
+    await ref.set(patchBase, { merge: true });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json(

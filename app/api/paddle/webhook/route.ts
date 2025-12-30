@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb } from "../../../../lib/firebaseAdmin";
 import { planIdFromPriceId } from "../../../../lib/paddlePrices";
+import type { PlanId } from "../../../../lib/plans";
+import { creditsForPlan } from "../../../../lib/planCredits";
 
 export const runtime = "nodejs";
 
@@ -10,7 +12,6 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
   const secret = process.env.PADDLE_WEBHOOK_SECRET || "";
   if (!secret || !signatureHeader) return false;
 
-  // Paddle header format: "ts=...;h1=..." (semicolon-separated)
   const parts = signatureHeader.split(";").map((p) => p.trim());
   const tsPart = parts.find((p) => p.startsWith("ts="));
   const h1Part = parts.find((p) => p.startsWith("h1="));
@@ -35,12 +36,6 @@ function verifyPaddleSignature(rawBody: string, signatureHeader: string | null) 
   }
 }
 
-function creditsForPlan(planId: "free" | "pro_monthly" | "lifetime") {
-  if (planId === "pro_monthly") return 1000;
-  if (planId === "lifetime") return 500; // ✅ updated
-  return 30;
-}
-
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const sig = req.headers.get("Paddle-Signature");
@@ -55,23 +50,19 @@ export async function POST(req: Request) {
 
   const event = JSON.parse(rawBody);
   const eventType: string = event?.event_type || event?.eventType || "";
-  const data = event?.data || event?.data?.object || event?.data?.data || event?.data;
+  const data =
+    event?.data || event?.data?.object || event?.data?.data || event?.data;
 
   const customData = data?.custom_data || data?.customData || {};
   const uid: string | undefined = customData?.firebase_uid;
 
-  // ✅ must have uid to attach purchase to a user
   if (!uid) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  // ✅ make TS happy: uid is now a guaranteed string for the rest of this request
   const safeUid = uid;
 
-  async function setPlanAndCredits(
-    uidParam: string,
-    planId: "free" | "pro_monthly" | "lifetime"
-  ) {
+  async function setPlanAndCredits(uidParam: string, planId: PlanId) {
     const credits = creditsForPlan(planId);
     const userRef = adminDb.collection("users").doc(uidParam);
 
@@ -87,7 +78,6 @@ export async function POST(req: Request) {
   }
 
   try {
-    // ✅ When payment succeeds (covers one-time and first subscription payment)
     if (eventType === "transaction.completed") {
       const items =
         data?.items || data?.details?.line_items || data?.line_items || [];
@@ -107,7 +97,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // ✅ Keep subscription status updated
     if (eventType.startsWith("subscription.")) {
       const subscriptionId =
         data?.id || data?.subscription_id || data?.subscriptionId;

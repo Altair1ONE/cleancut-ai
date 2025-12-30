@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminAuth, adminDb } from "../../../../lib/firebaseAdmin";
+import { creditsForPlan } from "../../../../lib/planCredits";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,10 @@ export async function POST(req: Request) {
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
     if (!token) {
-      return NextResponse.json({ ok: false, error: "Missing bearer token" }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, error: "Missing bearer token" },
+        { status: 401 }
+      );
     }
 
     const decoded = await adminAuth.verifyIdToken(token);
@@ -23,19 +27,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, created: false });
     }
 
-    const oneTimeFreeCredits = 30;
+    const plan_id = "free" as const;
+    const initialCredits = creditsForPlan(plan_id);
 
     await ref.set({
-      plan_id: "free",
-      credits_remaining: oneTimeFreeCredits,
+      plan_id,
+      credits_remaining: initialCredits,
       last_reset_at: null,
       email,
       updated_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     });
 
-    return NextResponse.json({ ok: true, created: true, credits: oneTimeFreeCredits });
+    return NextResponse.json({ ok: true, created: true, credits: initialCredits });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "Init error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: e?.message || "Init error" },
+      { status: 500 }
+    );
   }
 }

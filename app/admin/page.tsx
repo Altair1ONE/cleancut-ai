@@ -19,8 +19,16 @@ type AdminUserRow = {
   email_verified: boolean | null;
 };
 
-async function authedFetch(user: any, url: string, init?: RequestInit) {
+function apiPath(path: string) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  // ensure "/cleancut" + "/api/..." => "/cleancut/api/..."
+  return `${basePath}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+async function authedFetch(user: any, path: string, init?: RequestInit) {
   const token = await user.getIdToken();
+  const url = apiPath(path);
+
   return fetch(url, {
     ...init,
     headers: {
@@ -74,22 +82,36 @@ export default function AdminPage() {
 
     try {
       const res = await authedFetch(user, "/api/admin/users/list");
-      const json = await res.json().catch(() => ({}));
+      const text = await res.text();
+      const json = (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { raw: text };
+        }
+      })();
 
-      if (!res.ok) throw new Error(json?.error || "Failed to load admin users");
+      if (!res.ok) {
+        throw new Error(
+          json?.error ||
+            `Failed to load admin users (HTTP ${res.status}). URL: ${apiPath(
+              "/api/admin/users/list"
+            )}`
+        );
+      }
 
       setRows((json.rows || []) as AdminUserRow[]);
       setStatus("idle");
     } catch (e: any) {
       setStatus("error");
-      setError(e?.message || "Failed to load admin data.");
+      setError(e?.message || "Failed to load admin users");
     }
   }
 
   useEffect(() => {
     if (!user || loading) return;
     if (!isVerified) return;
-    if (!isAdminUi) return; // UI gate (server still enforces)
+    if (!isAdminUi) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid, loading, isVerified, isAdminUi]);
@@ -104,8 +126,17 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid, ...payload }),
       });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.error || "Update failed");
+
+      const text = await res.text();
+      const json = (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { raw: text };
+        }
+      })();
+
+      if (!res.ok) throw new Error(json?.error || `Update failed (HTTP ${res.status})`);
       await load();
     } catch (e: any) {
       setError(e?.message || "Update failed");
@@ -174,9 +205,10 @@ export default function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <p className="mt-2 text-sm text-slate-300">
-            Users from Firestore <code className="text-slate-200">users</code> collection.
+            API: <code className="text-slate-200">{apiPath("/api/admin/users/list")}</code>
           </p>
         </div>
+
         <button
           onClick={load}
           className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500"
@@ -216,15 +248,11 @@ export default function AdminPage() {
                 {rows.map((r) => (
                   <tr key={r.uid} className="border-b border-slate-900 align-top">
                     <td className="py-2 pr-4">{r.email || "-"}</td>
-
                     <td className="py-2 pr-4">
                       {r.email_verified === true ? "✅" : r.email_verified === false ? "❌" : "-"}
                     </td>
-
                     <td className="py-2 pr-4 text-slate-400">{r.uid}</td>
-
                     <td className="py-2 pr-4">{r.plan_id || "-"}</td>
-
                     <td className="py-2 pr-4">{r.credits_remaining ?? "-"}</td>
 
                     <td className="py-2 pr-4">
@@ -235,7 +263,6 @@ export default function AdminPage() {
                               key={p}
                               onClick={() => updateUser(r.uid, { action: "set_plan", planId: p })}
                               className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-200 hover:border-slate-500"
-                              title="Set plan"
                             >
                               Set {p}
                             </button>

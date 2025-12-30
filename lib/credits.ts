@@ -2,6 +2,12 @@
 import type { PlanId } from "./plans";
 import { firebaseAuth } from "./firebaseClient";
 
+function apiPath(path: string) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  // basePath like "/cleancut" + "/api/..." => "/cleancut/api/..."
+  return `${basePath}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export type CreditState = {
   planId: PlanId;
   creditsRemaining: number;
@@ -15,25 +21,28 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
 
   const token = await user.getIdToken();
 
-  // Ask server for current credits (server can init if missing)
-  const res = await fetch("/api/credits/get", {
+  // ✅ Ask server for current credits (server can init if missing)
+  const res = await fetch(apiPath("/api/credits/get"), {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
-    // fallback: try init then re-get
-    await fetch("/api/credits/init", {
+    // ✅ fallback: try init then re-get
+    await fetch(apiPath("/api/credits/init"), {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const res2 = await fetch("/api/credits/get", {
+    const res2 = await fetch(apiPath("/api/credits/get"), {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!res2.ok) return { planId: "free", creditsRemaining: 0, lastResetAt: null };
+    if (!res2.ok) {
+      return { planId: "free", creditsRemaining: 0, lastResetAt: null };
+    }
+
     const json2 = await res2.json();
     return {
       planId: (json2.planId as PlanId) || "free",
@@ -86,7 +95,7 @@ export async function consumeCredits(
 
   const token = await user.getIdToken();
 
-  const res = await fetch("/api/credits/consume", {
+  const res = await fetch(apiPath("/api/credits/consume"), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

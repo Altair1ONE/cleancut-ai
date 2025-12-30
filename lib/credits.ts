@@ -1,12 +1,7 @@
 // lib/credits.ts
 import type { PlanId } from "./plans";
 import { firebaseAuth } from "./firebaseClient";
-
-function apiPath(path: string) {
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  // basePath like "/cleancut" + "/api/..." => "/cleancut/api/..."
-  return `${basePath}${path.startsWith("/") ? path : `/${path}`}`;
-}
+import { apiPath } from "./apiPath";
 
 export type CreditState = {
   planId: PlanId;
@@ -16,19 +11,16 @@ export type CreditState = {
 
 export async function loadCreditsFromDB(): Promise<CreditState> {
   const user = firebaseAuth.currentUser;
-
   if (!user) return { planId: "free", creditsRemaining: 0, lastResetAt: null };
 
   const token = await user.getIdToken();
 
-  // ✅ Ask server for current credits (server can init if missing)
   const res = await fetch(apiPath("/api/credits/get"), {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
-    // ✅ fallback: try init then re-get
     await fetch(apiPath("/api/credits/init"), {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -39,11 +31,9 @@ export async function loadCreditsFromDB(): Promise<CreditState> {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!res2.ok) {
-      return { planId: "free", creditsRemaining: 0, lastResetAt: null };
-    }
-
+    if (!res2.ok) return { planId: "free", creditsRemaining: 0, lastResetAt: null };
     const json2 = await res2.json();
+
     return {
       planId: (json2.planId as PlanId) || "free",
       creditsRemaining: Number(json2.creditsRemaining ?? 0),
@@ -63,11 +53,7 @@ export async function loadCredits(): Promise<CreditState> {
   return loadCreditsFromDB();
 }
 
-export function canConsumeCredits(
-  state: CreditState | null,
-  imageCount: number,
-  isQuality: boolean
-): boolean {
+export function canConsumeCredits(state: CreditState | null, imageCount: number, isQuality: boolean) {
   if (!state) return false;
   const perImage = isQuality ? 2 : 1;
   const cost = Math.max(0, imageCount) * perImage;
@@ -107,7 +93,6 @@ export async function consumeCredits(
   const json = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    console.error("consume failed:", res.status, json);
     throw new Error(json?.error || "Failed to deduct credits");
   }
 

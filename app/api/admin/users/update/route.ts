@@ -1,111 +1,100 @@
+// app/api/admin/users/update/route.ts
 import { NextResponse } from "next/server";
-import { adminAuth, adminDb, adminFieldValue } from "../../../../../lib/firebaseAdmin";
+import { adminAuth, adminDb } from "../../../../../lib/firebaseAdmin";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-function getBearerToken(req: Request): string | null {
-  const h = req.headers.get("authorization") || "";
-  const m = h.match(/^Bearer\s+(.+)$/i);
-  return m ? m[1] : null;
-}
+type PlanId = "free" | "pro_monthly" | "lifetime";
 
-function isEmailAdmin(email: string | undefined | null): boolean {
-  const raw = process.env.ADMIN_EMAILS || "";
-  const list = raw
+function getAllowedAdminEmails() {
+  const raw = process.env.NEXT_PUBLIC_ADMIN_EMAILS || process.env.ADMIN_EMAILS || "";
+  return raw
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  if (!email) return false;
-  return list.includes(email.toLowerCase());
 }
 
-type PlanId = "free" | "pro_monthly" | "lifetime";
-type Action =
-  | { action: "set_plan"; uid: string; planId: PlanId }
-  | { action: "set_credits"; uid: string; credits: number }
-  | { action: "add_credits"; uid: string; delta: number };
+async function requireAdmin(req: Request) {
+  const auth = req.headers.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!token) {
+    return { ok: false as const, res: NextResponse.json({ error: "Missing token" }, { status: 401 }) };
+  }
+
+  const decoded = await adminAuth.verifyIdToken(token);
+
+  const isClaimAdmin = decoded.admin === true;
+  const email = (decoded.email || "").toLowerCase();
+  const isEmailAdmin = getAllowedAdminEmails().includes(email);
+
+  if (!isClaimAdmin && !isEmailAdmin) {
+    return { ok: false as const, res: NextResponse.json({ error: "Not admin" }, { status: 403 }) };
+  }
+
+  return { ok: true as const, decoded };
+}
+
+function isPlanId(v: any): v is PlanId {
+  return v === "free" || v === "pro_monthly" || v === "lifetime";
+}
 
 export async function POST(req: Request) {
+  const gate = await requireAdmin(req);
+  if (!gate.ok) return gate.res;
+
   try {
-    const token = getBearerToken(req);
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Missing token" }, { status: 401 });
-    }
+    const body = await req.json().catch(() => ({}));
 
-    const decoded = await adminAuth.verifyIdToken(token);
-    const email = decoded.email || null;
-
-    const adminByClaim = decoded.admin === true;
-    const adminByEmail = isEmailAdmin(email);
-
-    if (!adminByClaim && !adminByEmail) {
-      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-    }
-
-    const body = (await req.json()) as Partial<Action>;
-    const uid = body.uid;
-    if (!uid || typeof uid !== "string") {
+    const uid = String(body?.uid || "").trim();
+    if (!uid) {
       return NextResponse.json({ ok: false, error: "Missing uid" }, { status: 400 });
     }
 
-    const ref = adminDb.collection("users").doc(uid);
+    const patch: any = {
+      updated_at: new Date().toISOString(),
+    };
 
-    if (body.action === "set_plan") {
-      const planId = body.planId;
-      if (!planId || !["free", "pro_monthly", "lifetime"].includes(planId)) {
-        return NextResponse.json({ ok: false, error: "Invalid planId" }, { status: 400 });
+    // Optional: set plan_id
+    if (body?.plan_id != null) {
+      if (!isPlanId(body.plan_id)) {
+        return NextResponse.json({ ok: false, error: "Invalid plan_id" }, { status: 400 });
+      }
+      patch.plan_id = body.plan_id;
+    }
+
+    // Optional: set credits_remaining exactly
+    if (body?.credits_remaining != null) {
+      const n = Number(body.credits_remaining);
+      if (!Number.isFinite(n) || n < 0) {
+        return NextResponse.json({ ok: false, error: "Invalid credits_remaining" }, { status: 400 });
+      }
+      patch.credits_remaining = Math.floor(n);
+    }
+
+    // Optional: add credits (delta)
+    if (body?.add_credits != null) {
+      const add = Number(body.add_credits);
+      if (!Number.isFinite(add)) {
+        return NextResponse.json({ ok: false, error: "Invalid add_credits" }, { status: 400 });
       }
 
-      await ref.set(
-        {
-          plan_id: planId,
-          updated_at: adminFieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const ref = adminDb.collection("users").doc(uid);
+      await adminDb.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const current = snap.exists ? Number((snap.data() as any)?.credits_remaining ?? 0) : 0;
+        const next = Math.max(0, Math.floor(current + add));
+        tx.set(ref, { ...patch, credits_remaining: next }, { merge: true });
+      });
 
       return NextResponse.json({ ok: true });
     }
 
-    if (body.action === "set_credits") {
-      const credits = Number((body as any).credits);
-      if (!Number.isFinite(credits) || credits < 0) {
-        return NextResponse.json({ ok: false, error: "Invalid credits" }, { status: 400 });
-      }
+    // Default: merge patch
+    await adminDb.collection("users").doc(uid).set(patch, { merge: true });
 
-      await ref.set(
-        {
-          credits_remaining: Math.floor(credits),
-          updated_at: adminFieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      return NextResponse.json({ ok: true });
-    }
-
-    if (body.action === "add_credits") {
-      const delta = Number((body as any).delta);
-      if (!Number.isFinite(delta)) {
-        return NextResponse.json({ ok: false, error: "Invalid delta" }, { status: 400 });
-      }
-
-      await ref.set(
-        {
-          credits_remaining: adminFieldValue.increment(Math.floor(delta)),
-          updated_at: adminFieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      return NextResponse.json({ ok: true });
-    }
-
-    return NextResponse.json({ ok: false, error: "Unknown action" }, { status: 400 });
+    return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json(
-      { ok: false, error: e?.message || "Admin update failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: e?.message || "Update failed" }, { status: 500 });
   }
 }

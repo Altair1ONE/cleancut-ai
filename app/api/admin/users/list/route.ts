@@ -23,19 +23,16 @@ async function requireAdmin(req: Request) {
 
   const decoded = await adminAuth.verifyIdToken(token);
 
-  // ✅ Admin can be: custom claim OR email allowlist
+  // ✅ Allow admin by claim OR email allowlist (so you can use it immediately)
   const isClaimAdmin = decoded.admin === true;
   const email = (decoded.email || "").toLowerCase();
   const isEmailAdmin = getAllowedAdminEmails().includes(email);
 
   if (!isClaimAdmin && !isEmailAdmin) {
-    return {
-      ok: false as const,
-      res: NextResponse.json({ error: "Not admin" }, { status: 403 }),
-    };
+    return { ok: false as const, res: NextResponse.json({ error: "Not admin" }, { status: 403 }) };
   }
 
-  return { ok: true as const, decoded };
+  return { ok: true as const };
 }
 
 function toIso(v: any): string | null {
@@ -57,7 +54,6 @@ export async function GET(req: Request) {
   if (!gate.ok) return gate.res;
 
   try {
-    // ✅ Read last 200 user docs
     const snap = await adminDb.collection("users").limit(200).get();
 
     const rows = snap.docs

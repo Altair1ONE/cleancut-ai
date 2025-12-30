@@ -18,6 +18,7 @@ function getAllowedAdminEmails() {
 async function requireAdmin(req: Request) {
   const auth = req.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+
   if (!token) {
     return { ok: false as const, res: NextResponse.json({ error: "Missing token" }, { status: 401 }) };
   }
@@ -32,7 +33,7 @@ async function requireAdmin(req: Request) {
     return { ok: false as const, res: NextResponse.json({ error: "Not admin" }, { status: 403 }) };
   }
 
-  return { ok: true as const, decoded };
+  return { ok: true as const };
 }
 
 function isPlanId(v: any): v is PlanId {
@@ -45,17 +46,13 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json().catch(() => ({}));
-
     const uid = String(body?.uid || "").trim();
-    if (!uid) {
-      return NextResponse.json({ ok: false, error: "Missing uid" }, { status: 400 });
-    }
+    if (!uid) return NextResponse.json({ ok: false, error: "Missing uid" }, { status: 400 });
 
     const patch: any = {
       updated_at: new Date().toISOString(),
     };
 
-    // Optional: set plan_id
     if (body?.plan_id != null) {
       if (!isPlanId(body.plan_id)) {
         return NextResponse.json({ ok: false, error: "Invalid plan_id" }, { status: 400 });
@@ -63,7 +60,6 @@ export async function POST(req: Request) {
       patch.plan_id = body.plan_id;
     }
 
-    // Optional: set credits_remaining exactly
     if (body?.credits_remaining != null) {
       const n = Number(body.credits_remaining);
       if (!Number.isFinite(n) || n < 0) {
@@ -72,7 +68,7 @@ export async function POST(req: Request) {
       patch.credits_remaining = Math.floor(n);
     }
 
-    // Optional: add credits (delta)
+    // add_credits supports negative too
     if (body?.add_credits != null) {
       const add = Number(body.add_credits);
       if (!Number.isFinite(add)) {
@@ -90,9 +86,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    // Default: merge patch
     await adminDb.collection("users").doc(uid).set(patch, { merge: true });
-
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Update failed" }, { status: 500 });

@@ -55,13 +55,14 @@ export default function AdminPage() {
     try {
       const token = await user.getIdToken();
 
-      const res = await fetch(apiPath("/api/admin/users/list"), {
+      const url = apiPath("/api/admin/users/list");
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
-        throw new Error(`Failed to load admin users (HTTP ${res.status}). ${txt}`);
+        throw new Error(`Failed to load admin users (HTTP ${res.status}). URL: ${url}\n${txt}`);
       }
 
       const json = await res.json();
@@ -73,13 +74,6 @@ export default function AdminPage() {
     }
   }
 
-  useEffect(() => {
-    if (loading) return;
-    if (!user) return;
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, user?.uid]);
-
   async function updateUser(uid: string, patch: any) {
     if (!user) return;
 
@@ -87,7 +81,8 @@ export default function AdminPage() {
     try {
       const token = await user.getIdToken();
 
-      const res = await fetch(apiPath("/api/admin/users/update"), {
+      const url = apiPath("/api/admin/users/update");
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,7 +93,7 @@ export default function AdminPage() {
 
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
-        throw new Error(`Update failed (HTTP ${res.status}). ${txt}`);
+        throw new Error(`Update failed (HTTP ${res.status}). URL: ${url}\n${txt}`);
       }
 
       await loadUsers();
@@ -106,6 +101,13 @@ export default function AdminPage() {
       setError(e?.message || "Update failed.");
     }
   }
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return;
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user?.uid]);
 
   if (loading) {
     return (
@@ -123,8 +125,6 @@ export default function AdminPage() {
     );
   }
 
-  // Helpful notice: even if UI says admin by email, server still enforces admin.
-  // Make sure NEXT_PUBLIC_ADMIN_EMAILS is set in production env.
   if (!isAdminByEmail) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
@@ -147,7 +147,7 @@ export default function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <p className="mt-2 text-sm text-slate-300">
-            Manage users: view + manually set plan/credits.
+            View users + manually set plan/credits.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function AdminPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
+        <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200 whitespace-pre-wrap">
           {error}
         </div>
       )}
@@ -176,11 +176,10 @@ export default function AdminPage() {
               <thead className="text-slate-300">
                 <tr className="border-b border-slate-800">
                   <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4">Verified</th>
                   <th className="py-2 pr-4">UID</th>
                   <th className="py-2 pr-4">Plan</th>
                   <th className="py-2 pr-4">Credits</th>
-                  <th className="py-2 pr-4">Paddle</th>
+                  <th className="py-2 pr-4">Verified</th>
                   <th className="py-2 pr-4">Updated</th>
                   <th className="py-2 pr-4">Actions</th>
                 </tr>
@@ -190,11 +189,6 @@ export default function AdminPage() {
                 {rows.map((r) => (
                   <tr key={r.uid} className="border-b border-slate-900 align-top">
                     <td className="py-2 pr-4">{r.email || "-"}</td>
-
-                    <td className="py-2 pr-4">
-                      {r.email_verified === true ? "✅" : r.email_verified === false ? "❌" : "-"}
-                    </td>
-
                     <td className="py-2 pr-4 text-slate-400">{r.uid}</td>
 
                     <td className="py-2 pr-4">
@@ -240,10 +234,7 @@ export default function AdminPage() {
                     </td>
 
                     <td className="py-2 pr-4">
-                      <div>{r.paddle_status || "-"}</div>
-                      <div className="text-xs text-slate-500">
-                        {r.paddle_subscription_id || ""}
-                      </div>
+                      {r.email_verified === true ? "✅" : r.email_verified === false ? "❌" : "-"}
                     </td>
 
                     <td className="py-2 pr-4 text-slate-400">
@@ -253,20 +244,15 @@ export default function AdminPage() {
                     <td className="py-2 pr-4">
                       <button
                         className="rounded-full bg-indigo-500 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-600"
-                        onClick={() => updateUser(r.uid, { updated_at: new Date().toISOString() })}
+                        onClick={() => loadUsers()}
                       >
-                        Touch
+                        Refresh
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            <p className="mt-4 text-xs text-slate-400">
-              Tip: The server route enforces admin. Make sure your production env has{" "}
-              <code className="text-slate-200">NEXT_PUBLIC_ADMIN_EMAILS</code> set to your email.
-            </p>
           </div>
         )}
       </div>

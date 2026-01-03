@@ -134,6 +134,7 @@ function ExampleTile({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {/* BEFORE */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <Image
             src={withBasePath(beforeSrc)}
@@ -144,13 +145,14 @@ function ExampleTile({
           />
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        {/* AFTER (checkerboard) */}
+        <div className="checker-bg overflow-hidden rounded-2xl border border-slate-200">
           <Image
             src={withBasePath(afterSrc)}
             alt={`${title} after`}
             width={800}
             height={600}
-            className="h-auto w-full object-cover"
+            className="h-auto w-full object-contain"
           />
         </div>
       </div>
@@ -159,7 +161,6 @@ function ExampleTile({
     </div>
   );
 }
-
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">

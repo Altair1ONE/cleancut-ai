@@ -2,11 +2,18 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
+  /* Let the browser support both; we’ll control actual UI with Tailwind classes */
+  color-scheme: light dark;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  /* Light, premium base */
+  @apply bg-slate-50 text-slate-900 antialiased;
 }
 
 /* Optional: basic container helper */

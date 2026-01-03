@@ -2,13 +2,6 @@
 
 import { useId, useMemo, useState } from "react";
 
-/**
- * Your production site uses basePath: /cleancut
- * and static assets resolve under /cleancut/...
- *
- * This helper FORCE-prefixes /cleancut for local public assets,
- * while leaving external URLs untouched.
- */
 function toPublicUrl(src: string) {
   if (!src) return src;
 
@@ -23,6 +16,22 @@ function toPublicUrl(src: string) {
 
   // FORCE basePath for your deployment
   return `/cleancut${normalized}`;
+}
+
+/** Simple CSS checkerboard background */
+function checkerboardStyle(size = 14) {
+  const s = size;
+  return {
+    backgroundImage: `
+      linear-gradient(45deg, rgba(255,255,255,0.10) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(255,255,255,0.10) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.10) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.10) 75%)
+    `,
+    backgroundSize: `${s}px ${s}px`,
+    backgroundPosition: `0 0, 0 ${s / 2}px, ${s / 2}px -${s / 2}px, -${s / 2}px 0px`,
+    backgroundColor: "rgba(2,6,23,0.35)", // slate-ish base
+  } as React.CSSProperties;
 }
 
 export function BeforeAfterSlider({
@@ -46,9 +55,6 @@ export function BeforeAfterSlider({
   const before = useMemo(() => toPublicUrl(beforeSrc), [beforeSrc]);
   const after = useMemo(() => toPublicUrl(afterSrc), [afterSrc]);
 
-  const [beforeOk, setBeforeOk] = useState(true);
-  const [afterOk, setAfterOk] = useState(true);
-
   return (
     <div
       className={
@@ -63,22 +69,26 @@ export function BeforeAfterSlider({
           alt={alt}
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
-          onError={() => setBeforeOk(false)}
         />
 
         {/* AFTER (clipped by width) */}
         <div className="absolute inset-0">
-          {/* IMPORTANT: relative container so the absolute image positions inside */}
           <div
             className="relative h-full overflow-hidden"
             style={{ width: `${pos}%` }}
           >
+            {/* This layer prevents the transparent PNG from showing the "before" underneath */}
+            <div
+              className="absolute inset-0"
+              style={checkerboardStyle(14)}
+              aria-hidden="true"
+            />
+
             <img
               src={after}
               alt={alt}
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover"
-              onError={() => setAfterOk(false)}
+              className="absolute inset-0 h-full w-full object-contain"
             />
           </div>
 
@@ -124,25 +134,6 @@ export function BeforeAfterSlider({
         <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
           After
         </div>
-
-        {/* Visible fallback if something fails */}
-        {(!beforeOk || !afterOk) && (
-          <div className="absolute inset-0 grid place-items-center bg-black/50 p-6 text-center">
-            <div className="max-w-sm rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-sm text-slate-200">
-              <div className="font-semibold text-white">Example image failed to load</div>
-              <div className="mt-2 text-xs text-slate-300 break-all">
-                Before: {before}
-              </div>
-              <div className="mt-1 text-xs text-slate-300 break-all">
-                After: {after}
-              </div>
-              <div className="mt-2 text-xs text-slate-400">
-                If these URLs open in a new tab, the issue is caching/import. If they don’t,
-                it’s path/basePath.
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-300">

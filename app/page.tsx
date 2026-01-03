@@ -3,6 +3,16 @@ import Image from "next/image";
 import { SeoFaq } from "../components/SeoFaq";
 import { BeforeAfterSlider } from "../components/BeforeAfterSlider";
 
+function withBasePath(src: string) {
+  if (!src) return src;
+  if (/^(https?:)?\/\//.test(src)) return src;
+  if (src.startsWith("data:")) return src;
+
+  const normalized = src.startsWith("/") ? src : `/${src}`;
+  if (normalized.startsWith("/cleancut/")) return normalized;
+  return `/cleancut${normalized}`;
+}
+
 function JsonLd() {
   const siteUrl = "https://xevora.org";
   const basePath = "/cleancut";
@@ -57,13 +67,7 @@ function Pill({ children }: { children: React.ReactNode }) {
   );
 }
 
-function IconBullet({
-  title,
-  desc,
-}: {
-  title: string;
-  desc: string;
-}) {
+function IconBullet({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="text-sm font-semibold text-slate-900">{title}</div>
@@ -130,18 +134,19 @@ function ExampleTile({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <Image
-            src={beforeSrc}
+            src={withBasePath(beforeSrc)}
             alt={`${title} before`}
             width={800}
             height={600}
             className="h-auto w-full object-cover"
           />
         </div>
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <Image
-            src={afterSrc}
+            src={withBasePath(afterSrc)}
             alt={`${title} after`}
             width={800}
             height={600}
@@ -172,14 +177,17 @@ export default function HomePage() {
 
             <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
               Remove backgrounds in seconds —{" "}
-              <span className="text-indigo-600">get a transparent PNG you can use anywhere</span>
+              <span className="text-indigo-600">
+                get a transparent PNG you can use anywhere
+              </span>
             </h1>
 
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600">
               Upload your image and you’ll get a clean cutout instantly —{" "}
-              <strong className="text-slate-900">no watermark</strong>, no friction. Use it for{" "}
+              <strong className="text-slate-900">no watermark</strong>, no friction.
+              Use it for{" "}
               <strong className="text-slate-900">e-commerce</strong>,{" "}
-              <strong className="text-slate-900">YouTube & social</strong>,{" "}
+              <strong className="text-slate-900">YouTube &amp; social</strong>,{" "}
               <strong className="text-slate-900">design</strong>, and marketing.
             </p>
 
@@ -199,7 +207,8 @@ export default function HomePage() {
             </div>
 
             <div className="mt-4 text-xs text-slate-500">
-              No sign-up to try • Download instantly • Upgrade only when you need more credits
+              No sign-up to try • Download instantly • Upgrade only when you need
+              more credits
             </div>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -221,8 +230,11 @@ export default function HomePage() {
               alt="CleanCut AI background removal demo"
             />
             <div className="mt-3 text-center text-xs text-slate-600">
-              Drag the slider: <span className="font-semibold text-slate-900">left</span> is original —{" "}
-              <span className="font-semibold text-slate-900">right</span> is your transparent PNG
+              Drag the slider:{" "}
+              <span className="font-semibold text-slate-900">left</span> is original
+              —{" "}
+              <span className="font-semibold text-slate-900">right</span> is your
+              transparent PNG
             </div>
 
             <div className="mt-5 grid grid-cols-3 gap-3">
@@ -231,14 +243,18 @@ export default function HomePage() {
                 className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
               >
                 E-commerce
-                <div className="mt-1 font-normal text-slate-500">Products • Catalogs</div>
+                <div className="mt-1 font-normal text-slate-500">
+                  Products • Catalogs
+                </div>
               </Link>
               <Link
                 href="/use-cases/youtube-thumbnails"
                 className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
               >
                 Creators
-                <div className="mt-1 font-normal text-slate-500">YouTube • Social</div>
+                <div className="mt-1 font-normal text-slate-500">
+                  YouTube • Social
+                </div>
               </Link>
               <Link
                 href="/use-cases/amazon-listing-images"
@@ -252,7 +268,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PERSONAS (more “remove.bg” vibe: speaking to each user type) */}
+      {/* PERSONAS */}
       <section className="mt-12">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
@@ -260,8 +276,9 @@ export default function HomePage() {
               Built for your workflow — whatever you’re making
             </h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Whether you’re selling products, posting content, or designing assets, you want one thing:
-              a clean transparent PNG that’s ready to use.
+              Whether you’re selling products, posting content, or designing
+              assets, you want one thing: a clean transparent PNG that’s ready to
+              use.
             </p>
           </div>
           <Link
@@ -306,13 +323,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* VISUAL EXAMPLES (images back!) */}
+      {/* VISUAL EXAMPLES */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
           Real examples (before → after)
         </h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-600">
-          This is what you should expect: clean subject isolation and a transparent PNG you can drop into any design.
+          This is what you should expect: clean subject isolation and a transparent
+          PNG you can drop into any design.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -337,25 +355,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Simple HOW IT WORKS (keep, but tighter) */}
+      {/* HOW IT WORKS */}
       <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Upload → done → download</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          Upload → done → download
+        </h2>
         <p className="mt-2 max-w-2xl text-sm text-slate-600">
-          You don’t need to learn Photoshop or waste time. Just upload your image, process it, and download your PNG.
+          You don’t need to learn Photoshop or waste time. Just upload your image,
+          process it, and download your PNG.
         </p>
 
         <ol className="mt-5 grid gap-4 md:grid-cols-3">
-          <li className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <li className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-sm font-semibold text-slate-900">1) Upload</div>
-            <p className="mt-2 text-sm text-slate-600">PNG, JPG, WEBP — single or batch.</p>
+            <p className="mt-2 text-sm text-slate-600">
+              PNG, JPG, WEBP — single or batch.
+            </p>
           </li>
-          <li className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <li className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-sm font-semibold text-slate-900">2) Process</div>
-            <p className="mt-2 text-sm text-slate-600">Choose Fast or Quality depending on edges.</p>
+            <p className="mt-2 text-sm text-slate-600">
+              Choose Fast or Quality depending on edges.
+            </p>
           </li>
-          <li className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <li className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-sm font-semibold text-slate-900">3) Download</div>
-            <p className="mt-2 text-sm text-slate-600">Transparent PNG. Watermark-free.</p>
+            <p className="mt-2 text-sm text-slate-600">
+              Transparent PNG. Watermark-free.
+            </p>
           </li>
         </ol>
 
@@ -375,7 +402,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ (keep) */}
+      {/* FAQ */}
       <section className="mt-12">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
           Frequently asked questions
@@ -383,30 +410,42 @@ export default function HomePage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900">Is it really free?</h3>
+            <h3 className="text-sm font-semibold text-slate-900">
+              Is it really free?
+            </h3>
             <p className="mt-2 text-sm text-slate-600">
-              Yes — you can try it free and download watermark-free results. If you need bigger batches or more monthly
-              credits, you can upgrade anytime.
+              Yes — you can try it free and download watermark-free results. If
+              you need bigger batches or more monthly credits, you can upgrade
+              anytime.
             </p>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900">Will my image lose quality?</h3>
+            <h3 className="text-sm font-semibold text-slate-900">
+              Will my image lose quality?
+            </h3>
             <p className="mt-2 text-sm text-slate-600">
-              You’ll get a clean PNG cutout designed to look natural. For hair and detailed edges, use{" "}
-              <strong className="text-slate-900">Quality</strong> mode when available.
+              You’ll get a clean PNG cutout designed to look natural. For hair and
+              detailed edges, use{" "}
+              <strong className="text-slate-900">Quality</strong> mode when
+              available.
             </p>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900">Can I remove backgrounds in bulk?</h3>
+            <h3 className="text-sm font-semibold text-slate-900">
+              Can I remove backgrounds in bulk?
+            </h3>
             <p className="mt-2 text-sm text-slate-600">
-              Yes. Batch processing is supported. Paid plans unlock larger batch sizes and higher monthly limits.
+              Yes. Batch processing is supported. Paid plans unlock larger batch
+              sizes and higher monthly limits.
             </p>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900">Do you add watermarks?</h3>
+            <h3 className="text-sm font-semibold text-slate-900">
+              Do you add watermarks?
+            </h3>
             <p className="mt-2 text-sm text-slate-600">
               Never. Your exports are watermark-free — including the free plan.
             </p>

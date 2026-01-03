@@ -3,6 +3,54 @@
 import Image from "next/image";
 import { useId, useRef, useState } from "react";
 
+/**
+ * Base-path-safe asset URLs.
+ *
+ * If you deploy under /cleancut (Next.js basePath), static assets resolve as:
+ *   /cleancut/examples/...
+ *
+ * Locally (no basePath), they resolve as:
+ *   /examples/...
+ *
+ * Recommended: set NEXT_PUBLIC_BASE_PATH=/cleancut in production env.
+ */
+function withBasePath(src: string) {
+  // External URLs or data URIs should pass through untouched
+  if (!src) return src;
+  if (/^(https?:)?\/\//.test(src)) return src;
+  if (src.startsWith("data:")) return src;
+
+  // Normalize: ensure it starts with a slash
+  const normalized = src.startsWith("/") ? src : `/${src}`;
+
+  // If it's already prefixed with /cleancut, don't double-prefix
+  if (normalized.startsWith("/cleancut/")) return normalized;
+
+  // Use env if provided
+  const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || "").trim();
+
+  // If envBase exists, use it (supports "" or "/cleancut")
+  if (envBase) {
+    const base = envBase.startsWith("/") ? envBase : `/${envBase}`;
+    return `${base}${normalized}`;
+  }
+
+  /**
+   * Safe fallback:
+   * If you know prod is under /cleancut and local is not, this fallback helps
+   * even if env wasn't set (e.g., you forgot).
+   *
+   * If you ever change your basePath, set NEXT_PUBLIC_BASE_PATH and this won’t matter.
+   */
+  if (typeof window !== "undefined") {
+    const p = window.location.pathname || "";
+    if (p.startsWith("/cleancut")) return `/cleancut${normalized}`;
+  }
+
+  // Default (local / non-basePath)
+  return normalized;
+}
+
 export function BeforeAfterSlider({
   beforeSrc,
   afterSrc,
@@ -25,6 +73,9 @@ export function BeforeAfterSlider({
     return Math.min(100, Math.max(0, v));
   });
 
+  const before = withBasePath(beforeSrc);
+  const after = withBasePath(afterSrc);
+
   return (
     <div
       ref={wrapRef}
@@ -36,7 +87,7 @@ export function BeforeAfterSlider({
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
         {/* BEFORE */}
         <Image
-          src={beforeSrc}
+          src={before}
           alt={alt}
           fill
           sizes="(max-width: 768px) 100vw, 520px"
@@ -51,7 +102,7 @@ export function BeforeAfterSlider({
             style={{ width: `${pos}%` }}
           >
             <Image
-              src={afterSrc}
+              src={after}
               alt={alt}
               fill
               sizes="(max-width: 768px) 100vw, 520px"

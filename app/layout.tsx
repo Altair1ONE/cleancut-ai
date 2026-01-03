@@ -133,12 +133,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       {/* Premium light foundation */}
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
-        {/* Subtle background accents (non-cheesy, designer feel) */}
-        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute -left-32 -top-40 h-[420px] w-[420px] rounded-full bg-indigo-200/50 blur-3xl" />
-          <div className="absolute -right-32 -top-40 h-[420px] w-[420px] rounded-full bg-fuchsia-200/40 blur-3xl" />
-          <div className="absolute bottom-[-220px] left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-sky-200/30 blur-3xl" />
-        </div>
+        {/* Clean, consistent page background */}
+<div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-slate-50" />
+
 
         <AuthProvider>
           <div className="flex min-h-screen flex-col">

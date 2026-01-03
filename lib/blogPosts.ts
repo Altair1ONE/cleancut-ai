@@ -292,9 +292,17 @@ If your subject is small in the frame, crop closer before processing. This impro
 - **JPG** does NOT support transparency.
 - **PNG** supports transparency (alpha channel).
 
-> **Want a transparent background right now?**  
-> Use CleanCut AI to remove the background and export a clean transparent PNG (no watermark):  
-> **https://xevora.org/cleancut/transparent-background**
+<div style="margin-top:12px; padding:14px; border:1px solid rgba(148,163,184,0.25); border-radius:14px; background:rgba(15,23,42,0.35);">
+  <div style="font-weight:700; margin-bottom:6px;">
+    Want a transparent background right now?
+  </div>
+  <div style="margin-bottom:10px;">
+    Use CleanCut AI to remove the background and export a clean transparent PNG (no watermark).
+  </div>
+  <a href="/cleancut/transparent-background" style="font-weight:700; text-decoration:underline;">
+    Make background transparent for free →
+  </a>
+</div>
 
 ## What “transparent background” means
 A transparent background means the pixels behind your subject are removed, so whatever you place the image on will show through.

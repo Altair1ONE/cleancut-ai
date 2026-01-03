@@ -62,106 +62,105 @@ export default function HomePage() {
       <JsonLd />
 
       {/* HERO */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:p-10">
-        <div className="grid items-center gap-10 md:grid-cols-2">
-          {/* Copy */}
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <Pill>Watermark-free exports</Pill>
-              <Pill>Transparent PNG</Pill>
-              <Pill>Batch supported</Pill>
-            </div>
+<section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] md:p-10">
+  <div className="grid items-center gap-10 md:grid-cols-2">
+    {/* Copy */}
+    <div>
+      <div className="flex flex-wrap gap-2">
+        <Pill>No watermark</Pill>
+        <Pill>Transparent PNG</Pill>
+        <Pill>Batch ready</Pill>
+      </div>
 
-            <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-              Remove image backgrounds instantly —{" "}
-              <span className="text-indigo-600">download a clean transparent PNG</span>
-            </h1>
+      <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
+        Remove backgrounds in seconds —{" "}
+        <span className="text-indigo-600">get a transparent PNG you can use anywhere</span>
+      </h1>
 
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600">
-              CleanCut AI by Xevora helps you create crisp cutouts for{" "}
-              <strong className="text-slate-900">product photos</strong>,{" "}
-              <strong className="text-slate-900">portraits</strong>,{" "}
-              <strong className="text-slate-900">logos</strong>, thumbnails, and
-              marketing creatives. Upload → process → download.
-            </p>
+      <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600">
+        Upload your image and you’ll get a clean cutout instantly —{" "}
+        <strong className="text-slate-900">no watermark</strong>, no fuss. Use it for{" "}
+        <strong className="text-slate-900">product photos</strong>,{" "}
+        <strong className="text-slate-900">profile pictures</strong>,{" "}
+        <strong className="text-slate-900">thumbnails</strong>, ads, and brand assets.
+      </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/app"
-                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-              >
-                Try Free
-              </Link>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
-              >
-                View pricing
-              </Link>
-            </div>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          href="/app"
+          className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+        >
+          Upload an image (free)
+        </Link>
+        <Link
+          href="/pricing"
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
+        >
+          View pricing
+        </Link>
+      </div>
 
-            <div className="mt-4 text-xs text-slate-500">
-              No sign-up needed to try • Results are watermark-free • Upgrade only if you need more credits
-            </div>
+      <div className="mt-4 text-xs text-slate-500">
+        No sign-up to try • Download instantly • Upgrade only when you need more credits
+      </div>
 
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-slate-900">Clean edges</div>
-                <div className="mt-1 text-sm text-slate-600">
-                  Great for catalogs, listings, and brand assets.
-                </div>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-slate-900">Fast &amp; Quality modes</div>
-                <div className="mt-1 text-sm text-slate-600">
-                  Choose speed or detail based on your image.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Proof */}
-          <div className="md:pl-4">
-            <BeforeAfterSlider
-              originalSrc="/examples/product-before.jpg"
-              cutoutSrc="/examples/product-after.png"
-              alt="CleanCut AI background removal demo"
-            />
-
-            <div className="mt-3 text-center text-xs text-slate-600">
-              Slide <span className="font-semibold text-slate-900">left</span> to view the original • Slide{" "}
-              <span className="font-semibold text-slate-900">right</span> to preview transparency
-            </div>
-
-            {/* Use-case chips */}
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <Link
-                href="/use-cases/shopify-product-photos"
-                className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
-              >
-                Product photos
-                <div className="mt-1 font-normal text-slate-500">Shopify • Amazon • Etsy</div>
-              </Link>
-
-              <Link
-                href="/use-cases/youtube-thumbnails"
-                className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
-              >
-                Creators
-                <div className="mt-1 font-normal text-slate-500">Thumbnails • Social</div>
-              </Link>
-
-              <Link
-                href="/use-cases/amazon-listing-images"
-                className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
-              >
-                Listings
-                <div className="mt-1 font-normal text-slate-500">Catalogs • Collections</div>
-              </Link>
-            </div>
+      <div className="mt-7 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-sm font-semibold text-slate-900">Looks natural (clean edges)</div>
+          <div className="mt-1 text-sm text-slate-600">
+            Your cutouts won’t look “AI rough.” Great for shops, catalogs, and brand work.
           </div>
         </div>
-      </section>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-sm font-semibold text-slate-900">Choose speed or detail</div>
+          <div className="mt-1 text-sm text-slate-600">
+            Go fast for simple images, switch to Quality when you need better hair/edges.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Proof */}
+    <div className="md:pl-4">
+      <BeforeAfterSlider
+        originalSrc="/examples/product-before.jpg"
+        cutoutSrc="/examples/product-after.png"
+        alt="CleanCut AI background removal demo"
+      />
+
+      <div className="mt-3 text-center text-xs text-slate-600">
+        Drag the slider: <span className="font-semibold text-slate-900">left</span> shows the original —{" "}
+        <span className="font-semibold text-slate-900">right</span> shows your transparent PNG
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <Link
+          href="/use-cases/shopify-product-photos"
+          className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
+        >
+          Product photos
+          <div className="mt-1 font-normal text-slate-500">Shopify • Amazon • Etsy</div>
+        </Link>
+
+        <Link
+          href="/use-cases/youtube-thumbnails"
+          className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
+        >
+          Creators
+          <div className="mt-1 font-normal text-slate-500">Thumbnails • Social</div>
+        </Link>
+
+        <Link
+          href="/use-cases/amazon-listing-images"
+          className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
+        >
+          Listings
+          <div className="mt-1 font-normal text-slate-500">Catalogs • Collections</div>
+        </Link>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* TRUST STRIP */}
       <section className="mt-10 grid gap-4 md:grid-cols-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 function withBasePath(src: string) {
   if (!src) return src;
@@ -43,7 +43,7 @@ export function BeforeAfterSlider({
   afterSrc: string;
   alt: string;
   label?: string;
-  initial?: number;
+  initial?: number; // 0..100
   className?: string;
 }) {
   const id = useId();
@@ -52,15 +52,6 @@ export function BeforeAfterSlider({
   const before = useMemo(() => withBasePath(beforeSrc), [beforeSrc]);
   const after = useMemo(() => withBasePath(afterSrc), [afterSrc]);
 
-  const [beforeOk, setBeforeOk] = useState<null | boolean>(null);
-  const [afterOk, setAfterOk] = useState<null | boolean>(null);
-
-  // Helps you verify you’re seeing the latest build/component
-  const [mountedAt, setMountedAt] = useState<string>("");
-  useEffect(() => {
-    setMountedAt(new Date().toISOString());
-  }, []);
-
   return (
     <div
       className={
@@ -68,71 +59,39 @@ export function BeforeAfterSlider({
         className
       }
     >
-      {/* DEBUG PANEL */}
-      <div className="mb-3 rounded-2xl border border-slate-800 bg-slate-950/60 p-3 text-[11px] text-slate-200">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 font-semibold text-indigo-200">
-            BeforeAfterSlider DEBUG
-          </span>
-          <span className="text-slate-400">mounted:</span>
-          <span className="text-slate-200">{mountedAt || "…"}</span>
-        </div>
-
-        <div className="mt-2 grid gap-2">
-          <div>
-            <div className="text-slate-400">Computed BEFORE URL</div>
-            <a className="break-all text-indigo-300 underline" href={before} target="_blank" rel="noreferrer">
-              {before}
-            </a>
-            <div className="mt-1 text-slate-400">
-              load status:{" "}
-              <span className={beforeOk === false ? "text-red-300" : "text-emerald-300"}>
-                {beforeOk === null ? "not attempted yet" : beforeOk ? "OK" : "FAILED"}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <div className="text-slate-400">Computed AFTER URL</div>
-            <a className="break-all text-indigo-300 underline" href={after} target="_blank" rel="noreferrer">
-              {after}
-            </a>
-            <div className="mt-1 text-slate-400">
-              load status:{" "}
-              <span className={afterOk === false ? "text-red-300" : "text-emerald-300"}>
-                {afterOk === null ? "not attempted yet" : afterOk ? "OK" : "FAILED"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SLIDER */}
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-slate-950">
         {/* BEFORE */}
         <img
           src={before}
           alt={alt}
+          loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
-          onLoad={() => setBeforeOk(true)}
-          onError={() => setBeforeOk(false)}
         />
 
-        {/* AFTER clipped */}
+        {/* AFTER (clipped by width) */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 overflow-hidden" style={{ width: `${pos}%` }}>
+          {/* IMPORTANT: must be relative so the absolute image positions INSIDE the clip */}
+          <div
+            className="relative h-full overflow-hidden"
+            style={{ width: `${pos}%` }}
+          >
             <img
               src={after}
               alt={alt}
+              loading="lazy"
               className="absolute inset-0 h-full w-full object-cover"
-              onLoad={() => setAfterOk(true)}
-              onError={() => setAfterOk(false)}
             />
           </div>
 
           {/* Divider */}
-          <div className="pointer-events-none absolute inset-y-0 w-px bg-white/80" style={{ left: `${pos}%` }} />
-          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={{ left: `${pos}%` }}>
+          <div
+            className="pointer-events-none absolute inset-y-0 w-px bg-white/80"
+            style={{ left: `${pos}%` }}
+          />
+          <div
+            className="pointer-events-none absolute top-1/2 -translate-y-1/2"
+            style={{ left: `${pos}%` }}
+          >
             <div className="ml-[-18px] h-9 w-9 rounded-full bg-white/90 shadow ring-1 ring-black/10" />
           </div>
 
@@ -144,7 +103,7 @@ export function BeforeAfterSlider({
             {label}
           </div>
 
-          {/* Range */}
+          {/* Range control */}
           <label htmlFor={id} className="sr-only">
             Before and after comparison slider
           </label>
@@ -159,7 +118,7 @@ export function BeforeAfterSlider({
           />
         </div>
 
-        {/* Labels */}
+        {/* Corner labels */}
         <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
           Before
         </div>

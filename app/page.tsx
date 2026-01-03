@@ -79,7 +79,7 @@ export default function HomePage() {
             href="/app"
             className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(99,102,241,0.25)] hover:bg-indigo-600"
           >
-            Start Free Background Removal
+            Make Background Transparent (Free)
           </Link>
           <Link
             href="/pricing"

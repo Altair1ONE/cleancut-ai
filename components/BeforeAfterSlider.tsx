@@ -1,42 +1,35 @@
 "use client";
 
-import Image from "next/image";
-import { useId, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 
 /**
- * Your site is deployed under /cleancut (Next basePath).
- * Public assets must be requested as /cleancut/... in production.
- *
- * This helper:
- * - keeps external URLs intact
- * - keeps already-prefixed paths intact
- * - prefixes local public paths with /cleancut in production
+ * Base-path-safe asset URLs.
+ * Your deployed basePath is /cleancut, and your examples load at:
+ *   /cleancut/examples/...
  */
 function withBasePath(src: string) {
   if (!src) return src;
 
-  // External / absolute URLs or data URIs -> leave untouched
+  // External URLs or data URIs should pass through untouched
   if (/^(https?:)?\/\//.test(src)) return src;
   if (src.startsWith("data:")) return src;
 
-  // Ensure leading slash
   const normalized = src.startsWith("/") ? src : `/${src}`;
 
-  // Already prefixed
+  // If already prefixed, keep it
   if (normalized.startsWith("/cleancut/")) return normalized;
 
-  // Prefer env var if you set it (recommended)
+  // Prefer env var if set
   const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || "").trim();
   if (envBase) {
     const base = envBase.startsWith("/") ? envBase : `/${envBase}`;
     return `${base}${normalized}`;
   }
 
-  // Fallback: detect deployment under /cleancut
+  // Fallback: on your site deployment
   if (typeof window !== "undefined") {
-    if ((window.location.pathname || "").startsWith("/cleancut")) {
-      return `/cleancut${normalized}`;
-    }
+    const p = window.location.pathname || "";
+    if (p.startsWith("/cleancut")) return `/cleancut${normalized}`;
   }
 
   // Default local
@@ -65,8 +58,8 @@ export function BeforeAfterSlider({
     return Math.min(100, Math.max(0, v));
   });
 
-  const before = withBasePath(beforeSrc);
-  const after = withBasePath(afterSrc);
+  const before = useMemo(() => withBasePath(beforeSrc), [beforeSrc]);
+  const after = useMemo(() => withBasePath(afterSrc), [afterSrc]);
 
   return (
     <div
@@ -76,15 +69,13 @@ export function BeforeAfterSlider({
         className
       }
     >
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-slate-950">
         {/* BEFORE */}
-        <Image
+        <img
           src={before}
           alt={alt}
-          fill
-          sizes="(max-width: 768px) 100vw, 520px"
-          className="object-cover"
-          priority={false}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
         />
 
         {/* AFTER (clipped by width) */}
@@ -93,13 +84,11 @@ export function BeforeAfterSlider({
             className="absolute inset-0 overflow-hidden"
             style={{ width: `${pos}%` }}
           >
-            <Image
+            <img
               src={after}
               alt={alt}
-              fill
-              sizes="(max-width: 768px) 100vw, 520px"
-              className="object-cover"
-              priority={false}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
 

@@ -151,6 +151,39 @@ function getRelatedPosts(currentSlug: string) {
     .slice(0, 3);
 }
 
+function TransparentBackgroundCta() {
+  return (
+    <section className="mt-6 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+      <h3 className="text-sm font-semibold text-white">
+        Want a transparent background right now?
+      </h3>
+      <p className="mt-2 text-sm text-slate-300">
+        Use CleanCut AI to remove the background and export a clean transparent PNG (no watermark).
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          href="/transparent-background"
+          className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
+        >
+          Make background transparent →
+        </Link>
+
+        <Link
+          href="/app"
+          className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
+        >
+          Open App
+        </Link>
+      </div>
+
+      <p className="mt-3 text-xs text-slate-400">
+        Tip: Transparent PNG preserves the cutout so you can place it on any background later.
+      </p>
+    </section>
+  );
+}
+
 export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
   const params = useParams();
 
@@ -176,6 +209,8 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
   const blocks = renderParagraphs(post.content);
 
   const related = getRelatedPosts(post.slug);
+
+  const showTransparentCta = post.slug === "transparent-png-what-it-is";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -208,12 +243,19 @@ export default function ClientPost({ initialSlug }: { initialSlug?: string }) {
       <article className="prose prose-invert mt-8 max-w-none">
         <div className="space-y-4">
           {blocks.map((b, idx) => {
-            if (b.type === "h2")
+            if (b.type === "h2") {
               return (
-                <h2 key={idx} className="mt-8 text-xl font-semibold text-white">
-                  {b.text}
-                </h2>
+                <div key={idx}>
+                  <h2 className="mt-8 text-xl font-semibold text-white">
+                    {b.text}
+                  </h2>
+
+                  {/* ✅ Inject CTA right after the first H2 section for the targeted post */}
+                  {showTransparentCta && idx === 0 && <TransparentBackgroundCta />}
+                </div>
               );
+            }
+
             if (b.type === "h3")
               return (
                 <h3 key={idx} className="mt-6 text-lg font-semibold text-white">

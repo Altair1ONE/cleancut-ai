@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { BLOG_POSTS, getPostBySlug } from "../../../lib/blogPosts";
 import ClientPost from "./ClientPost";
+import { getBlogOgImage } from "../../../lib/og";
 
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
   return BLOG_POSTS.map((p) => ({ slug: p.slug }));
 }
-
-import { getBlogOgImage } from "../../../lib/og";
 
 export function generateMetadata({
   params,
@@ -54,7 +53,6 @@ export function generateMetadata({
     },
   };
 }
-
 
 export default function BlogPostPage({
   params,

@@ -118,11 +118,11 @@ export default function HomePage() {
           {/* Interactive proof (Client Component) */}
           <div className="md:pl-4">
             <BeforeAfterSlider
-              beforeSrc="/examples/product-before.jpg"
-              afterSrc="/examples/product-after.png"
-              alt="Product photo background removal before and after"
-              label="Drag to compare"
-            />
+  originalSrc="/examples/product-before.jpg"
+  cutoutSrc="/examples/product-after.png"
+  alt="Product background removal demo"
+/>
+
 
             <div className="mt-4 grid grid-cols-3 gap-3">
               <Link
@@ -205,11 +205,11 @@ export default function HomePage() {
             </p>
             <div className="mt-4">
               <BeforeAfterSlider
-                beforeSrc="/examples/product-before.jpg"
-                afterSrc="/examples/product-after.png"
-                alt="E-commerce product photo before and after background removal"
-                label="Compare"
-              />
+  originalSrc="/examples/product-before.jpg"
+  cutoutSrc="/examples/product-after.png"
+  alt="Product background removal demo"
+/>
+
             </div>
           </div>
 
@@ -220,11 +220,11 @@ export default function HomePage() {
             </p>
             <div className="mt-4">
               <BeforeAfterSlider
-                beforeSrc="/examples/portrait-before.jpg"
-                afterSrc="/examples/portrait-after.png"
-                alt="Portrait before and after background removal"
-                label="Compare"
-              />
+  originalSrc="/examples/portrait-before.jpg"
+  cutoutSrc="/examples/portrait-after.png"
+  alt="Product background removal demo"
+/>
+
             </div>
           </div>
 
@@ -235,11 +235,11 @@ export default function HomePage() {
             </p>
             <div className="mt-4">
               <BeforeAfterSlider
-                beforeSrc="/examples/logo-before.jpg"
-                afterSrc="/examples/logo-after.png"
-                alt="Logo before and after background removal"
-                label="Compare"
-              />
+  originalSrc="/examples/logo-before.jpg"
+  cutoutSrc="/examples/logo-after.png"
+  alt="Product background removal demo"
+/>
+
             </div>
           </div>
         </div>

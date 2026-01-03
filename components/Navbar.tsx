@@ -7,6 +7,13 @@ import { useAuth } from "./AuthProvider";
 import { signOut } from "firebase/auth";
 import { firebaseAuth } from "../lib/firebaseClient";
 
+function getBasePath() {
+  // Your production basePath is /cleancut
+  return process.env.NEXT_PUBLIC_BASE_PATH?.trim()
+    ? `/${process.env.NEXT_PUBLIC_BASE_PATH.trim().replace(/^\/+/, "")}`
+    : "/cleancut";
+}
+
 export default function Navbar() {
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [open, setOpen] = useState(false);
@@ -56,67 +63,93 @@ export default function Navbar() {
   async function handleSignOut() {
     await signOut(firebaseAuth);
     setOpen(false);
-    window.location.href = "/";
+    window.location.href = getBasePath(); // ✅ don’t bounce to domain root
   }
 
   const initial = user?.email?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/75 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-sm font-bold tracking-wide text-white">
-          CleanCut<span className="text-indigo-400"> AI</span>
-          <span className="ml-2 text-xs font-normal text-slate-400">by Xevora</span>
+        {/* Brand */}
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-black text-white">
+            CC
+          </div>
+          <div className="leading-tight">
+            <div className="text-sm font-extrabold tracking-tight text-slate-900">
+              CleanCut <span className="text-indigo-600">AI</span>
+            </div>
+            <div className="text-[11px] text-slate-500">by Xevora • watermark-free PNG</div>
+          </div>
         </Link>
 
+        {/* Nav */}
         <nav className="hidden items-center gap-6 md:flex">
-          <Link href="/app" className="text-sm text-slate-300 hover:text-white">
+          <Link href="/app" className="text-sm font-medium text-slate-600 hover:text-slate-900">
             App
           </Link>
-          <Link href="/pricing" className="text-sm text-slate-300 hover:text-white">
+          <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900">
             Pricing
           </Link>
-          <Link href="/blog" className="text-sm text-slate-300 hover:text-white">
-            Blog
+          <Link href="/blog" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+            Guides
           </Link>
-          <Link href="/contact" className="text-sm text-slate-300 hover:text-white">
+          <Link href="/contact" className="text-sm font-medium text-slate-600 hover:text-slate-900">
             Support
           </Link>
         </nav>
 
+        {/* Right */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
-            <div className="text-xs text-slate-300">
-              Credits: <span className="font-semibold text-white">{credits.creditsRemaining}</span>
+            <div className="hidden rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 md:block">
+              Credits: <span className="font-semibold text-slate-900">{credits.creditsRemaining}</span>
             </div>
           )}
 
           {!user && (
-            <Link
-              href="/login"
-              className="rounded-full bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
-            >
-              Sign in
-            </Link>
+            <>
+              <Link
+                href="/login"
+                className="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:border-slate-300 md:inline-flex"
+              >
+                Sign in
+              </Link>
+
+              <Link
+                href="/app"
+                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
+              >
+                Try Free
+              </Link>
+            </>
           )}
 
           {user && (
             <>
+              <Link
+                href="/app"
+                className="hidden rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 md:inline-flex"
+              >
+                Remove Background
+              </Link>
+
               <button
                 onClick={() => setOpen((v) => !v)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500 text-sm font-bold text-white hover:bg-indigo-600"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white hover:bg-indigo-700"
                 aria-label="Open user menu"
               >
                 {initial}
               </button>
 
               {open && (
-                <div className="absolute right-0 top-12 w-56 rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-xl">
-                  <div className="px-3 py-2 text-xs text-slate-400">{user.email}</div>
+                <div className="absolute right-0 top-12 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                  <div className="px-3 py-2 text-xs text-slate-500">{user.email}</div>
 
                   <Link
                     href="/profile"
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                     onClick={() => setOpen(false)}
                   >
                     Profile
@@ -124,7 +157,7 @@ export default function Navbar() {
 
                   <Link
                     href="/usage"
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                     onClick={() => setOpen(false)}
                   >
                     Usage & Credits
@@ -132,15 +165,17 @@ export default function Navbar() {
 
                   <Link
                     href="/pricing"
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                     onClick={() => setOpen(false)}
                   >
                     Plans & Billing
                   </Link>
 
+                  <div className="my-2 border-t border-slate-200" />
+
                   <button
                     onClick={handleSignOut}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-400 hover:bg-slate-800"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
                     type="button"
                   >
                     Sign out
@@ -149,13 +184,6 @@ export default function Navbar() {
               )}
             </>
           )}
-
-          <Link
-            href="/app"
-            className="hidden rounded-full border border-slate-700 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500 md:inline-flex"
-          >
-            Remove Background
-          </Link>
         </div>
       </div>
     </header>

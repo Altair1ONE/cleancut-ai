@@ -53,10 +53,7 @@ export const metadata: Metadata = {
   creator: "Xevora",
   publisher: "Xevora",
 
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 
   openGraph: {
     type: "website",
@@ -83,7 +80,6 @@ export const metadata: Metadata = {
     images: [OG_DEFAULT],
   },
 };
-
 
 function GlobalJsonLd() {
   const org = {
@@ -135,13 +131,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
 
-      <body className="bg-slate-950 text-white">
+      {/* Premium light foundation */}
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+        {/* Subtle background accents (non-cheesy, designer feel) */}
+        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+          <div className="absolute -left-32 -top-40 h-[420px] w-[420px] rounded-full bg-indigo-200/50 blur-3xl" />
+          <div className="absolute -right-32 -top-40 h-[420px] w-[420px] rounded-full bg-fuchsia-200/40 blur-3xl" />
+          <div className="absolute bottom-[-220px] left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-sky-200/30 blur-3xl" />
+        </div>
+
         <AuthProvider>
-          <Navbar />
-          <WelcomeBar />
-          <TrialPopup />
-          {children}
-          <Footer />
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <WelcomeBar />
+            <TrialPopup />
+
+            {/* Keeps footer pinned nicely */}
+            <div className="flex-1">{children}</div>
+
+            <Footer />
+          </div>
         </AuthProvider>
       </body>
     </html>

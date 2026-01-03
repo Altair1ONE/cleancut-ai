@@ -50,7 +50,7 @@ export default function Footer() {
             <div className="text-sm font-semibold text-white">Product</div>
             <ul className="mt-4 space-y-2 text-sm text-slate-300">
               <li>
-                <Link className="hover:text-white" href="/cleancut">
+                <Link className="hover:text-white" href="/">
                   Home
                 </Link>
               </li>

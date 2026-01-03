@@ -58,19 +58,21 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -right-24 -bottom-24 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
 
         <h1 className="text-3xl font-bold text-white md:text-5xl">
-          Remove image backgrounds in seconds{" "}
-          <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
-            — clean PNGs, no watermark
-          </span>
-        </h1>
+  Make image backgrounds transparent in seconds{" "}
+  <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+    — export clean transparent PNGs, no watermark
+  </span>
+</h1>
+
 
         <p className="mt-4 max-w-2xl text-base text-slate-300">
-          CleanCut AI by Xevora is a fast, reliable{" "}
-          <strong>AI background remover</strong> for product photos, portraits, and
-          marketing images. Get a crisp{" "}
-          <strong>transparent PNG</strong>, process images in{" "}
-          <strong>batch</strong>, and keep clean edges that look professional.
-        </p>
+  CleanCut AI by Xevora makes your{" "}
+  <strong>background transparent</strong> instantly. Upload a photo and get a crisp{" "}
+  <strong>transparent PNG</strong> for product images, portraits, thumbnails, and
+  marketing assets. Process one image or{" "}
+  <strong>batch</strong> files and keep clean edges that look professional.
+</p>
+
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

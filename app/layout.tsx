@@ -21,12 +21,12 @@ export const metadata: Metadata = {
   },
 
   title: {
-    default: "CleanCut AI – Background Remover (No Watermark) | Xevora",
+    default: "Make Background Transparent (Free PNG, No Watermark) | CleanCut AI",
     template: "%s | CleanCut AI by Xevora",
   },
 
   description:
-    "Remove backgrounds from images in seconds with CleanCut AI. Export transparent PNGs with no watermark, process in batch, and get clean edges for e-commerce, creators, and teams.",
+    "Make any image background transparent in seconds with CleanCut AI by Xevora. Export clean transparent PNGs (no watermark), remove backgrounds in batch, and get crisp edges for e-commerce, creators, and marketing.",
 
   icons: {
     icon: "/cleancut/favicon.ico",
@@ -35,15 +35,18 @@ export const metadata: Metadata = {
   manifest: "/cleancut/manifest.webmanifest",
 
   keywords: [
+    "transparent background",
+    "make background transparent",
+    "transparent png",
+    "png transparent background",
+    "remove background to transparent",
+    "free transparent png",
+    "background remover no watermark",
     "AI background remover",
     "remove background from image",
     "remove image background online",
-    "transparent PNG",
-    "background remover no watermark",
-    "free background remover",
     "product photo background removal",
     "remove background for ecommerce",
-    "background remover for thumbnails",
   ],
 
   authors: [{ name: "Xevora" }],
@@ -58,28 +61,29 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: `${SITE_URL}${BASE_PATH}`,
-    title: "CleanCut AI – Remove Image Backgrounds (No Watermark)",
+    title: "Make Background Transparent (PNG, No Watermark) – CleanCut AI",
     description:
-      "Fast AI background remover for clean transparent PNG exports. Batch processing, clean edges, and simple pricing—by Xevora.",
+      "Turn photos into clean transparent PNGs in seconds. No watermark, batch processing, and crisp edges—CleanCut AI by Xevora.",
     siteName: "CleanCut AI",
     images: [
       {
         url: OG_DEFAULT,
         width: 1200,
         height: 630,
-        alt: "CleanCut AI – AI Background Remover by Xevora",
+        alt: "CleanCut AI – Make background transparent (PNG)",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "CleanCut AI – AI Background Remover",
+    title: "Make Background Transparent – CleanCut AI",
     description:
-      "Remove image backgrounds in seconds. Transparent PNG export, batch processing, and watermark-free results.",
+      "Remove backgrounds and export transparent PNGs in seconds. No watermark, batch processing, clean edges.",
     images: [OG_DEFAULT],
   },
 };
+
 
 function GlobalJsonLd() {
   const org = {

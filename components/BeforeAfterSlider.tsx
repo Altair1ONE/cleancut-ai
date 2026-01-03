@@ -4,50 +4,42 @@ import Image from "next/image";
 import { useId, useRef, useState } from "react";
 
 /**
- * Base-path-safe asset URLs.
+ * Your site is deployed under /cleancut (Next basePath).
+ * Public assets must be requested as /cleancut/... in production.
  *
- * If you deploy under /cleancut (Next.js basePath), static assets resolve as:
- *   /cleancut/examples/...
- *
- * Locally (no basePath), they resolve as:
- *   /examples/...
- *
- * Recommended: set NEXT_PUBLIC_BASE_PATH=/cleancut in production env.
+ * This helper:
+ * - keeps external URLs intact
+ * - keeps already-prefixed paths intact
+ * - prefixes local public paths with /cleancut in production
  */
 function withBasePath(src: string) {
-  // External URLs or data URIs should pass through untouched
   if (!src) return src;
+
+  // External / absolute URLs or data URIs -> leave untouched
   if (/^(https?:)?\/\//.test(src)) return src;
   if (src.startsWith("data:")) return src;
 
-  // Normalize: ensure it starts with a slash
+  // Ensure leading slash
   const normalized = src.startsWith("/") ? src : `/${src}`;
 
-  // If it's already prefixed with /cleancut, don't double-prefix
+  // Already prefixed
   if (normalized.startsWith("/cleancut/")) return normalized;
 
-  // Use env if provided
+  // Prefer env var if you set it (recommended)
   const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || "").trim();
-
-  // If envBase exists, use it (supports "" or "/cleancut")
   if (envBase) {
     const base = envBase.startsWith("/") ? envBase : `/${envBase}`;
     return `${base}${normalized}`;
   }
 
-  /**
-   * Safe fallback:
-   * If you know prod is under /cleancut and local is not, this fallback helps
-   * even if env wasn't set (e.g., you forgot).
-   *
-   * If you ever change your basePath, set NEXT_PUBLIC_BASE_PATH and this won’t matter.
-   */
+  // Fallback: detect deployment under /cleancut
   if (typeof window !== "undefined") {
-    const p = window.location.pathname || "";
-    if (p.startsWith("/cleancut")) return `/cleancut${normalized}`;
+    if ((window.location.pathname || "").startsWith("/cleancut")) {
+      return `/cleancut${normalized}`;
+    }
   }
 
-  // Default (local / non-basePath)
+  // Default local
   return normalized;
 }
 

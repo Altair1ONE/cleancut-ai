@@ -1,103 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { SeoFaq } from "../components/SeoFaq";
-
-/**
- * Lightweight, dependency-free before/after slider
- * - Works with mouse + touch
- * - Pure client interaction via <input type="range">
- */
-function BeforeAfter({
-  beforeSrc,
-  afterSrc,
-  alt,
-  label = "Drag to compare",
-}: {
-  beforeSrc: string;
-  afterSrc: string;
-  alt: string;
-  label?: string;
-}) {
-  return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-3 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
-        {/* BEFORE */}
-        <Image
-          src={beforeSrc}
-          alt={alt}
-          fill
-          sizes="(max-width: 768px) 100vw, 520px"
-          className="object-cover"
-          priority={false}
-        />
-
-        {/* AFTER (clipped via CSS) */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 w-1/2 overflow-hidden [--pos:50%]">
-            <Image
-              src={afterSrc}
-              alt={alt}
-              fill
-              sizes="(max-width: 768px) 100vw, 520px"
-              className="object-cover"
-              priority={false}
-            />
-          </div>
-
-          {/* Divider line */}
-          <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-white/70" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-900 shadow">
-            {label}
-          </div>
-
-          {/* Range slider controls the clip position */}
-          <input
-            aria-label="Before and after comparison"
-            type="range"
-            min={0}
-            max={100}
-            defaultValue={50}
-            className="absolute inset-x-3 bottom-3 h-2 w-[calc(100%-1.5rem)] cursor-ew-resize appearance-none rounded-full bg-white/20 outline-none"
-            onInput={(e) => {
-              const v = Number((e.target as HTMLInputElement).value);
-              const container = (e.target as HTMLInputElement).closest("div");
-              if (!container) return;
-
-              const afterWrapper = container.querySelector(
-                ".absolute.inset-0.w-1\\/2"
-              ) as HTMLDivElement | null;
-
-              const divider = container.querySelector(
-                ".pointer-events-none.absolute.inset-y-0.left-1\\/2"
-              ) as HTMLDivElement | null;
-
-              const badge = container.querySelector(
-                ".pointer-events-none.absolute.left-1\\/2.top-1\\/2"
-              ) as HTMLDivElement | null;
-
-              if (afterWrapper) afterWrapper.style.width = `${v}%`;
-              if (divider) divider.style.left = `${v}%`;
-              if (badge) badge.style.left = `${v}%`;
-            }}
-          />
-        </div>
-
-        {/* Tiny labels */}
-        <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
-          Before
-        </div>
-        <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
-          After
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-300">
-        <span>Transparent PNG export</span>
-        <span className="text-slate-400">No watermark • Fast & Quality</span>
-      </div>
-    </div>
-  );
-}
+import { BeforeAfterSlider } from "../components/BeforeAfterSlider";
 
 function JsonLd() {
   const siteUrl = "https://xevora.org";
@@ -172,8 +75,8 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-base text-slate-300">
-              Upload an image and download a crisp cutout (no watermark). Ideal
-              for <strong>product photos</strong>, <strong>portraits</strong>,{" "}
+              Upload an image and download a crisp cutout (no watermark). Ideal for{" "}
+              <strong>product photos</strong>, <strong>portraits</strong>,{" "}
               <strong>logos</strong>, thumbnails, and marketing creatives.
             </p>
 
@@ -188,7 +91,7 @@ export default function HomePage() {
                 href="/pricing"
                 className="inline-flex items-center justify-center rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
               >
-                Pricing & limits
+                Pricing &amp; limits
               </Link>
             </div>
 
@@ -201,7 +104,7 @@ export default function HomePage() {
                 ✔ Clean edges (great for catalogs)
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-                ✔ Fast & Quality modes
+                ✔ Fast &amp; Quality modes
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
                 ✔ Transparent PNG export
@@ -212,41 +115,36 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Interactive proof */}
+          {/* Interactive proof (Client Component) */}
           <div className="md:pl-4">
-            <BeforeAfter
+            <BeforeAfterSlider
               beforeSrc="/examples/product-before.jpg"
               afterSrc="/examples/product-after.png"
               alt="Product photo background removal before and after"
               label="Drag to compare"
             />
+
             <div className="mt-4 grid grid-cols-3 gap-3">
               <Link
                 href="/use-cases/shopify-product-photos"
                 className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 text-xs font-semibold text-slate-200 hover:border-slate-600"
               >
                 Product photos
-                <div className="mt-1 font-normal text-slate-400">
-                  Shopify • Amazon • Etsy
-                </div>
+                <div className="mt-1 font-normal text-slate-400">Shopify • Amazon • Etsy</div>
               </Link>
               <Link
                 href="/use-cases/youtube-thumbnails"
                 className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 text-xs font-semibold text-slate-200 hover:border-slate-600"
               >
                 Creators
-                <div className="mt-1 font-normal text-slate-400">
-                  Thumbnails • Social
-                </div>
+                <div className="mt-1 font-normal text-slate-400">Thumbnails • Social</div>
               </Link>
               <Link
                 href="/use-cases/amazon-listing-images"
                 className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 text-xs font-semibold text-slate-200 hover:border-slate-600"
               >
                 Listings
-                <div className="mt-1 font-normal text-slate-400">
-                  Catalogs • Collections
-                </div>
+                <div className="mt-1 font-normal text-slate-400">Catalogs • Collections</div>
               </Link>
             </div>
           </div>
@@ -306,7 +204,7 @@ export default function HomePage() {
               Clean cutouts for stores, catalogs, and collections.
             </p>
             <div className="mt-4">
-              <BeforeAfter
+              <BeforeAfterSlider
                 beforeSrc="/examples/product-before.jpg"
                 afterSrc="/examples/product-after.png"
                 alt="E-commerce product photo before and after background removal"
@@ -321,7 +219,7 @@ export default function HomePage() {
               Great for profile photos, creators, and teams.
             </p>
             <div className="mt-4">
-              <BeforeAfter
+              <BeforeAfterSlider
                 beforeSrc="/examples/portrait-before.jpg"
                 afterSrc="/examples/portrait-after.png"
                 alt="Portrait before and after background removal"
@@ -331,12 +229,12 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4">
-            <div className="text-sm font-semibold text-white">Logos & graphics</div>
+            <div className="text-sm font-semibold text-white">Logos &amp; graphics</div>
             <p className="mt-1 text-sm text-slate-300">
               Transparent assets for web, slides, and branding.
             </p>
             <div className="mt-4">
-              <BeforeAfter
+              <BeforeAfterSlider
                 beforeSrc="/examples/logo-before.jpg"
                 afterSrc="/examples/logo-after.png"
                 alt="Logo before and after background removal"
@@ -358,12 +256,10 @@ export default function HomePage() {
           </li>
           <li>
             Click <strong>Process</strong> and choose <strong>Fast</strong> or{" "}
-            <strong>Quality</strong> mode depending on edge complexity (hair, fur,
-            objects, etc.).
+            <strong>Quality</strong> mode depending on edge complexity.
           </li>
           <li>
-            Download a <strong>transparent PNG</strong> instantly — always
-            watermark-free.
+            Download a <strong>transparent PNG</strong> instantly — always watermark-free.
           </li>
         </ol>
 
@@ -422,9 +318,7 @@ export default function HomePage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">
-              Is CleanCut AI really free?
-            </h3>
+            <h3 className="text-sm font-semibold text-white">Is CleanCut AI really free?</h3>
             <p className="mt-2 text-sm text-slate-300">
               Yes. You can remove backgrounds for free with watermark-free exports.
               Usage limits exist to keep the app fast and fair for everyone.
@@ -432,9 +326,7 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">
-              Does it reduce image quality?
-            </h3>
+            <h3 className="text-sm font-semibold text-white">Does it reduce image quality?</h3>
             <p className="mt-2 text-sm text-slate-300">
               We focus on clean results that preserve detail. For hair and complex
               edges, use <strong>Quality</strong> mode when available.
@@ -442,9 +334,7 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">
-              Can I remove backgrounds in bulk?
-            </h3>
+            <h3 className="text-sm font-semibold text-white">Can I remove backgrounds in bulk?</h3>
             <p className="mt-2 text-sm text-slate-300">
               Yes. Batch background removal is supported. Paid plans unlock bigger
               batch sizes and higher monthly usage.
@@ -452,9 +342,7 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">
-              Do you add watermarks?
-            </h3>
+            <h3 className="text-sm font-semibold text-white">Do you add watermarks?</h3>
             <p className="mt-2 text-sm text-slate-300">
               Never. Exports are always watermark-free — free plan included.
             </p>
@@ -462,7 +350,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* INTERNAL LINK HUB (SEO) */}
+      {/* INTERNAL LINK HUB */}
       <section className="mt-14">
         <h2 className="text-xl font-semibold text-white">Popular use cases</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -495,27 +383,6 @@ export default function HomePage() {
               Make subjects stand out with transparent PNG exports.
             </p>
           </Link>
-        </div>
-
-        <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-950/40 p-6">
-          <div className="text-sm font-semibold text-white">For developers</div>
-          <p className="mt-1 text-sm text-slate-300">
-            Building automation for your workflow? Add an API page later and link it here.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/pricing"
-              className="inline-flex rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
-            >
-              See plans
-            </Link>
-            <Link
-              href="/app"
-              className="inline-flex rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
-            >
-              Start free
-            </Link>
-          </div>
         </div>
       </section>
 

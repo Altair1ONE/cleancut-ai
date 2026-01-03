@@ -144,10 +144,11 @@ export function BeforeAfterSlider({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-300">
-        <span>Slide to preview transparency</span>
-        <span className="text-slate-400">White checkerboard background</span>
-      </div>
+      <div className="mt-3 text-center text-xs text-slate-300">
+  Slide <span className="font-semibold text-white">left</span> to view the original • Slide{" "}
+  <span className="font-semibold text-white">right</span> to preview transparency
+</div>
+
     </div>
   );
 }

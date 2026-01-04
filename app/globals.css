@@ -17,10 +17,24 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
-/* Headings use Sora for “premium SaaS” vibe */
-h1, h2, h3, .font-display {
-  font-family: var(--font-sora), var(--font-inter), ui-sans-serif, system-ui;
+/* Typography system inspired by remove.bg */
+
+h1 {
+  @apply text-[2.25rem] md:text-[3.25rem] font-semibold leading-[1.1] tracking-tight;
 }
+
+h2 {
+  @apply text-[1.5rem] md:text-[2rem] font-semibold leading-tight;
+}
+
+h3 {
+  @apply text-[1.125rem] font-semibold;
+}
+
+p {
+  @apply leading-relaxed;
+}
+
 
 /* Optional: container helper */
 .container {

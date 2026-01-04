@@ -19,117 +19,129 @@ export default function ContactClient({ supportEmail }: { supportEmail: string }
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-12">
-      <h1 className="text-3xl font-bold text-white">Support</h1>
-      <p className="mt-3 text-slate-300">
-        Need help with CleanCut AI? Whether it’s a bug, billing question, or refund request,
-        we’re here to help. The fastest way to reach us is email.
-      </p>
-
-      <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/30 p-4 text-sm text-slate-300">
-        <div className="font-semibold text-white">Typical response time</div>
-        <div className="mt-1 text-slate-300">
-          We usually reply within <span className="font-semibold text-white">24–48 hours</span> (often faster).
-        </div>
-      </div>
-
-      <section className="mt-8 grid gap-4 md:grid-cols-2">
-        {/* Email card */}
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-          <h2 className="text-lg font-semibold text-white">Email support</h2>
-          <p className="mt-2 text-sm text-slate-300">
-            For refunds, billing, account help, and technical issues.
-          </p>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <a
-              href={mailto}
-              className="rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
-            >
-              Email support →
-            </a>
-
-            <button
-              onClick={copyEmail}
-              type="button"
-              className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
-            >
-              Copy email
-            </button>
-          </div>
-
-          <p className="mt-4 text-xs text-slate-500">
-            Email: <span className="text-slate-300">{supportEmail}</span>
-          </p>
-
-          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <div className="text-sm font-semibold text-white">Before you email</div>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
-              <li>
-                For <span className="font-semibold text-white">refunds</span>, include your purchase email and date.
-              </li>
-              <li>
-                For <span className="font-semibold text-white">billing</span>, mention the plan (Pro Monthly / Lifetime).
-              </li>
-              <li>
-                For <span className="font-semibold text-white">bugs</span>, include steps + screenshot if possible.
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Useful links card */}
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-          <h2 className="text-lg font-semibold text-white">Quick links</h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Policies, pricing, and common answers.
-          </p>
-
-          <ul className="mt-4 space-y-2 text-sm text-slate-300">
-            <li>
-              <Link className="text-indigo-300 hover:text-indigo-200" href="/pricing">
-                Pricing & plans
-              </Link>
-            </li>
-            <li>
-              <Link className="text-indigo-300 hover:text-indigo-200" href="/refund">
-                Refund policy
-              </Link>
-            </li>
-            <li>
-              <Link className="text-indigo-300 hover:text-indigo-200" href="/privacy">
-                Privacy policy
-              </Link>
-            </li>
-            <li>
-              <Link className="text-indigo-300 hover:text-indigo-200" href="/terms">
-                Terms of service
-              </Link>
-            </li>
-          </ul>
-
-          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <div className="text-sm font-semibold text-white">Want to keep working?</div>
-            <p className="mt-2 text-sm text-slate-300">
-              You can continue removing backgrounds while you wait—your account and credits remain available.
+    <main className="cc-bg">
+      <div className="cc-container py-10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-2xl">
+            <h1 className="text-[1.75rem] font-extrabold tracking-tight text-slate-900 md:text-[2.25rem]">
+              Support
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Need help with CleanCut AI? Whether it’s a bug, billing question, or refund request,
+              we’re here to help. The fastest way to reach us is email.
             </p>
+          </div>
+
+          <div className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 md:block">
+            Contact
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+          <div className="font-semibold text-slate-900">Typical response time</div>
+          <div className="mt-1 text-slate-600">
+            We usually reply within <span className="font-semibold text-slate-900">24–48 hours</span> (often faster).
+          </div>
+        </div>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-2">
+          {/* Email card */}
+          <div className="card p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Email support</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              For refunds, billing, account help, and technical issues.
+            </p>
+
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href="/app"
-                className="rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-600"
+              <a
+                href={mailto}
+                className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
               >
-                Open the app
-              </Link>
-              <Link
-                href="/use-cases"
-                className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-200 hover:border-slate-500"
+                Email support →
+              </a>
+
+              <button
+                onClick={copyEmail}
+                type="button"
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:border-slate-300"
               >
-                Explore use cases
-              </Link>
+                Copy email
+              </button>
+            </div>
+
+            <p className="mt-4 text-xs text-slate-500">
+              Email: <span className="text-slate-700">{supportEmail}</span>
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="text-sm font-semibold text-slate-900">Before you email</div>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                <li>
+                  For <span className="font-semibold text-slate-900">refunds</span>, include your purchase email and date.
+                </li>
+                <li>
+                  For <span className="font-semibold text-slate-900">billing</span>, mention the plan (Pro Monthly / Lifetime).
+                </li>
+                <li>
+                  For <span className="font-semibold text-slate-900">bugs</span>, include steps + screenshot if possible.
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
+
+          {/* Useful links card */}
+          <div className="card p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Quick links</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Policies, pricing, and common answers.
+            </p>
+
+            <ul className="mt-4 space-y-2 text-sm text-slate-700">
+              <li>
+                <Link className="text-blue-700 hover:underline" href="/pricing">
+                  Pricing & plans
+                </Link>
+              </li>
+              <li>
+                <Link className="text-blue-700 hover:underline" href="/refund">
+                  Refund policy
+                </Link>
+              </li>
+              <li>
+                <Link className="text-blue-700 hover:underline" href="/privacy">
+                  Privacy policy
+                </Link>
+              </li>
+              <li>
+                <Link className="text-blue-700 hover:underline" href="/terms">
+                  Terms of service
+                </Link>
+              </li>
+            </ul>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="text-sm font-semibold text-slate-900">Want to keep working?</div>
+              <p className="mt-2 text-sm text-slate-700">
+                You can continue removing backgrounds while you wait—your account and credits remain available.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  href="/app"
+                  className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                >
+                  Open the app
+                </Link>
+                <Link
+                  href="/use-cases"
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:border-slate-300"
+                >
+                  Explore use cases
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

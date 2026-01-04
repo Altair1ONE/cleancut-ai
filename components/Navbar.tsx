@@ -8,7 +8,6 @@ import { signOut } from "firebase/auth";
 import { firebaseAuth } from "../lib/firebaseClient";
 
 function getBasePath() {
-  // Your production basePath is /cleancut
   return process.env.NEXT_PUBLIC_BASE_PATH?.trim()
     ? `/${process.env.NEXT_PUBLIC_BASE_PATH.trim().replace(/^\/+/, "")}`
     : "/cleancut";
@@ -17,6 +16,7 @@ function getBasePath() {
 export default function Navbar() {
   const [credits, setCredits] = useState<CreditState | null>(null);
   const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const { user } = useAuth();
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -63,7 +63,8 @@ export default function Navbar() {
   async function handleSignOut() {
     await signOut(firebaseAuth);
     setOpen(false);
-    window.location.href = getBasePath(); // ✅ don’t bounce to domain root
+    setMobileOpen(false);
+    window.location.href = getBasePath();
   }
 
   const initial = user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -80,13 +81,11 @@ export default function Navbar() {
             <div className="text-[15px] font-extrabold tracking-tight text-slate-900">
               CleanCut <span className="text-blue-600">AI</span>
             </div>
-            <div className="text-xs text-slate-500">
-              by Xevora • watermark-free PNG
-            </div>
+            <div className="text-xs text-slate-500">by Xevora • watermark-free PNG</div>
           </div>
         </Link>
 
-        {/* Nav */}
+        {/* Desktop nav */}
         <nav className="hidden items-center gap-7 md:flex">
           <Link href="/app" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
             App
@@ -105,10 +104,21 @@ export default function Navbar() {
         {/* Right */}
         <div ref={wrapRef} className="relative flex items-center gap-3">
           {credits && (
-            <div className="hidden rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 md:block">
-              Credits: <span className="font-semibold text-slate-900">{credits.creditsRemaining}</span>
+            <div className="hidden rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 shadow-sm md:block">
+              Credits:{" "}
+              <span className="font-semibold text-slate-900">{credits.creditsRemaining}</span>
             </div>
           )}
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 md:hidden"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
 
           {!user && (
             <>
@@ -121,9 +131,17 @@ export default function Navbar() {
 
               <Link
                 href="/app"
-                className="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                className="hidden items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 md:inline-flex"
               >
                 Try Free
+              </Link>
+
+              {/* On mobile, keep primary CTA visible */}
+              <Link
+                href="/app"
+                className="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 md:hidden"
+              >
+                Try
               </Link>
             </>
           )}
@@ -188,6 +206,46 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      {/* Mobile dropdown */}
+      {mobileOpen && (
+        <div className="border-t border-slate-200 bg-white/95 backdrop-blur md:hidden">
+          <div className="cc-container py-3">
+            <div className="grid gap-2">
+              <Link onClick={() => setMobileOpen(false)} href="/app" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">
+                App
+              </Link>
+              <Link onClick={() => setMobileOpen(false)} href="/pricing" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">
+                Pricing
+              </Link>
+              <Link onClick={() => setMobileOpen(false)} href="/blog" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">
+                Guides
+              </Link>
+              <Link onClick={() => setMobileOpen(false)} href="/contact" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800">
+                Support
+              </Link>
+
+              {!user ? (
+                <Link
+                  onClick={() => setMobileOpen(false)}
+                  href="/login"
+                  className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
+                >
+                  Sign in
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="rounded-2xl bg-slate-900 px-4 py-3 text-left text-sm font-semibold text-white"
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

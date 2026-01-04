@@ -1,4 +1,3 @@
-// components/UploadArea.tsx
 "use client";
 
 import { useCallback, useRef, useState } from "react";
@@ -71,28 +70,47 @@ export function UploadArea({ onFilesSelected }: UploadAreaProps) {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       <div
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-10 text-xs ${
+        className={[
+          "group relative flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-10 text-center transition",
           isDragging
-            ? "border-brand bg-slate-900/80 text-slate-100"
-            : "border-slate-700 bg-slate-900/60 text-slate-300"
-        }`}
+            ? "border-blue-400 bg-blue-50"
+            : "border-slate-200 bg-white hover:border-slate-300",
+        ].join(" ")}
         onClick={openFileDialog}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
       >
-        <p className="text-sm font-semibold text-slate-100">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <span className="text-xl">⬆️</span>
+        </div>
+
+        <p className="mt-4 text-base font-semibold text-slate-900">
           Drag &amp; drop images here
         </p>
-        <p className="mt-1 text-[11px] text-slate-400">
-          or click to browse. We accept PNG, JPG, WEBP.
+
+        <p className="mt-2 text-sm text-slate-600">
+          Or click to browse. We accept <span className="font-semibold">PNG, JPG, WEBP</span>.
         </p>
-        <p className="mt-2 text-[11px] text-slate-400">
-          Batch upload supported – we&apos;ll automatically apply your plan&apos;s
-          limits.
+
+        <p className="mt-2 text-xs text-slate-500">
+          Batch upload supported — we automatically apply your plan limits.
         </p>
+
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+            No watermark
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+            Transparent PNG
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+            Fast workflow
+          </span>
+        </div>
+
         <input
           ref={inputRef}
           type="file"
@@ -103,20 +121,28 @@ export function UploadArea({ onFilesSelected }: UploadAreaProps) {
         />
       </div>
 
-      <div className="mt-3 flex gap-2 text-[11px]">
-        <input
-          type="url"
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          placeholder="Paste image URL (PNG/JPG/WEBP)..."
-          className="flex-1 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-slate-100 placeholder:text-slate-500"
-        />
-        <button
-          onClick={handleUrlUpload}
-          className="rounded-full bg-slate-800 px-3 py-1 font-semibold text-slate-100 hover:bg-slate-700"
-        >
-          Use URL
-        </button>
+      {/* URL input */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-4">
+        <div className="text-sm font-semibold text-slate-900">Or use an image URL</div>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="Paste image URL (PNG/JPG/WEBP)..."
+            className="w-full flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400"
+          />
+          <button
+            onClick={handleUrlUpload}
+            className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            Use URL
+          </button>
+        </div>
+
+        <p className="mt-2 text-xs text-slate-500">
+          Tip: Use direct image links ending in .png, .jpg, .jpeg, or .webp.
+        </p>
       </div>
     </div>
   );

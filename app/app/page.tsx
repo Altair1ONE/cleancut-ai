@@ -176,6 +176,51 @@ export default function AppPage() {
   return <AppInner />;
 }
 
+function StepTag({ n, label }: { n: number; label: string }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
+        {n}
+      </span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function SegButton({
+  active,
+  disabled,
+  onClick,
+  children,
+  title,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={[
+        "px-4 py-2 text-xs font-semibold transition",
+        "rounded-full border",
+        disabled
+          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+          : active
+          ? "border-blue-600/25 bg-blue-600 text-white shadow-sm"
+          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
 function AppInner() {
   const { user } = useAuth();
 
@@ -196,7 +241,8 @@ function AppInner() {
 
   // ✅ Download gate modal
   const [showDownloadGate, setShowDownloadGate] = useState(false);
-  const [pendingDownload, setPendingDownload] = useState<PendingDownload | null>(null);
+  const [pendingDownload, setPendingDownload] =
+    useState<PendingDownload | null>(null);
 
   // ✅ cold start hint (only show once ever)
   const [hasSeenColdStartHint, setHasSeenColdStartHint] = useState(true);
@@ -423,7 +469,7 @@ function AppInner() {
           console.warn("usage log failed:", e);
         }
 
-        // 2) deduct credits (your existing credits.ts should handle Firebase now)
+        // 2) deduct credits
         const updatedCredits = await consumeCredits(credits, images.length, isQuality);
         setCredits(updatedCredits);
 
@@ -470,115 +516,67 @@ function AppInner() {
 
   const showFirstTimeHint = isProcessing && !hasSeenColdStartHint;
 
+  const maxBatch = isGuest ? 1 : plan.maxBatchSize;
+
   return (
     <main className="cc-bg">
       <div className="cc-container relative py-10">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[1.5rem] font-extrabold tracking-tight text-slate-900 md:text-[2rem]">
-              CleanCut AI – Background Removal App
+        {/* Top header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-3xl">
+            <h1 className="text-slate-900">
+              Remove background and download a clean transparent PNG
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+
+            <p className="mt-3 text-sm text-slate-600">
               {isGuest
-                ? "Guest preview: process 1 image (Fast). Sign up free to download + batch."
+                ? "Guest preview: process 1 image (Fast). Create a free account to download and batch."
                 : "Fast costs 1 credit/image. Quality costs 2 credits/image (paid plans only)."}
             </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <StepTag n={1} label="Upload" />
+              <StepTag n={2} label="Settings" />
+              <StepTag n={3} label="Process & Download" />
+            </div>
           </div>
 
-          <CreditsBadge />
-        </header>
+          <div className="flex items-center justify-start md:justify-end">
+            <CreditsBadge />
+          </div>
+        </div>
 
-        <section className="mt-8 grid gap-6 md:grid-cols-[2fr,2fr]">
-          <div className="card p-6">
-            <UploadArea onFilesSelected={onFilesSelected} />
+        {/* Status strip */}
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                {isGuest ? "Guest preview" : `Plan: ${plan.name}`}
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                Batch limit: <span className="font-semibold text-slate-900">{maxBatch}</span>
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                Mode:{" "}
+                <span className="font-semibold text-slate-900">
+                  {isQuality ? "Quality" : "Fast"}
+                </span>
+              </span>
+              {!isGuest && (
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                  Est. cost:{" "}
+                  <span className="font-semibold text-slate-900">
+                    {images.length === 0 ? "—" : totalCost}
+                  </span>
+                </span>
+              )}
+            </div>
 
-            <div className="mt-6 space-y-4 text-sm text-slate-700">
-              <div>
-                <span className="text-sm font-semibold text-slate-900">Background mode</span>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]).map(
-                    (mode) => (
-                      <button
-                        key={mode}
-                        onClick={() => setBgMode(mode)}
-                        className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                          bgMode === mode
-                            ? "bg-blue-600 text-white"
-                            : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                        }`}
-                      >
-                        {mode}
-                      </button>
-                    )
-                  )}
-                  {bgMode === "custom" && (
-                    <input
-                      type="color"
-                      className="h-9 w-12 cursor-pointer rounded-xl border border-slate-200 bg-white p-1"
-                      value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">Processing mode</div>
-                    <div className="mt-1 text-xs text-slate-600">
-                      {isGuest
-                        ? "Guest preview supports Fast only."
-                        : "Fast = 1 credit/image. Quality = 2 credits/image (paid only)."}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setQualityMode("fast")}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                        qualityMode === "fast"
-                          ? "bg-emerald-600/15 text-emerald-800 border border-emerald-600/25"
-                          : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                      }`}
-                    >
-                      Fast (1 credit)
-                    </button>
-
-                    <button
-                      onClick={() => setQualityMode("quality")}
-                      disabled={!allowQuality}
-                      title={!allowQuality ? "Quality mode is available on paid plans." : ""}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition border ${
-                        !allowQuality
-                          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                          : qualityMode === "quality"
-                          ? "bg-blue-600/10 text-blue-800 border-blue-600/25"
-                          : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                      }`}
-                    >
-                      Quality (2 credits)
-                    </button>
-                  </div>
-                </div>
-
-                {showFirstTimeHint && (
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-700">
-                    <div className="font-semibold text-slate-900">
-                      ⏳ First-time setup may take longer
-                    </div>
-                    <div className="mt-1 text-slate-600">
-                      The first processing can take extra time while our AI starts up. Please
-                      wait — next runs will be faster.
-                    </div>
-                  </div>
-                )}
-              </div>
-
+            <div className="flex gap-2">
               <button
                 onClick={handleProcess}
                 disabled={isProcessing || images.length === 0}
-                className="w-full rounded-2xl bg-blue-600 px-6 py-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="cc-btn-primary disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {isProcessing ? (
                   <span className="inline-flex items-center justify-center gap-2">
@@ -586,41 +584,247 @@ function AppInner() {
                     Processing {processedCount}/{images.length}
                   </span>
                 ) : (
-                  `Process ${images.length || ""} image${images.length === 1 ? "" : "s"} • Cost: ${
-                    isGuest ? 0 : totalCost
-                  } credit${totalCost === 1 ? "" : "s"}`
+                  "Remove Background"
                 )}
               </button>
 
-              {errorMsg && <p className="text-sm text-rose-600">{errorMsg}</p>}
-
-              {results.length > 0 && (
-                <button
-                  onClick={handleDownloadAll}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm font-semibold text-slate-800 hover:border-slate-300"
-                >
-                  Download all as PNG
-                </button>
-              )}
-
-              {results.length > 0 && isGuest && (
-                <p className="text-sm text-slate-600">
-                  Downloads require a free account. Your preview is already ready.
-                </p>
-              )}
+              <button
+                onClick={handleDownloadAll}
+                disabled={results.length === 0}
+                className="cc-btn-secondary disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Download all
+              </button>
             </div>
           </div>
 
-          <div className="card p-6">
-            <BeforeAfter
-              images={results}
-              bgMode={bgMode}
-              customColor={customColor}
-              onDownloadRequested={requestDownloadSingle}
-            />
+          {errorMsg && <p className="mt-3 text-sm text-rose-600">{errorMsg}</p>}
+
+          {results.length > 0 && isGuest && (
+            <p className="mt-3 text-sm text-slate-600">
+              Downloads require a free account. Your preview is already ready.
+            </p>
+          )}
+        </div>
+
+        {/* Main grid */}
+        <section className="mt-6 grid gap-6 lg:grid-cols-[1fr,0.95fr]">
+          {/* LEFT column */}
+          <div className="space-y-6">
+            {/* Step 1 */}
+            <div className="card p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Step 1 — Upload</div>
+                  <div className="mt-1 text-xs text-slate-600">PNG / JPG / WEBP supported.</div>
+                </div>
+                <div className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 md:block">
+                  {isGuest ? "1 image max" : `${plan.maxBatchSize} images max`}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <UploadArea onFilesSelected={onFilesSelected} />
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="card p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Step 2 — Settings</div>
+                  <div className="mt-1 text-xs text-slate-600">
+                    Choose preview background and processing quality.
+                  </div>
+                </div>
+
+                {bgMode === "custom" && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-700">Color</span>
+                    <input
+                      type="color"
+                      className="h-9 w-12 cursor-pointer rounded-xl border border-slate-200 bg-white p-1"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                {/* Background preview */}
+                <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                  <div className="text-sm font-semibold text-slate-900">Preview background</div>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Helpful to check edges before downloading.
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {(
+                      ["transparent", "white", "black", "custom", "blur", "shadow"] as BgMode[]
+                    ).map((mode) => (
+                      <SegButton
+                        key={mode}
+                        active={bgMode === mode}
+                        onClick={() => setBgMode(mode)}
+                      >
+                        {mode}
+                      </SegButton>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                    Tip: Use <span className="font-semibold text-slate-900">white</span> or{" "}
+                    <span className="font-semibold text-slate-900">custom</span> to spot edge halos.
+                  </div>
+                </div>
+
+                {/* Processing quality */}
+                <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                  <div className="text-sm font-semibold text-slate-900">Processing quality</div>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {isGuest
+                      ? "Guest preview supports Fast only."
+                      : "Fast = 1 credit/image. Quality = 2 credits/image (paid only)."}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setQualityMode("fast")}
+                      className={[
+                        "rounded-full px-4 py-2 text-xs font-semibold border transition",
+                        qualityMode === "fast"
+                          ? "border-emerald-600/25 bg-emerald-600 text-white"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                      ].join(" ")}
+                    >
+                      Fast (1 credit)
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setQualityMode("quality")}
+                      disabled={!allowQuality}
+                      title={!allowQuality ? "Quality mode is available on paid plans." : ""}
+                      className={[
+                        "rounded-full px-4 py-2 text-xs font-semibold border transition",
+                        !allowQuality
+                          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                          : qualityMode === "quality"
+                          ? "border-blue-600/25 bg-blue-600 text-white"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                      ].join(" ")}
+                    >
+                      Quality (2 credits)
+                    </button>
+                  </div>
+
+                  {showFirstTimeHint && (
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                      <div className="font-semibold text-slate-900">
+                        ⏳ First-time setup may take longer
+                      </div>
+                      <div className="mt-1 text-slate-600">
+                        The first processing can take extra time while our AI starts up.
+                        Please wait — next runs will be faster.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="card p-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    Step 3 — Process & download
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {images.length === 0
+                      ? "Upload an image to enable processing."
+                      : isGuest
+                      ? "Guest preview costs 0 credits."
+                      : `Estimated cost: ${totalCost} credit${totalCost === 1 ? "" : "s"}`}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+                    Cost/image:{" "}
+                    <span className="font-semibold text-slate-900">{perImageCost}</span>
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+                    Total:{" "}
+                    <span className="font-semibold text-slate-900">
+                      {isGuest ? "0" : images.length === 0 ? "—" : totalCost}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={handleProcess}
+                  disabled={isProcessing || images.length === 0}
+                  className="w-full rounded-2xl bg-blue-600 px-6 py-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {isProcessing ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
+                      Processing {processedCount}/{images.length}
+                    </span>
+                  ) : (
+                    "Remove Background"
+                  )}
+                </button>
+
+                <button
+                  onClick={handleDownloadAll}
+                  disabled={results.length === 0}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm font-semibold text-slate-800 hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Download all PNG
+                </button>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                Tip: If you plan to batch often, upgrade for bigger limits + Quality mode.
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT column */}
+          <div className="lg:sticky lg:top-24 h-fit">
+            <div className="card p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Preview</div>
+                  <div className="mt-1 text-xs text-slate-600">
+                    Your before/after results appear here.
+                  </div>
+                </div>
+
+                <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 md:block">
+                  Output
+                </span>
+              </div>
+
+              <div className="mt-4">
+                <BeforeAfter
+                  images={results}
+                  bgMode={bgMode}
+                  customColor={customColor}
+                  onDownloadRequested={requestDownloadSingle}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
+        {/* Paywall */}
         {showPaywall && (
           <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4">
             <div className="cc-card max-w-sm p-6">
@@ -630,7 +834,9 @@ function AppInner() {
               </p>
               <p className="mt-3 text-xs text-slate-500">
                 Current selection:{" "}
-                <span className="font-semibold text-slate-900">{isQuality ? "quality" : "fast"}</span>{" "}
+                <span className="font-semibold text-slate-900">
+                  {isQuality ? "quality" : "fast"}
+                </span>{" "}
                 • Cost per image:{" "}
                 <span className="font-semibold text-slate-900">{perImageCost}</span> credit(s)
               </p>
@@ -652,6 +858,7 @@ function AppInner() {
           </div>
         )}
 
+        {/* Download gate */}
         <DownloadGateModal
           open={showDownloadGate}
           onClose={() => {

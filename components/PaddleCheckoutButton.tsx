@@ -1,4 +1,3 @@
-// components/PaddleCheckoutButton.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -74,10 +73,7 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
           return;
         }
 
-        // ✅ CORRECT for Paddle Billing v2
-        window.Paddle.Initialize({
-          token,
-        });
+        window.Paddle.Initialize({ token });
 
         if (!cancelled) {
           setReady(true);
@@ -117,10 +113,9 @@ export default function PaddleCheckoutButton({ plan, className, children }: Prop
         items: [{ priceId, quantity: 1 }],
         customer: user.email ? { email: user.email } : undefined,
         customData: {
-  firebase_uid: user.uid,
-  plan,
-},
-
+          firebase_uid: user.uid,
+          plan,
+        },
       });
     } catch (err) {
       console.error("[Paddle] Checkout error", err);

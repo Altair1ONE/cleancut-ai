@@ -44,7 +44,7 @@ export default function Footer() {
               </span>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/app"
                 className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
@@ -64,31 +64,11 @@ export default function Footer() {
           <div>
             <div className="text-sm font-semibold text-slate-900">Product</div>
             <ul className="mt-4 space-y-2 text-sm text-slate-600">
-              <li>
-                <Link className="hover:text-slate-900" href="/">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-slate-900" href="/app">
-                  Background Remover
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-slate-900" href="/pricing">
-                  Pricing & Plans
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-slate-900" href="/blog">
-                  Guides & Blog
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-slate-900" href="/contact">
-                  Support / Contact
-                </Link>
-              </li>
+              <li><Link className="hover:text-slate-900" href="/">Home</Link></li>
+              <li><Link className="hover:text-slate-900" href="/app">Background Remover</Link></li>
+              <li><Link className="hover:text-slate-900" href="/pricing">Pricing & Plans</Link></li>
+              <li><Link className="hover:text-slate-900" href="/blog">Guides & Blog</Link></li>
+              <li><Link className="hover:text-slate-900" href="/contact">Support / Contact</Link></li>
             </ul>
           </div>
 
@@ -127,18 +107,10 @@ export default function Footer() {
           <div>© {new Date().getFullYear()} Xevora. All rights reserved.</div>
 
           <div className="flex flex-wrap gap-4">
-            <Link className="hover:text-slate-700" href="/terms">
-              Terms
-            </Link>
-            <Link className="hover:text-slate-700" href="/privacy">
-              Privacy
-            </Link>
-            <Link className="hover:text-slate-700" href="/refund">
-              Refunds
-            </Link>
-            <Link className="hover:text-slate-700" href="/contact">
-              Contact
-            </Link>
+            <Link className="hover:text-slate-700" href="/terms">Terms</Link>
+            <Link className="hover:text-slate-700" href="/privacy">Privacy</Link>
+            <Link className="hover:text-slate-700" href="/refund">Refunds</Link>
+            <Link className="hover:text-slate-700" href="/contact">Contact</Link>
           </div>
         </div>
       </div>

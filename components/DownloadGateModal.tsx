@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { firebaseAuth } from "../lib/firebaseClient";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
 type Mode = "signin" | "signup";
 
@@ -64,31 +67,31 @@ export default function DownloadGateModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_30px_100px_rgba(2,6,23,0.25)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-white">{title}</h2>
-            <p className="mt-2 text-sm text-slate-300">{subtitle}</p>
+            <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+            <p className="mt-2 text-sm text-slate-600">{subtitle}</p>
           </div>
 
           <button
             onClick={onClose}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-slate-500"
+            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-slate-300"
             type="button"
           >
             Close
           </button>
         </div>
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-5 grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setMode("signup")}
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold ${
+            className={`rounded-2xl px-4 py-2 text-sm font-semibold ${
               mode === "signup"
-                ? "bg-indigo-500 text-white"
-                : "border border-slate-700 text-slate-200 hover:border-slate-500"
+                ? "bg-blue-600 text-white"
+                : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300"
             }`}
           >
             Sign up (free)
@@ -96,21 +99,21 @@ export default function DownloadGateModal({
           <button
             type="button"
             onClick={() => setMode("signin")}
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold ${
+            className={`rounded-2xl px-4 py-2 text-sm font-semibold ${
               mode === "signin"
-                ? "bg-indigo-500 text-white"
-                : "border border-slate-700 text-slate-200 hover:border-slate-500"
+                ? "bg-blue-600 text-white"
+                : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300"
             }`}
           >
             Sign in
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="text-xs text-slate-300">Email</label>
+            <label className="text-xs font-semibold text-slate-700">Email</label>
             <input
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500"
               type="email"
               autoComplete="email"
               value={email}
@@ -120,9 +123,9 @@ export default function DownloadGateModal({
           </div>
 
           <div>
-            <label className="text-xs text-slate-300">Password</label>
+            <label className="text-xs font-semibold text-slate-700">Password</label>
             <input
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500"
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               value={password}
@@ -130,12 +133,14 @@ export default function DownloadGateModal({
               required
               minLength={6}
             />
-            {mode === "signup" && <p className="mt-2 text-xs text-slate-500">Minimum 6 characters.</p>}
+            {mode === "signup" && (
+              <p className="mt-2 text-xs text-slate-500">Minimum 6 characters.</p>
+            )}
           </div>
 
           {mode === "signup" && (
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-              <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
                 <input
                   type="checkbox"
                   className="mt-1 h-4 w-4"
@@ -144,15 +149,15 @@ export default function DownloadGateModal({
                 />
                 <span>
                   I agree to{" "}
-                  <Link href="/terms" className="text-indigo-300 hover:text-indigo-200">
+                  <Link href="/terms" className="text-blue-700 hover:text-blue-800">
                     Terms
                   </Link>
                   ,{" "}
-                  <Link href="/privacy" className="text-indigo-300 hover:text-indigo-200">
+                  <Link href="/privacy" className="text-blue-700 hover:text-blue-800">
                     Privacy
                   </Link>
                   , and{" "}
-                  <Link href="/refund" className="text-indigo-300 hover:text-indigo-200">
+                  <Link href="/refund" className="text-blue-700 hover:text-blue-800">
                     Refunds
                   </Link>
                   .
@@ -161,18 +166,20 @@ export default function DownloadGateModal({
             </div>
           )}
 
-          {err && <p className="text-sm text-rose-400">{err}</p>}
-          {msg && <p className="text-sm text-emerald-400">{msg}</p>}
+          {err && <p className="text-sm text-rose-600">{err}</p>}
+          {msg && <p className="text-sm text-emerald-700">{msg}</p>}
 
           <button
             type="submit"
             disabled={loading || !canSubmit}
-            className="w-full rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-700"
+            className="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {loading ? "Please wait…" : mode === "signup" ? "Create free account" : "Sign in"}
           </button>
 
-          <p className="text-center text-xs text-slate-500">Tip: Downloads require a free account.</p>
+          <p className="text-center text-xs text-slate-500">
+            Tip: Downloads require a free account.
+          </p>
         </form>
       </div>
     </div>

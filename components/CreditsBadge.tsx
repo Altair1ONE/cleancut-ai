@@ -41,17 +41,15 @@ export function CreditsBadge() {
   const plan = getPlanById(state.planId);
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-[11px] text-slate-200">
-      <span className="rounded-full bg-slate-800 px-2 py-[2px] text-[10px] uppercase tracking-wide text-slate-300">
+    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm">
+      <span className="rounded-full bg-slate-900 px-2 py-[2px] text-[10px] font-semibold uppercase tracking-wide text-white">
         {plan.name}
       </span>
 
       <span>
         Credits:{" "}
-        <span className="font-semibold text-emerald-300">
-          {state.creditsRemaining}
-        </span>
-        /{plan.monthlyCredits}
+        <span className="font-semibold text-emerald-700">{state.creditsRemaining}</span>
+        <span className="text-slate-400">/{plan.monthlyCredits}</span>
       </span>
     </div>
   );

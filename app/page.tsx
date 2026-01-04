@@ -61,7 +61,7 @@ function JsonLd() {
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
       {children}
     </span>
   );
@@ -71,7 +71,7 @@ function IconBullet({ title, desc }: { title: string; desc: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="text-sm font-semibold text-slate-900">{title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-slate-600">{desc}</div>
+      <div className="mt-1 text-sm text-slate-600">{desc}</div>
     </div>
   );
 }
@@ -93,8 +93,8 @@ function PersonaCard({
       className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="text-base font-semibold text-slate-900">{title}</div>
-        <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
+        <div className="text-base font-bold text-slate-900">{title}</div>
+        <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
           {tag}
         </span>
       </div>
@@ -102,13 +102,13 @@ function PersonaCard({
       <ul className="mt-4 space-y-2 text-sm text-slate-600">
         {bullets.map((b) => (
           <li key={b} className="flex gap-2">
-            <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+            <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-indigo-600" />
             <span>{b}</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-5 text-xs font-medium text-slate-900">
+      <div className="mt-5 text-xs font-semibold text-indigo-600">
         See how people use it →
       </div>
     </Link>
@@ -134,6 +134,7 @@ function ExampleTile({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {/* BEFORE */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <Image
             src={withBasePath(beforeSrc)}
@@ -144,6 +145,7 @@ function ExampleTile({
           />
         </div>
 
+        {/* AFTER (checkerboard) */}
         <div className="checker-bg overflow-hidden rounded-2xl border border-slate-200">
           <Image
             src={withBasePath(afterSrc)}
@@ -159,7 +161,6 @@ function ExampleTile({
     </div>
   );
 }
-
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
@@ -172,45 +173,53 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-2">
               <Pill>No watermark</Pill>
               <Pill>Transparent PNG</Pill>
-              <Pill>Batch ready</Pill>
+              <Pill>Batch-ready</Pill>
             </div>
 
-            <h1 className="mt-5 max-w-2xl text-[2.25rem] font-semibold leading-[1.1] tracking-tight text-slate-900 md:text-[3.25rem]">
-              Remove image backgrounds automatically
+            <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
+              Remove backgrounds in seconds —{" "}
+              <span className="text-indigo-600">
+                get a transparent PNG you can use anywhere
+              </span>
             </h1>
 
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600">
-              Upload an image and get a clean, transparent background in seconds.
-              No manual work. No watermark.
+              Upload your image and you’ll get a clean cutout instantly —{" "}
+              <strong className="text-slate-900">no watermark</strong>, no friction.
+              Use it for{" "}
+              <strong className="text-slate-900">e-commerce</strong>,{" "}
+              <strong className="text-slate-900">YouTube &amp; social</strong>,{" "}
+              <strong className="text-slate-900">design</strong>, and marketing.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/app"
-                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
               >
-                Upload an image
+                Upload an image (free)
               </Link>
               <Link
                 href="/pricing"
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 hover:border-slate-300"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
               >
                 View pricing
               </Link>
             </div>
 
             <div className="mt-4 text-xs text-slate-500">
-              Try it free • Download instantly • Upgrade only if you need more
+              No sign-up to try • Download instantly • Upgrade only when you need
+              more credits
             </div>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               <IconBullet
-                title="Clean, natural cutouts"
-                desc="Edges look professional — ideal for catalogs, branding, and listings."
+                title="Looks natural (clean edges)"
+                desc="Your cutouts won’t look rough. Great for catalogs, brand assets, and listings."
               />
               <IconBullet
-                title="Automatic, but flexible"
-                desc="Use Fast mode for speed or Quality mode for detailed edges."
+                title="Choose speed or detail"
+                desc="Go fast for simple images. Switch to Quality when hair/edges need more detail."
               />
             </div>
           </div>
@@ -222,7 +231,39 @@ export default function HomePage() {
               alt="CleanCut AI background removal demo"
             />
             <div className="mt-3 text-center text-xs text-slate-600">
-              Slide right to preview transparency • left shows the original
+              Drag the slider:{" "}
+              <span className="font-semibold text-slate-900">left</span> is original
+              —{" "}
+              <span className="font-semibold text-slate-900">right</span> is your
+              transparent PNG
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Link
+                href="/use-cases/shopify-product-photos"
+                className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
+              >
+                E-commerce
+                <div className="mt-1 font-normal text-slate-500">
+                  Products • Catalogs
+                </div>
+              </Link>
+              <Link
+                href="/use-cases/youtube-thumbnails"
+                className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
+              >
+                Creators
+                <div className="mt-1 font-normal text-slate-500">
+                  YouTube • Social
+                </div>
+              </Link>
+              <Link
+                href="/use-cases/amazon-listing-images"
+                className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-sm hover:border-slate-300"
+              >
+                Designers
+                <div className="mt-1 font-normal text-slate-500">Brand assets</div>
+              </Link>
             </div>
           </div>
         </div>
@@ -230,13 +271,24 @@ export default function HomePage() {
 
       {/* PERSONAS */}
       <section className="mt-12">
-        <h2 className="text-[1.75rem] font-semibold tracking-tight text-slate-900">
-          Built for everyday workflows
-        </h2>
-        <p className="mt-2 max-w-3xl text-sm text-slate-600">
-          Whether you sell products, create content, or design assets, CleanCut AI
-          helps you get results that are ready to use.
-        </p>
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              Built for your workflow — whatever you’re making
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm text-slate-600">
+              Whether you’re selling products, posting content, or designing
+              assets, you want one thing: a clean transparent PNG that’s ready to
+              use.
+            </p>
+          </div>
+          <Link
+            href="/app"
+            className="inline-flex w-fit items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+          >
+            Try it on your image
+          </Link>
+        </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <PersonaCard
@@ -244,9 +296,9 @@ export default function HomePage() {
             tag="Listings"
             href="/use-cases/shopify-product-photos"
             bullets={[
-              "Consistent product images for marketplaces",
-              "Faster cleanup for large catalogs",
-              "Professional-looking listings",
+              "Clean product cutouts for Shopify, Amazon, Etsy",
+              "Consistent images for collections & catalogs",
+              "Faster workflow when you have lots of SKUs",
             ]}
           />
           <PersonaCard
@@ -254,9 +306,9 @@ export default function HomePage() {
             tag="Content"
             href="/use-cases/youtube-thumbnails"
             bullets={[
-              "Subjects that stand out in thumbnails",
-              "Reusable overlays and cutouts",
-              "Consistent visual style",
+              "Make subjects pop in thumbnails and reels",
+              "Create overlays, stickers, and visuals fast",
+              "Keep your style consistent across posts",
             ]}
           />
           <PersonaCard
@@ -264,11 +316,141 @@ export default function HomePage() {
             tag="Brand"
             href="/use-cases/amazon-listing-images"
             bullets={[
-              "Transparent assets for ads and landing pages",
-              "Quick iterations for creatives",
-              "Less manual cleanup work",
+              "Transparent PNG assets for ads & landing pages",
+              "Quick cutouts for banners and creatives",
+              "Save time on repetitive background cleanup",
             ]}
           />
+        </div>
+      </section>
+
+      {/* VISUAL EXAMPLES */}
+      <section className="mt-12">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          Real examples (before → after)
+        </h2>
+        <p className="mt-2 max-w-3xl text-sm text-slate-600">
+          This is what you should expect: clean subject isolation and a transparent
+          PNG you can drop into any design.
+        </p>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <ExampleTile
+            title="Product photo"
+            beforeSrc="/examples/product-before.jpg"
+            afterSrc="/examples/product-after.png"
+            note="Perfect for e-commerce listings, catalogs, and collections."
+          />
+          <ExampleTile
+            title="Portrait"
+            beforeSrc="/examples/portrait-before.jpg"
+            afterSrc="/examples/portrait-after.png"
+            note="Great for profile pictures, creators, and team pages."
+          />
+          <ExampleTile
+            title="Logo / graphic"
+            beforeSrc="/examples/logo-before.jpg"
+            afterSrc="/examples/logo-after.png"
+            note="Transparent assets for web, slides, branding, and UI."
+          />
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          Upload → done → download
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-slate-600">
+          You don’t need to learn Photoshop or waste time. Just upload your image,
+          process it, and download your PNG.
+        </p>
+
+        <ol className="mt-5 grid gap-4 md:grid-cols-3">
+          <li className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="text-sm font-semibold text-slate-900">1) Upload</div>
+            <p className="mt-2 text-sm text-slate-600">
+              PNG, JPG, WEBP — single or batch.
+            </p>
+          </li>
+          <li className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="text-sm font-semibold text-slate-900">2) Process</div>
+            <p className="mt-2 text-sm text-slate-600">
+              Choose Fast or Quality depending on edges.
+            </p>
+          </li>
+          <li className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="text-sm font-semibold text-slate-900">3) Download</div>
+            <p className="mt-2 text-sm text-slate-600">
+              Transparent PNG. Watermark-free.
+            </p>
+          </li>
+        </ol>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/app"
+            className="inline-flex rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            Upload an image (free)
+          </Link>
+          <Link
+            href="/pricing"
+            className="inline-flex rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
+          >
+            Compare plans
+          </Link>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="mt-12">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          Frequently asked questions
+        </h2>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Is it really free?
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Yes — you can try it free and download watermark-free results. If
+              you need bigger batches or more monthly credits, you can upgrade
+              anytime.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Will my image lose quality?
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              You’ll get a clean PNG cutout designed to look natural. For hair and
+              detailed edges, use{" "}
+              <strong className="text-slate-900">Quality</strong> mode when
+              available.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Can I remove backgrounds in bulk?
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Yes. Batch processing is supported. Paid plans unlock larger batch
+              sizes and higher monthly limits.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Do you add watermarks?
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Never. Your exports are watermark-free — including the free plan.
+            </p>
+          </div>
         </div>
       </section>
 

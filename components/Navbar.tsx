@@ -69,33 +69,35 @@ export default function Navbar() {
   const initial = user?.email?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/75 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur">
+      <div className="cc-container flex items-center justify-between py-4">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-black text-white">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white shadow-sm">
             CC
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-extrabold tracking-tight text-slate-900">
-              CleanCut <span className="text-indigo-600">AI</span>
+            <div className="text-[15px] font-extrabold tracking-tight text-slate-900">
+              CleanCut <span className="text-blue-600">AI</span>
             </div>
-            <div className="text-[11px] text-slate-500">by Xevora • watermark-free PNG</div>
+            <div className="text-xs text-slate-500">
+              by Xevora • watermark-free PNG
+            </div>
           </div>
         </Link>
 
         {/* Nav */}
-        <nav className="hidden items-center gap-6 md:flex">
-          <Link href="/app" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+        <nav className="hidden items-center gap-7 md:flex">
+          <Link href="/app" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
             App
           </Link>
-          <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+          <Link href="/pricing" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
             Pricing
           </Link>
-          <Link href="/blog" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+          <Link href="/blog" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
             Guides
           </Link>
-          <Link href="/contact" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+          <Link href="/contact" className="text-sm font-semibold text-slate-600 hover:text-slate-900">
             Support
           </Link>
         </nav>
@@ -112,14 +114,14 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:border-slate-300 md:inline-flex"
+                className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300 md:inline-flex"
               >
                 Sign in
               </Link>
 
               <Link
                 href="/app"
-                className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
               >
                 Try Free
               </Link>
@@ -130,14 +132,14 @@ export default function Navbar() {
             <>
               <Link
                 href="/app"
-                className="hidden rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 md:inline-flex"
+                className="hidden rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 md:inline-flex"
               >
                 Remove Background
               </Link>
 
               <button
                 onClick={() => setOpen((v) => !v)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white hover:bg-indigo-700"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white shadow-sm hover:bg-slate-800"
                 aria-label="Open user menu"
               >
                 {initial}
@@ -149,7 +151,7 @@ export default function Navbar() {
 
                   <Link
                     href="/profile"
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     onClick={() => setOpen(false)}
                   >
                     Profile
@@ -157,7 +159,7 @@ export default function Navbar() {
 
                   <Link
                     href="/usage"
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     onClick={() => setOpen(false)}
                   >
                     Usage & Credits
@@ -165,7 +167,7 @@ export default function Navbar() {
 
                   <Link
                     href="/pricing"
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     onClick={() => setOpen(false)}
                   >
                     Plans & Billing
@@ -175,7 +177,7 @@ export default function Navbar() {
 
                   <button
                     onClick={handleSignOut}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
+                    className="w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50"
                     type="button"
                   >
                     Sign out

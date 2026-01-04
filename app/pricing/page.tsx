@@ -101,14 +101,12 @@ const plans: PlanCard[] = [
 function Pill({ label, tone }: { label: string; tone?: "ok" | "info" | "soon" }) {
   const cls =
     tone === "ok"
-      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-200"
+      ? "border-emerald-600/25 bg-emerald-600/10 text-emerald-800"
       : tone === "info"
-      ? "border-indigo-500/25 bg-indigo-500/10 text-indigo-200"
-      : "border-amber-500/25 bg-amber-500/10 text-amber-200";
+      ? "border-blue-600/25 bg-blue-600/10 text-blue-800"
+      : "border-amber-600/25 bg-amber-600/10 text-amber-800";
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${cls}`}
-    >
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${cls}`}>
       {label}
     </span>
   );
@@ -149,225 +147,209 @@ function JsonLd() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
     </>
   );
 }
 
 export default function PricingPage() {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
-      <JsonLd />
+    <main className="cc-bg">
+      <div className="cc-container relative py-12">
+        <JsonLd />
 
-      {/* HERO */}
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 md:p-12">
-        <h1 className="text-3xl font-bold text-white md:text-5xl">
-          Pricing that’s{" "}
-          <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
-            simple, fair, and made for real use
-          </span>
-        </h1>
+        {/* HERO */}
+        <section className="cc-card-soft p-8 md:p-12">
+          <h1 className="text-slate-900">
+            Pricing that’s{" "}
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              simple, fair, and made for real use
+            </span>
+          </h1>
 
-        <p className="mt-4 max-w-3xl text-slate-300">
-          Start free with watermark-free exports. Upgrade when you need bigger
-          batches, higher monthly limits, and Quality mode for sharper edges on
-          complex subjects.
-        </p>
+          <p className="mt-4 max-w-3xl text-base text-slate-600">
+            Start free with watermark-free exports. Upgrade when you need bigger
+            batches, higher monthly limits, and Quality mode for sharper edges on
+            complex subjects.
+          </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/app"
-            className="rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
-          >
-            Try Free Now
-          </Link>
-          <Link
-            href="/"
-            className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
-          >
-            Back to Home
-          </Link>
-        </div>
-      </section>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/app" className="cc-btn-primary">
+              Try Free Now
+            </Link>
+            <Link href="/" className="cc-btn-secondary">
+              Back to Home
+            </Link>
+          </div>
+        </section>
 
-      {/* PLANS */}
-      <section className="mt-10 grid gap-4 md:grid-cols-3">
-        {plans.map((p) => (
-          <div
-            key={p.id}
-            className={`rounded-3xl border p-6 ${
-              p.highlight
-                ? "border-indigo-500/60 bg-indigo-500/10 shadow-[0_25px_80px_rgba(99,102,241,0.15)]"
-                : "border-slate-800 bg-slate-900/40"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-white">{p.name}</div>
-                <div className="mt-1 text-3xl font-bold text-white">
-                  {p.price}
-                  <span className="ml-2 text-sm font-medium text-slate-400">
-                    {p.sub}
-                  </span>
+        {/* PLANS */}
+        <section className="mt-10 grid gap-4 md:grid-cols-3">
+          {plans.map((p) => (
+            <div
+              key={p.id}
+              className={`relative overflow-hidden rounded-3xl border p-7 ${
+                p.highlight
+                  ? "border-blue-600/30 bg-white shadow-[0_30px_90px_rgba(37,99,235,0.18)]"
+                  : "border-slate-200 bg-white shadow-[0_18px_55px_rgba(2,6,23,0.08)]"
+              }`}
+            >
+              {p.highlight && (
+                <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-blue-200/50 blur-2xl" />
+              )}
+
+              <div className="relative flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">{p.name}</div>
+                  <div className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900">
+                    {p.price}
+                    <span className="ml-2 text-sm font-semibold text-slate-500">
+                      {p.sub}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-700">
+                    {p.creditsLabel}
+                  </div>
                 </div>
-                <div className="mt-2 text-sm font-semibold text-slate-200">
-                  {p.creditsLabel}
+
+                <div
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    p.highlight ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {p.badge}
                 </div>
               </div>
 
-              <div
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  p.highlight
-                    ? "bg-indigo-500 text-white"
-                    : "bg-slate-800 text-slate-200"
-                }`}
-              >
-                {p.badge}
+              {/* BADGES / PILLS */}
+              <div className="relative mt-4 flex flex-wrap gap-2">
+                {p.pills.map((x) => (
+                  <Pill key={x.label} label={x.label} tone={x.tone} />
+                ))}
               </div>
+
+              <ul className="relative mt-5 space-y-2 text-sm text-slate-700">
+                {p.features.map((f) => (
+                  <li key={f} className="flex gap-2">
+                    <span className="text-emerald-600">✓</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {p.id === "free" ? (
+                <Link
+                  href={p.cta.href}
+                  className={`relative mt-6 inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-semibold ${
+                    p.highlight
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "border border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                  }`}
+                >
+                  {p.cta.label}
+                </Link>
+              ) : (
+                <PaddleCheckoutButton
+                  plan={p.id === "pro_monthly" ? "pro_monthly" : "lifetime"}
+                  className={`relative mt-6 inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-semibold ${
+                    p.highlight
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "border border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                  }`}
+                >
+                  {p.id === "pro_monthly" ? "Upgrade to Pro" : "Get Lifetime"}
+                </PaddleCheckoutButton>
+              )}
+
+              {p.note && <p className="mt-3 text-xs text-slate-500">{p.note}</p>}
+
+              {p.id !== "free" && (
+                <p className="mt-3 text-xs text-slate-500">
+                  Secure checkout via Paddle. Your plan and credits are applied automatically after payment.
+                </p>
+              )}
             </div>
+          ))}
+        </section>
 
-            {/* BADGES / PILLS */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {p.pills.map((x) => (
-                <Pill key={x.label} label={x.label} tone={x.tone} />
-              ))}
-            </div>
+        {/* COMPARISON */}
+        <section className="mt-14 cc-card-soft p-8">
+          <h2 className="text-slate-900">What you get with CleanCut AI</h2>
+          <p className="mt-3 max-w-3xl text-sm text-slate-600">
+            Many tools lock exports behind watermarks or make pricing confusing.
+            CleanCut AI keeps it straightforward: clean transparent PNGs, clear credit costs, and upgrades only when you need them.
+          </p>
 
-            <ul className="mt-5 space-y-2 text-sm text-slate-300">
-              {p.features.map((f) => (
-                <li key={f} className="flex gap-2">
-                  <span className="text-green-400">✓</span>
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            {p.id === "free" ? (
-              <Link
-                href={p.cta.href}
-                className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
-                  p.highlight
-                    ? "bg-indigo-500 text-white hover:bg-indigo-600"
-                    : "border border-slate-700 text-slate-200 hover:border-slate-500"
-                }`}
-              >
-                {p.cta.label}
-              </Link>
-            ) : (
-              <PaddleCheckoutButton
-                plan={p.id === "pro_monthly" ? "pro_monthly" : "lifetime"}
-                className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold ${
-                  p.highlight
-                    ? "bg-indigo-500 text-white hover:bg-indigo-600"
-                    : "border border-slate-700 text-slate-200 hover:border-slate-500"
-                }`}
-              >
-                {p.id === "pro_monthly" ? "Upgrade to Pro" : "Get Lifetime"}
-              </PaddleCheckoutButton>
-            )}
-
-            {p.note && <p className="mt-3 text-xs text-slate-400">{p.note}</p>}
-
-            {p.id !== "free" && (
-              <p className="mt-3 text-xs text-slate-400">
-                Secure checkout via Paddle. Your plan and credits are applied automatically after payment.
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">Watermark-free exports</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Your results stay clean—ready for stores, ads, and design.
               </p>
-            )}
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">Batch-ready workflow</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Process collections and product sets without manual repetition.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">Quality when it matters</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Upgrade for cleaner edges on hair, complex objects, and fine detail.
+              </p>
+            </div>
           </div>
-        ))}
-      </section>
+        </section>
 
-      {/* COMPARISON */}
-      <section className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
-        <h2 className="text-xl font-semibold text-white">
-          What you get with CleanCut AI
-        </h2>
-        <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          Many tools lock exports behind watermarks or make pricing confusing.
-          CleanCut AI keeps it straightforward: clean transparent PNGs, clear credit costs, and upgrades only when you need them.
-        </p>
+        {/* FAQ */}
+        <section className="mt-14">
+          <h2 className="text-slate-900">Pricing FAQ</h2>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Watermark-free exports</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Your results stay clean—ready for stores, ads, and design.
-            </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">Do you add watermarks on the free plan?</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                No. CleanCut AI never adds watermarks—even on the free tier.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">How do credits work?</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Each processed image costs credits. Fast costs 1 credit/image.
+                Quality costs 2 credits/image. Your monthly credits refill automatically on paid plans.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">Can I upgrade later?</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Yes. Start free and upgrade only when you need higher limits and Quality mode.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900">Will my plan apply automatically after payment?</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Yes. Once checkout completes, your plan and credits are updated automatically.
+              </p>
+            </div>
           </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Batch-ready workflow</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Process collections and product sets without manual repetition.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Quality when it matters</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Upgrade for cleaner edges on hair, complex objects, and fine detail.
-            </p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FAQ */}
-      <section className="mt-12">
-        <h2 className="text-xl font-semibold text-white">Pricing FAQ</h2>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Do you add watermarks on the free plan?</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              No. CleanCut AI never adds watermarks—even on the free tier.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">How do credits work?</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Each processed image costs credits. Fast costs 1 credit/image.
-              Quality costs 2 credits/image. Your monthly credits refill automatically on paid plans.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Can I upgrade later?</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Yes. Start free and upgrade only when you need higher limits and Quality mode.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <h3 className="text-sm font-semibold text-white">Will my plan apply automatically after payment?</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Yes. Once checkout completes, your plan and credits are updated automatically.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Checkout anchor (keep structure) */}
-      <section
-        id="checkout"
-        className="mt-12 rounded-3xl border border-slate-800 bg-slate-900/40 p-8"
-      >
-        <h2 className="text-xl font-semibold text-white">Checkout</h2>
-        <p className="mt-3 max-w-3xl text-sm text-slate-300">
-          Choose a plan above to open secure checkout. After payment, your account upgrades automatically and your credits are applied right away.
-        </p>
-        <Link
-          href="/app"
-          className="mt-5 inline-flex rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-600"
-        >
-          Continue to App
-        </Link>
-      </section>
+        {/* Checkout anchor (keep structure) */}
+        <section id="checkout" className="mt-14 cc-card-soft p-8">
+          <h2 className="text-slate-900">Checkout</h2>
+          <p className="mt-3 max-w-3xl text-sm text-slate-600">
+            Choose a plan above to open secure checkout. After payment, your account upgrades automatically and your credits are applied right away.
+          </p>
+          <Link href="/app" className="mt-6 inline-flex cc-btn-primary">
+            Continue to App
+          </Link>
+        </section>
+      </div>
     </main>
   );
 }

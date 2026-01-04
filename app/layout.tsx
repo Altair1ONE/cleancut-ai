@@ -101,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
 
-      <body>
+      <body className="cc-body">
         <AuthProvider>
           <Navbar />
           <WelcomeBar />

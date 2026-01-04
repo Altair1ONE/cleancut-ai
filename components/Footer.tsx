@@ -10,18 +10,18 @@ export default function Footer() {
   const popularUseCases = useCases.slice(0, 6);
 
   return (
-    <footer className="mt-16 border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-12">
+    <footer className="mt-20 border-t border-slate-200 bg-white">
+      <div className="cc-container py-14">
         <div className="grid gap-10 md:grid-cols-4">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-black text-white">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white shadow-sm">
                 CC
               </div>
               <div>
-                <div className="text-sm font-extrabold tracking-tight text-slate-900">
-                  CleanCut <span className="text-indigo-600">AI</span>
+                <div className="text-[15px] font-extrabold tracking-tight text-slate-900">
+                  CleanCut <span className="text-blue-600">AI</span>
                 </div>
                 <div className="text-xs text-slate-500">by Xevora</div>
               </div>
@@ -47,13 +47,13 @@ export default function Footer() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/app"
-                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
+                className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
               >
                 Try Free
               </Link>
               <Link
                 href="/pricing"
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:border-slate-300"
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
               >
                 View Pricing
               </Link>
@@ -123,7 +123,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-slate-200 pt-7 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
           <div>© {new Date().getFullYear()} Xevora. All rights reserved.</div>
 
           <div className="flex flex-wrap gap-4">

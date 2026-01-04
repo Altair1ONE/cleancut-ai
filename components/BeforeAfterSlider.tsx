@@ -36,10 +36,6 @@ function checkerboard(size = 14) {
  * Demo that "changes background" like remove.bg:
  * - BEFORE: shows the ORIGINAL image
  * - AFTER: shows a white checkerboard + CUTOUT PNG on top
- *
- * This requires:
- * - originalSrc: original photo (jpg/png)
- * - cutoutSrc: transparent PNG of the same photo after background removal
  */
 export function BeforeAfterSlider({
   originalSrc,
@@ -67,54 +63,31 @@ export function BeforeAfterSlider({
   const fitClass = objectFit === "contain" ? "object-contain" : "object-cover";
 
   return (
-    <div
-      className={
-        "rounded-3xl border border-slate-800 bg-slate-950/40 p-3 shadow-[0_30px_80px_rgba(0,0,0,0.35)] " +
-        className
-      }
-    >
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-slate-950">
+    <div className={"rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_24px_70px_rgba(2,6,23,0.10)] " + className}>
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-slate-100">
         {/* BEFORE (original full image) */}
-        <img
-          src={original}
-          alt={alt}
-          loading="lazy"
-          className={`absolute inset-0 h-full w-full ${fitClass}`}
-        />
+        <img src={original} alt={alt} loading="lazy" className={`absolute inset-0 h-full w-full ${fitClass}`} />
 
         {/* AFTER overlay: checkerboard + cutout (clipped by width) */}
         <div className="absolute inset-0">
-          <div
-            className="relative h-full overflow-hidden"
-            style={{ width: `${pos}%` }}
-          >
-            {/* Checkerboard background */}
+          <div className="relative h-full overflow-hidden" style={{ width: `${pos}%` }}>
             <div className="absolute inset-0" style={checkerboard(14)} />
-
-            {/* Cutout PNG */}
-            <img
-              src={cutout}
-              alt={alt}
-              loading="lazy"
-              className={`absolute inset-0 h-full w-full ${fitClass}`}
-            />
+            <img src={cutout} alt={alt} loading="lazy" className={`absolute inset-0 h-full w-full ${fitClass}`} />
           </div>
 
-          {/* Divider + knob */}
-          <div
-            className="pointer-events-none absolute inset-y-0 w-px bg-black/70"
-            style={{ left: `${pos}%` }}
-          />
-          <div
-            className="pointer-events-none absolute top-1/2 -translate-y-1/2"
-            style={{ left: `${pos}%` }}
-          >
-            <div className="ml-[-18px] h-9 w-9 rounded-full bg-white shadow ring-1 ring-black/20" />
+          {/* Divider */}
+          <div className="pointer-events-none absolute inset-y-0 w-px bg-slate-900/30" style={{ left: `${pos}%` }} />
+
+          {/* Knob */}
+          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={{ left: `${pos}%` }}>
+            <div className="ml-[-20px] grid h-10 w-10 place-items-center rounded-full bg-white shadow ring-1 ring-slate-900/10">
+              <div className="h-4 w-4 rounded-full bg-blue-600/90" />
+            </div>
           </div>
 
           {/* Badge */}
           <div
-            className="pointer-events-none absolute top-3 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur"
+            className="pointer-events-none absolute top-3 -translate-x-1/2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur"
             style={{ left: `${pos}%` }}
           >
             {label}
@@ -131,24 +104,23 @@ export function BeforeAfterSlider({
             max={100}
             value={pos}
             onChange={(e) => setPos(Number(e.target.value))}
-            className="absolute inset-x-3 bottom-3 h-2 w-[calc(100%-1.5rem)] cursor-ew-resize appearance-none rounded-full bg-black/20 outline-none"
+            className="absolute inset-x-3 bottom-3 h-2 w-[calc(100%-1.5rem)] cursor-ew-resize appearance-none rounded-full bg-slate-900/10 outline-none"
           />
         </div>
 
         {/* Corner labels */}
-        <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+        <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur">
           Original
         </div>
-        <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+        <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur">
           Transparent PNG
         </div>
       </div>
 
-      <div className="mt-3 text-center text-xs text-slate-300">
-  Slide <span className="font-semibold text-white">left</span> to view the original • Slide{" "}
-  <span className="font-semibold text-white">right</span> to preview transparency
-</div>
-
+      <div className="mt-4 text-center text-sm text-slate-600">
+        Slide <span className="font-semibold text-slate-900">left</span> to view the original • Slide{" "}
+        <span className="font-semibold text-slate-900">right</span> to preview transparency
+      </div>
     </div>
   );
 }

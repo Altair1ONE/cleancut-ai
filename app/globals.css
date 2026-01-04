@@ -21,19 +21,16 @@ body {
 
 /* --------- Design system (remove.bg-inspired, bigger + cleaner) --------- */
 @layer base {
-  /* Better default text sizing */
   html {
     font-size: 16px;
   }
 
-  /* Make headings use Sora for that “brand” feel (like remove.bg style hierarchy) */
   h1,
   h2,
   h3 {
     font-family: var(--font-sora), var(--font-inter), ui-sans-serif, system-ui;
   }
 
-  /* Big, confident hero typography */
   h1 {
     @apply text-[2.25rem] leading-[1.08] tracking-tight font-semibold;
   }
@@ -55,7 +52,6 @@ body {
     @apply leading-relaxed;
   }
 
-  /* Nicer focus ring (important for “premium” UX) */
   :where(a, button, input, select, textarea):focus-visible {
     outline: none;
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
@@ -64,7 +60,6 @@ body {
 }
 
 @layer components {
-  /* Page background like remove.bg (soft blue tint + subtle gradients) */
   .cc-body {
     @apply bg-white;
   }
@@ -101,21 +96,20 @@ body {
     @apply rounded-3xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-[0_20px_60px_rgba(2,6,23,0.08)];
   }
 
-  /* Buttons (bigger like remove.bg) */
-  .cc-btn {
-    @apply inline-flex items-center justify-center rounded-2xl px-6 py-4 text-sm font-semibold transition;
-  }
-
+  /* Buttons (no @apply custom class chaining!) */
   .cc-btn-primary {
-    @apply cc-btn bg-blue-600 text-white shadow-sm hover:bg-blue-700;
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-4 text-sm font-semibold transition
+      bg-blue-600 text-white shadow-sm hover:bg-blue-700;
   }
 
   .cc-btn-secondary {
-    @apply cc-btn border border-slate-200 bg-white text-slate-800 hover:border-slate-300;
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-4 text-sm font-semibold transition
+      border border-slate-200 bg-white text-slate-800 hover:border-slate-300;
   }
 
   .cc-btn-ghost {
-    @apply cc-btn border border-slate-200 bg-white/70 text-slate-700 hover:border-slate-300;
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-4 text-sm font-semibold transition
+      border border-slate-200 bg-white/70 text-slate-700 hover:border-slate-300;
   }
 
   /* Pills */
@@ -123,9 +117,9 @@ body {
     @apply inline-flex items-center rounded-full border border-blue-100 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur;
   }
 
-  /* A generic .card you already use in /app — make it match the new system */
+  /* You already use .card in /app */
   .card {
-    @apply cc-card-soft;
+    @apply rounded-3xl border border-slate-200/70 bg-white/80 backdrop-blur shadow-[0_20px_60px_rgba(2,6,23,0.08)];
   }
 
   /* Transparent checkerboard background */

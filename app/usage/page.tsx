@@ -103,78 +103,80 @@ export default function UsagePage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
-        {title}
-      </div>
+      <main className="cc-bg">
+        <div className="cc-container py-10 text-sm text-slate-600">{title}</div>
+      </main>
     );
   }
 
   if (!uid) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-300">
-        {title}
-      </div>
+      <main className="cc-bg">
+        <div className="cc-container py-10 text-sm text-slate-600">{title}</div>
+      </main>
     );
   }
 
   return (
-    <main className="relative mx-auto max-w-5xl px-4 py-10">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl" />
-      </div>
-
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-xs text-slate-300">
-          <span className="h-2 w-2 rounded-full bg-indigo-400" />
-          Usage
-        </div>
-
-        <h1 className="mt-4 text-2xl font-bold text-white">My Usage</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          Your latest processing history (last 50 events).
-        </p>
-
-        {error && (
-          <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
-            {error}
+    <main className="cc-bg">
+      <div className="cc-container py-10">
+        <div className="cc-card p-6 md:p-8">
+          <div className="cc-pill">
+            <span className="h-2 w-2 rounded-full bg-blue-600" />
+            <span className="ml-2">Usage</span>
           </div>
-        )}
 
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
-          {status === "loading" ? (
-            <div className="text-sm text-slate-300">Loading usage…</div>
-          ) : rows.length === 0 ? (
-            <div className="text-sm text-slate-300">
-              No usage events yet. Process an image in the App and come back.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="text-slate-300">
-                  <tr className="border-b border-slate-800">
-                    <th className="py-2 pr-4">Time</th>
-                    <th className="py-2 pr-4">Plan</th>
-                    <th className="py-2 pr-4">Mode</th>
-                    <th className="py-2 pr-4">Images</th>
-                    <th className="py-2 pr-4">Credits</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-200">
-                  {rows.map((r) => (
-                    <tr key={r.id} className="border-b border-slate-900">
-                      <td className="py-2 pr-4 text-slate-400">
-                        {new Date(r.created_at).toLocaleString()}
-                      </td>
-                      <td className="py-2 pr-4">{r.plan_id || "-"}</td>
-                      <td className="py-2 pr-4">{r.mode || "-"}</td>
-                      <td className="py-2 pr-4">{r.images_count}</td>
-                      <td className="py-2 pr-4">{r.credits_spent}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <h1 className="mt-4 text-[1.75rem] font-semibold text-slate-900">My Usage</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Your latest processing history (last 50 events).
+          </p>
+
+          {error && (
+            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              {error}
             </div>
           )}
+
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white/70 p-4">
+            {status === "loading" ? (
+              <div className="text-sm text-slate-600">Loading usage…</div>
+            ) : rows.length === 0 ? (
+              <div className="text-sm text-slate-600">
+                No usage events yet. Process an image in the App and come back.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="text-slate-600">
+                    <tr className="border-b border-slate-200">
+                      <th className="py-2 pr-4">Time</th>
+                      <th className="py-2 pr-4">Plan</th>
+                      <th className="py-2 pr-4">Mode</th>
+                      <th className="py-2 pr-4">Images</th>
+                      <th className="py-2 pr-4">Credits</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-800">
+                    {rows.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-100">
+                        <td className="py-2 pr-4 text-slate-500">
+                          {new Date(r.created_at).toLocaleString()}
+                        </td>
+                        <td className="py-2 pr-4">{r.plan_id || "-"}</td>
+                        <td className="py-2 pr-4">{r.mode || "-"}</td>
+                        <td className="py-2 pr-4">{r.images_count}</td>
+                        <td className="py-2 pr-4">{r.credits_spent}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 text-xs text-slate-500">
+            Tip: credits update instantly after processing and purchases.
+          </div>
         </div>
       </div>
     </main>

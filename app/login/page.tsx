@@ -79,103 +79,96 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative mx-auto max-w-5xl px-4 py-12">
-      {/* background glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="absolute -bottom-28 right-0 h-72 w-[34rem] rounded-full bg-sky-500/10 blur-3xl" />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Left: value */}
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/30 p-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950/40 px-3 py-1 text-xs text-slate-300">
-            <span className="h-2 w-2 rounded-full bg-indigo-400" />
-            CleanCut AI account
-          </div>
-
-          <h1 className="mt-5 text-3xl font-bold text-white">Welcome back</h1>
-          <p className="mt-3 text-slate-300">{subtitle}</p>
-
-          <div className="mt-6 grid gap-3 text-sm text-slate-300">
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-              ✔ No watermark exports
-            </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-              ✔ Track your usage & credits
-            </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
-              ✔ Upgrade anytime for bigger batches
-            </div>
-          </div>
-
-          <p className="mt-6 text-xs text-slate-400">
-            By signing in, you agree to our{" "}
-            <Link href="/terms" className="text-indigo-300 hover:text-indigo-200">
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="text-indigo-300 hover:text-indigo-200">
-              Privacy Policy
-            </Link>
-            .
-          </p>
-        </section>
-
-        {/* Right: form */}
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8">
-          <h2 className="text-xl font-bold text-white">Sign in</h2>
-          <p className="mt-2 text-sm text-slate-300">Access your CleanCut AI account.</p>
-
-          <form onSubmit={handleLogin} className="mt-6 space-y-4">
-            <div>
-              <label className="text-xs text-slate-300">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
-              />
+    <main className="cc-bg">
+      <div className="cc-container py-12">
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Left: value */}
+          <section className="cc-card-soft p-8">
+            <div className="cc-pill">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              <span className="ml-2">CleanCut AI account</span>
             </div>
 
-            <div>
-              <label className="text-xs text-slate-300">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500"
-              />
-            </div>
+            <h1 className="mt-5">Welcome back</h1>
+            <p className="mt-3 text-slate-600">{subtitle}</p>
 
-            {error && (
-              <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">
-                {error}
+            <div className="mt-6 grid gap-3 text-sm text-slate-700">
+              <div className="rounded-2xl border border-slate-200 bg-white/70 p-3">
+                ✔ No watermark exports
               </div>
-            )}
-
-            <button
-              disabled={loading}
-              className="w-full rounded-full bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-500/20 hover:bg-indigo-600 disabled:bg-slate-700"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <p className="text-slate-400">
-                Don’t have an account?{" "}
-                <Link href="/signup" className="text-indigo-300 hover:text-indigo-200">
-                  Sign up
-                </Link>
-              </p>
-              <Link href="/contact" className="text-indigo-300 hover:text-indigo-200">
-                Need help?
-              </Link>
+              <div className="rounded-2xl border border-slate-200 bg-white/70 p-3">
+                ✔ Track your usage & credits
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white/70 p-3">
+                ✔ Upgrade anytime for bigger batches
+              </div>
             </div>
-          </form>
-        </section>
+
+            <p className="mt-6 text-xs text-slate-500">
+              By signing in, you agree to our{" "}
+              <Link href="/terms" className="text-blue-700 hover:text-blue-800">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-blue-700 hover:text-blue-800">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </section>
+
+          {/* Right: form */}
+          <section className="cc-card p-8">
+            <h2 className="text-[1.25rem] font-semibold text-slate-900">Sign in</h2>
+            <p className="mt-2 text-sm text-slate-600">Access your CleanCut AI account.</p>
+
+            <form onSubmit={handleLogin} className="mt-6 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              <button disabled={loading} className="cc-btn-primary w-full">
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <p className="text-slate-600">
+                  Don’t have an account?{" "}
+                  <Link href="/signup" className="font-semibold text-blue-700 hover:text-blue-800">
+                    Sign up
+                  </Link>
+                </p>
+                <Link href="/contact" className="font-semibold text-blue-700 hover:text-blue-800">
+                  Need help?
+                </Link>
+              </div>
+            </form>
+          </section>
+        </div>
       </div>
     </main>
   );

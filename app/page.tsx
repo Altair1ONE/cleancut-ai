@@ -342,20 +342,20 @@ export default function HomePage() {
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <ExampleTile
               title="Product photo"
-              beforeSrc="/examples/product-before.jpg"
-              afterSrc="/examples/product-after.png"
+              beforeSrc="/examples/product-before.webp"
+              afterSrc="/examples/product-after.webp"
               note="Perfect for listings, catalogs, and collections."
             />
             <ExampleTile
               title="Portrait"
-              beforeSrc="/examples/portrait-before.jpg"
-              afterSrc="/examples/portrait-after.png"
+              beforeSrc="/examples/portrait-before.webp"
+              afterSrc="/examples/portrait-after.webp"
               note="Great for profile pictures, creators, and team pages."
             />
             <ExampleTile
               title="Logo / graphic"
-              beforeSrc="/examples/logo-before.jpg"
-              afterSrc="/examples/logo-after.png"
+              beforeSrc="/examples/logo-before.webp"
+              afterSrc="/examples/logo-after.webp"
               note="Transparent assets for web, slides, branding, and UI."
             />
           </div>

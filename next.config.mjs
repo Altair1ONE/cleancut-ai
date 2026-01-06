@@ -14,16 +14,12 @@ const nextConfig = {
         permanent: true,
         basePath: false,
       },
-
-      // Root sitemap redirect (optional, helps audit tools)
       {
         source: "/sitemap.xml",
         destination: "/cleancut/sitemap.xml",
         permanent: true,
         basePath: false,
       },
-
-      // Root robots redirect (optional, helps audit tools)
       {
         source: "/robots.txt",
         destination: "/cleancut/robots.txt",
@@ -33,7 +29,6 @@ const nextConfig = {
     ];
   },
 
-  // ✅ KEY FIX: make root favicon/icon URLs resolve even with basePath
   async rewrites() {
     return [
       { source: "/favicon.ico", destination: "/cleancut/favicon.ico" },
@@ -41,6 +36,25 @@ const nextConfig = {
       { source: "/manifest.webmanifest", destination: "/cleancut/manifest.webmanifest" },
       { source: "/icon-192.png", destination: "/cleancut/icon-192.png" },
       { source: "/icon-512.png", destination: "/cleancut/icon-512.png" },
+    ];
+  },
+
+  // ✅ Cache your own heavy static assets
+  async headers() {
+    return [
+      {
+        source: "/examples/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // If you have /og-default.png or other static media:
+      {
+        source: "/:path*.(png|jpg|jpeg|webp|avif|svg|ico)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
     ];
   },
 };

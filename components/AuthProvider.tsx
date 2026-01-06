@@ -37,25 +37,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(firebaseAuth, (u) => {
-  setUser((prev) => {
-    const wasLoggedOut = !prev?.uid;
+      setUser((prev) => {
+        const wasLoggedOut = !prev?.uid;
 
-    // Equivalent of SIGNED_IN event
-    if (u && wasLoggedOut) {
-      setJustLoggedIn(true);
-      setAuthEventNonce((n) => n + 1);
-      setTimeout(() => setJustLoggedIn(false), 3000);
-    }
+        // Equivalent of SIGNED_IN event
+        if (u && wasLoggedOut) {
+          setJustLoggedIn(true);
+          setAuthEventNonce((n) => n + 1);
+          setTimeout(() => setJustLoggedIn(false), 3000);
+        }
 
-    return u;
-  });
+        return u;
+      });
 
-  setLoading(false);
-});
-
+      setLoading(false);
+    });
 
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

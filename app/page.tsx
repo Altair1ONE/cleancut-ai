@@ -47,24 +47,14 @@ function JsonLd() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApp) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApp) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
     </>
   );
 }
 
 function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="cc-pill">
-      {children}
-    </span>
-  );
+  return <span className="cc-pill">{children}</span>;
 }
 
 function IconBullet({ title, desc }: { title: string; desc: string }) {
@@ -99,17 +89,11 @@ function PersonaCard({
 
       <div className="relative flex items-start justify-between gap-3">
         <div>
-          <div className="text-base font-extrabold tracking-tight text-slate-900">
-            {title}
-          </div>
-          <div className="mt-2 text-sm text-slate-600">
-            Get clean transparent PNGs ready for your workflow.
-          </div>
+          <div className="text-base font-extrabold tracking-tight text-slate-900">{title}</div>
+          <div className="mt-2 text-sm text-slate-600">Get clean transparent PNGs ready for your workflow.</div>
         </div>
 
-        <span className="relative rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
-          {tag}
-        </span>
+        <span className="relative rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">{tag}</span>
       </div>
 
       <ul className="relative mt-5 space-y-2 text-sm text-slate-600">
@@ -153,6 +137,8 @@ function ExampleTile({
             alt={`${title} before`}
             width={800}
             height={600}
+            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 360px"
+            quality={80}
             className="h-auto w-full object-cover"
           />
         </div>
@@ -163,6 +149,8 @@ function ExampleTile({
             alt={`${title} after`}
             width={800}
             height={600}
+            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 44vw, 360px"
+            quality={80}
             className="h-auto w-full object-contain"
           />
         </div>
@@ -182,7 +170,6 @@ export default function HomePage() {
         {/* HERO */}
         <section className="cc-card-soft p-7 md:p-12">
           <div className="grid items-center gap-10 md:grid-cols-2">
-            {/* Left */}
             <div>
               <div className="flex flex-wrap gap-2">
                 <Pill>No watermark</Pill>
@@ -199,14 +186,12 @@ export default function HomePage() {
 
               <p className="mt-5 max-w-xl text-base text-slate-600">
                 Upload your image and get a clean cutout instantly —{" "}
-                <span className="font-semibold text-slate-900">watermark-free</span>.
-                Made for{" "}
+                <span className="font-semibold text-slate-900">watermark-free</span>. Made for{" "}
                 <span className="font-semibold text-slate-900">e-commerce</span>,{" "}
                 <span className="font-semibold text-slate-900">YouTube &amp; social</span>,{" "}
                 <span className="font-semibold text-slate-900">design</span>, and marketing.
               </p>
 
-              {/* Primary CTA row (remove.bg-style simple) */}
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link href="/app" className="cc-btn-primary w-full sm:w-auto">
                   Upload an image (free)
@@ -220,7 +205,6 @@ export default function HomePage() {
                 No sign-up to try • Download instantly • Upgrade only when you need more credits
               </div>
 
-              {/* Benefits row */}
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 <IconBullet
                   title="Natural-looking cutouts"
@@ -233,7 +217,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right */}
             <div className="md:pl-4">
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                 <BeforeAfterSlider
@@ -242,8 +225,7 @@ export default function HomePage() {
                   alt="CleanCut AI background removal demo"
                 />
                 <div className="mt-3 text-center text-xs text-slate-600">
-                  Drag the slider:{" "}
-                  <span className="font-semibold text-slate-900">left</span> is original —{" "}
+                  Drag the slider: <span className="font-semibold text-slate-900">left</span> is original —{" "}
                   <span className="font-semibold text-slate-900">right</span> is your transparent PNG
                 </div>
               </div>
@@ -254,9 +236,7 @@ export default function HomePage() {
                   className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-900 shadow-sm hover:border-slate-300"
                 >
                   E-commerce
-                  <div className="mt-1 font-normal text-slate-500">
-                    Products • Catalogs
-                  </div>
+                  <div className="mt-1 font-normal text-slate-500">Products • Catalogs</div>
                 </Link>
 
                 <Link
@@ -264,9 +244,7 @@ export default function HomePage() {
                   className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-900 shadow-sm hover:border-slate-300"
                 >
                   Creators
-                  <div className="mt-1 font-normal text-slate-500">
-                    YouTube • Social
-                  </div>
+                  <div className="mt-1 font-normal text-slate-500">YouTube • Social</div>
                 </Link>
 
                 <Link
@@ -274,9 +252,7 @@ export default function HomePage() {
                   className="rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-900 shadow-sm hover:border-slate-300"
                 >
                   Designers
-                  <div className="mt-1 font-normal text-slate-500">
-                    Brand assets
-                  </div>
+                  <div className="mt-1 font-normal text-slate-500">Brand assets</div>
                 </Link>
               </div>
             </div>
@@ -289,8 +265,8 @@ export default function HomePage() {
             <div>
               <h2 className="text-slate-900">Built for your workflow</h2>
               <p className="mt-3 max-w-3xl text-sm text-slate-600">
-                Whether you’re selling products, posting content, or designing assets —
-                you want one thing: a clean transparent PNG that’s ready to use.
+                Whether you’re selling products, posting content, or designing assets — you want one thing: a clean
+                transparent PNG that’s ready to use.
               </p>
             </div>
             <Link href="/app" className="cc-btn-primary w-fit">
@@ -401,7 +377,8 @@ export default function HomePage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="text-sm font-semibold text-slate-900">Is it really free?</h3>
               <p className="mt-2 text-sm text-slate-600">
-                Yes — you can try it free and download watermark-free results. Upgrade only if you need bigger batches or higher monthly credits.
+                Yes — you can try it free and download watermark-free results. Upgrade only if you need bigger batches
+                or higher monthly credits.
               </p>
             </div>
 

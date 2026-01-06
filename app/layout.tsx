@@ -30,13 +30,23 @@ export const metadata: Metadata = {
     canonical: "https://xevora.org/cleancut",
     types: { "application/rss+xml": "https://xevora.org/cleancut/feed.xml" },
   },
+
   title: {
-    default: "Make Background Transparent (Free PNG, No Watermark) | CleanCut AI",
-    template: "%s | CleanCut AI by Xevora",
+    default: "Free Background Remover – Make PNG Transparent (No Watermark) | CleanCut AI",
+    template: "%s | CleanCut AI",
   },
+
   description:
-    "Make any image background transparent in seconds with CleanCut AI by Xevora. Export clean transparent PNGs (no watermark), remove backgrounds in batch, and get crisp edges for e-commerce, creators, and marketing.",
-  icons: { icon: "/cleancut/favicon.ico", apple: "/cleancut/apple-touch-icon.png" },
+    "Remove backgrounds in seconds with CleanCut AI by Xevora. Export transparent PNGs with no watermark, batch remove backgrounds, and get clean edges for e-commerce, creators, and marketing.",
+
+  icons: {
+  icon: [
+    { url: "/cleancut/favicon.ico" },
+    { url: "/cleancut/favicon-48.png", sizes: "48x48", type: "image/png" },
+    { url: "/cleancut/favicon-96.png", sizes: "96x96", type: "image/png" },
+  ],
+  apple: "/cleancut/apple-touch-icon.png",
+},
   manifest: "/cleancut/manifest.webmanifest",
   keywords: [
     "transparent background",

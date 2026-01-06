@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import Image from "next/image";
+import React, { useId, useMemo, useState } from "react";
 
 /**
  * Your production site uses basePath: /cleancut
@@ -45,6 +46,11 @@ export function BeforeAfterSlider({
   initial = 50,
   className = "",
   objectFit = "cover",
+  // ✅ performance controls (default safe)
+  priority = false,
+  quality = 82,
+  // ✅ correct responsive download sizes for the hero area
+  sizes = "(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 560px",
 }: {
   originalSrc: string;
   cutoutSrc: string; // transparent PNG
@@ -53,6 +59,9 @@ export function BeforeAfterSlider({
   initial?: number; // 0..100
   className?: string;
   objectFit?: "cover" | "contain";
+  priority?: boolean;
+  quality?: number;
+  sizes?: string;
 }) {
   const id = useId();
   const [pos, setPos] = useState(() => Math.min(100, Math.max(0, initial)));
@@ -60,26 +69,57 @@ export function BeforeAfterSlider({
   const original = useMemo(() => toPublicUrl(originalSrc), [originalSrc]);
   const cutout = useMemo(() => toPublicUrl(cutoutSrc), [cutoutSrc]);
 
-  const fitClass = objectFit === "contain" ? "object-contain" : "object-cover";
+  const fit: "cover" | "contain" = objectFit === "contain" ? "contain" : "cover";
 
   return (
-    <div className={"rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_24px_70px_rgba(2,6,23,0.10)] " + className}>
+    <div
+      className={
+        "rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_24px_70px_rgba(2,6,23,0.10)] " +
+        className
+      }
+    >
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-slate-100">
         {/* BEFORE (original full image) */}
-        <img src={original} alt={alt} loading="lazy" className={`absolute inset-0 h-full w-full ${fitClass}`} />
+        <Image
+          src={original}
+          alt={alt}
+          fill
+          sizes={sizes}
+          quality={quality}
+          priority={priority}
+          fetchPriority={priority ? "high" : "auto"}
+          placeholder="empty"
+          style={{ objectFit: fit }}
+        />
 
         {/* AFTER overlay: checkerboard + cutout (clipped by width) */}
         <div className="absolute inset-0">
           <div className="relative h-full overflow-hidden" style={{ width: `${pos}%` }}>
             <div className="absolute inset-0" style={checkerboard(14)} />
-            <img src={cutout} alt={alt} loading="lazy" className={`absolute inset-0 h-full w-full ${fitClass}`} />
+            <Image
+              src={cutout}
+              alt={alt}
+              fill
+              sizes={sizes}
+              quality={quality}
+              // not priority: original already drives LCP, keep this lower impact
+              priority={false}
+              placeholder="empty"
+              style={{ objectFit: fit }}
+            />
           </div>
 
           {/* Divider */}
-          <div className="pointer-events-none absolute inset-y-0 w-px bg-slate-900/30" style={{ left: `${pos}%` }} />
+          <div
+            className="pointer-events-none absolute inset-y-0 w-px bg-slate-900/30"
+            style={{ left: `${pos}%` }}
+          />
 
           {/* Knob */}
-          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={{ left: `${pos}%` }}>
+          <div
+            className="pointer-events-none absolute top-1/2 -translate-y-1/2"
+            style={{ left: `${pos}%` }}
+          >
             <div className="ml-[-20px] grid h-10 w-10 place-items-center rounded-full bg-white shadow ring-1 ring-slate-900/10">
               <div className="h-4 w-4 rounded-full bg-blue-600/90" />
             </div>

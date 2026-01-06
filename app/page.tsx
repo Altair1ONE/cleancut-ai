@@ -220,10 +220,12 @@ export default function HomePage() {
             <div className="md:pl-4">
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                 <BeforeAfterSlider
-                  originalSrc="/examples/product-before.webp"
-                  cutoutSrc="/examples/product-after.webp"
-                  alt="CleanCut AI background removal demo"
-                />
+  originalSrc="/examples/product-before.webp"
+  cutoutSrc="/examples/product-after.webp"
+  alt="CleanCut AI background removal demo"
+  priority
+/>
+
                 <div className="mt-3 text-center text-xs text-slate-600">
                   Drag the slider: <span className="font-semibold text-slate-900">left</span> is original —{" "}
                   <span className="font-semibold text-slate-900">right</span> is your transparent PNG
